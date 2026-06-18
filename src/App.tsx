@@ -432,6 +432,9 @@ export default function App() {
                                 <button data-action="load-cloud-project" data-id="${id}" class="px-3 py-1.5 rounded-xl bg-sky-600/15 hover:bg-sky-600/30 border border-sky-500/20 text-sky-300 text-xs font-bold transition cursor-pointer">
                                     Load
                                 </button>
+                                <button data-action="rename-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-1.5 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer">
+                                    Rename
+                                </button>
                                 <button data-action="delete-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-1.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-400 text-xs font-bold transition cursor-pointer">
                                     Delete
                                 </button>
@@ -544,6 +547,61 @@ export default function App() {
             showToast('Project cloud berhasil dimuat ke canvas.', 'success');
             addDBLog(`Cloud project dimuat: ${item.title || item.id}`, 'success');
         }
+
+        async function renameCloudProject(projectId: string) {
+            if (!isSupabaseConfigured()) {
+                showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                return;
+            }
+
+            const user = AppStore.state.authUser;
+            if (!user?.id) {
+                showToast('Login Google dulu untuk rename project cloud.', 'error');
+                return;
+            }
+
+            const item = AppStore.state.cloudProjects.find((p: any) => p.id === projectId);
+            const currentTitle = item?.title || 'Untitled Project';
+            const nextTitleRaw = window.prompt('Nama project baru:', currentTitle);
+            if (nextTitleRaw === null) return;
+
+            const nextTitle = nextTitleRaw.trim();
+            if (!nextTitle) {
+                showToast('Nama project tidak boleh kosong.', 'error');
+                return;
+            }
+
+            if (nextTitle === currentTitle) {
+                showToast('Nama project tidak berubah.', 'info');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('projects')
+                    .update({ title: nextTitle })
+                    .eq('id', projectId)
+                    .eq('user_id', user.id)
+                    .select('id,title,content,created_at,updated_at')
+                    .single();
+
+                if (error) throw error;
+
+                const updatedProjects = AppStore.state.cloudProjects.map((p: any) =>
+                    p.id === projectId ? { ...p, ...(data || {}), title: nextTitle } : p
+                );
+
+                AppStore.setState({ cloudProjects: updatedProjects });
+                renderCloudHistoryModal(updatedProjects);
+                showToast('Nama project cloud berhasil diubah.', 'success');
+                addDBLog(`Cloud project rename: ${currentTitle} → ${nextTitle}`, 'success');
+            } catch (err: any) {
+                console.error('Gagal rename cloud project:', err);
+                showToast(err?.message || 'Gagal rename project cloud.', 'error');
+                addDBLog(`Cloud rename gagal: ${err?.message || err}`, 'error');
+            }
+        }
+
 
         async function deleteCloudProject(projectId: string) {
             if (!isSupabaseConfigured()) {
@@ -1976,6 +2034,13 @@ export default function App() {
             if (loadCloudBtn) {
                 const id = loadCloudBtn.getAttribute('data-id') || '';
                 await loadCloudProject(id);
+                return;
+            }
+
+            const renameCloudBtn = target.closest('[data-action="rename-cloud-project"]');
+            if (renameCloudBtn) {
+                const id = renameCloudBtn.getAttribute('data-id') || '';
+                await renameCloudProject(id);
                 return;
             }
 
