@@ -292,6 +292,65 @@ export default function App() {
             }
         }
 
+
+        async function saveActiveProjectToCloud() {
+            if (!isSupabaseConfigured()) {
+                showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                return;
+            }
+
+            const user = AppStore.state.authUser;
+            if (!user?.id) {
+                showToast('Login Google dulu untuk menyimpan project ke cloud.', 'error');
+                return;
+            }
+
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData) {
+                showToast('Belum ada storyboard aktif untuk disimpan.', 'error');
+                return;
+            }
+
+            const theme = (document.getElementById('themeInput') as HTMLTextAreaElement)?.value?.trim() || '';
+            const title = storyboardData.youtube_title || theme || 'Untitled Project';
+            const btn = document.getElementById('btnSaveCloudProject') as HTMLButtonElement | null;
+            const originalText = btn?.innerHTML || '☁️ Save to Cloud';
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '☁️ Saving...';
+                }
+
+                const { error } = await supabase.from('projects').insert({
+                    user_id: user.id,
+                    title,
+                    content: {
+                        title,
+                        theme,
+                        ratio: AppStore.state.activeRatio,
+                        saved_from: 'k-creator-suite-pro',
+                        saved_at: new Date().toISOString(),
+                        storyboard: storyboardData
+                    }
+                });
+
+                if (error) throw error;
+
+                showToast('Project berhasil disimpan ke Supabase Cloud.', 'success');
+                addDBLog(`Cloud save berhasil: ${title}`, 'success');
+            } catch (err: any) {
+                console.error('Cloud save gagal:', err);
+                showToast(err?.message || 'Gagal menyimpan project ke cloud.', 'error');
+                addDBLog(`Cloud save gagal: ${err?.message || err}`, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        }
+
         async function logWorkflowActivity(actionText: string, actionType = 'info') {
             try {
                 const logs = await SettingsRepo.get('activity_log') || [];
@@ -1641,6 +1700,11 @@ export default function App() {
 
             if (target.closest('[data-action="logout-google"]')) {
                 await signOutGoogle();
+                return;
+            }
+
+            if (target.closest('[data-action="save-cloud-project"]')) {
+                await saveActiveProjectToCloud();
                 return;
             }
 

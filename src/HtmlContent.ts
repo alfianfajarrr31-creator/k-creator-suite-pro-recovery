@@ -395,6 +395,9 @@ export const HTML_CONTENT = `
                             <button id="btnTransferAllScenes" data-action="transfer-all-scenes" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer">
                                 🎙️ Kirim Semua Narasi ke Voice Lab
                             </button>
+                            <button id="btnSaveCloudProject" data-action="save-cloud-project" class="bg-sky-600/15 hover:bg-sky-600/25 text-sky-400 border border-sky-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                ☁️ Save to Cloud
+                            </button>
                             <button id="btnCopyAllPrompts" data-action="copy-all-prompts" class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                 Copy All Prompts
                             </button>
