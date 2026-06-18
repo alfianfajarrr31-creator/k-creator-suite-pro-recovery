@@ -294,6 +294,95 @@ export default function App() {
             }
         }
 
+        function cleanProjectTitlePart(value: any): string {
+            return String(value || '')
+                .replace(/[#*_`~|<>\[\]{}]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function toTitleCase(value: string): string {
+            const keepUpper = new Set(['AI', 'CGI', '3D', '2D', 'ASMR', 'TTS', 'POV', 'KOL']);
+            return value
+                .split(' ')
+                .filter(Boolean)
+                .map((word) => {
+                    const upper = word.toUpperCase();
+                    if (keepUpper.has(upper)) return upper;
+                    if (word.length <= 3 && upper === word) return word;
+                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                })
+                .join(' ');
+        }
+
+        function getSelectedAnimationStyleLabel(): string {
+            const customStyle = (document.getElementById('customStyleInput') as HTMLInputElement | null)?.value?.trim();
+            const select = document.getElementById('animationStyle') as HTMLSelectElement | null;
+            const selected = select?.value || '';
+            if (selected === 'Gaya Kustom' && customStyle) return customStyle;
+            return selected || '';
+        }
+
+        function generateSmartProjectTitle(storyboardData: any, theme: string): string {
+            const aiTitle = cleanProjectTitlePart(storyboardData?.youtube_title || storyboardData?.title || '');
+            const topicRaw = cleanProjectTitlePart(theme || aiTitle || 'Untitled Project');
+            const animationStyle = cleanProjectTitlePart(getSelectedAnimationStyleLabel());
+            const category = cleanProjectTitlePart((document.getElementById('projectCategorySelect') as HTMLSelectElement | null)?.value || '');
+
+            const shortTopic = topicRaw
+                .replace(/^(bahas|membahas|tentang|animasi tentang|buat|bikin|konten tentang)\s+/i, '')
+                .split(/[.!?\n]/)[0]
+                .slice(0, 54)
+                .trim();
+
+            const styleToken = animationStyle
+                .replace(/Animation|Style|Gaya|Animasi/gi, '')
+                .replace(/\(.+?\)/g, '')
+                .trim()
+                .split(' ')
+                .slice(0, 2)
+                .join(' ');
+
+            let title = '';
+            if (aiTitle && aiTitle.length <= 70 && !/^Project Storyboard/i.test(aiTitle)) {
+                title = aiTitle;
+            } else {
+                title = [shortTopic || 'Untitled Project', styleToken, category && category !== 'Anime' ? category : 'Storyboard']
+                    .filter(Boolean)
+                    .join(' - ');
+            }
+
+            return toTitleCase(title).slice(0, 80).trim() || 'Untitled Project';
+        }
+
+        function setCloudSaveStatus(status: 'hidden' | 'unsaved' | 'saving' | 'saved' | 'updated' | 'guest' | 'error', customText?: string) {
+            const badge = document.getElementById('cloudSaveStatus');
+            if (!badge) return;
+
+            const styles: Record<string, string> = {
+                hidden: 'hidden px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-slate-900/70 text-slate-500 border-slate-800',
+                unsaved: 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-amber-500/10 text-amber-300 border-amber-500/20',
+                saving: 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-sky-500/10 text-sky-300 border-sky-500/20 animate-pulse',
+                saved: 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+                updated: 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-indigo-500/10 text-indigo-300 border-indigo-500/20',
+                guest: 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-slate-500/10 text-slate-400 border-slate-700',
+                error: 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-rose-500/10 text-rose-300 border-rose-500/20'
+            };
+
+            const labels: Record<string, string> = {
+                hidden: '',
+                unsaved: 'Unsaved',
+                saving: 'Saving...',
+                saved: 'Saved',
+                updated: 'Updated',
+                guest: 'Guest Draft',
+                error: 'Save Failed'
+            };
+
+            badge.className = styles[status] || styles.unsaved;
+            badge.textContent = customText || labels[status] || 'Unsaved';
+        }
+
 
         async function saveActiveProjectToCloud(silent = false) {
             if (!isSupabaseConfigured()) {
@@ -314,7 +403,7 @@ export default function App() {
             }
 
             const theme = (document.getElementById('themeInput') as HTMLTextAreaElement)?.value?.trim() || '';
-            const title = storyboardData.youtube_title || theme || 'Untitled Project';
+            const title = generateSmartProjectTitle(storyboardData, theme);
             const btn = document.getElementById('btnSaveCloudProject') as HTMLButtonElement | null;
             const originalText = btn?.innerHTML || '☁️ Save to Cloud';
             const existingCloudId = AppStore.state.activeCloudProjectId;
@@ -332,6 +421,7 @@ export default function App() {
                     btn.disabled = true;
                     btn.innerHTML = existingCloudId ? '☁️ Updating...' : '☁️ Saving...';
                 }
+                setCloudSaveStatus('saving');
 
                 let savedId = existingCloudId;
 
@@ -366,11 +456,13 @@ export default function App() {
                 }
 
                 AppStore.setState({ activeCloudProjectId: savedId });
-                if (!silent) showToast(existingCloudId ? 'Project cloud berhasil diperbarui.' : 'Project berhasil disimpan ke Supabase Cloud.', 'success');
+                setCloudSaveStatus(existingCloudId ? 'updated' : 'saved', existingCloudId ? 'Updated' : 'Saved');
+                if (!silent) showToast(existingCloudId ? 'Project cloud berhasil diperbarui.' : `Project "${title}" berhasil disimpan ke Supabase Cloud.`, 'success');
                 addDBLog(`${silent ? 'Auto-save cloud' : 'Cloud save'} berhasil: ${title}`, 'success');
                 return savedId;
             } catch (err: any) {
                 console.error('Cloud save gagal:', err);
+                setCloudSaveStatus('error');
                 if (!silent) showToast(err?.message || 'Gagal menyimpan project ke cloud.', 'error');
                 addDBLog(`Cloud save gagal: ${err?.message || err}`, 'error');
                 return null;
@@ -571,6 +663,7 @@ export default function App() {
             if (themeInput) themeInput.value = theme;
 
             Views.renderStoryboard(storyboard, ratio);
+            setCloudSaveStatus('saved', 'Loaded from Cloud');
             closeCloudHistoryModal();
             showToast('Project cloud berhasil dimuat ke canvas.', 'success');
             addDBLog(`Cloud project dimuat: ${item.title || item.id}`, 'success');
@@ -1769,9 +1862,10 @@ export default function App() {
 
             const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLSelectElement)?.value || "Anime";
             const projectId = generateSecureId();
+            const smartProjectTitle = generateSmartProjectTitle(parsedData, theme);
             const newProject = {
                 id: projectId,
-                title: parsedData.youtube_title || `Project Storyboard ${projectId}`,
+                title: smartProjectTitle,
                 theme: theme,
                 status: "Generated",
                 category: selectedCategory,
@@ -1811,11 +1905,13 @@ export default function App() {
                 }
 
                 Views.renderStoryboard(parsedData, AppStore.state.activeRatio);
+                setCloudSaveStatus(AppStore.state.authUser?.id ? 'unsaved' : 'guest', AppStore.state.authUser?.id ? 'Unsaved' : 'Guest Draft');
                 showToast("Naskah visual storyboard berhasil dirumuskan!", "success");
 
                 if (AppStore.state.authUser?.id && isSupabaseConfigured()) {
                     saveActiveProjectToCloud(true).then((cloudId) => {
                         if (cloudId) {
+                            setCloudSaveStatus('saved', 'Auto-saved');
                             showToast("Project otomatis tersimpan ke cloud.", "success");
                         }
                     });
