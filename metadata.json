@@ -1,0 +1,6 @@
+{
+  "name": "K Creator Suite Pro",
+  "description": "Unified AI Storyboard & Human-Expression TTS Workspace with Advanced Workflow analytics",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
