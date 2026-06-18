@@ -18,3 +18,8 @@ View your app in AI Studio: https://ai.studio/apps/88216211-647c-4606-a60d-f7604
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+
+## Patch: Cloud History
+- Adds Cloud History button for logged-in users.
+- Loads saved Supabase projects back to the storyboard canvas.

@@ -54,6 +54,9 @@ export const HTML_CONTENT = `
             <button id="btnLogoutGoogle" data-action="logout-google" class="hidden px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 Logout
             </button>
+            <button id="btnCloudHistory" data-action="open-cloud-history" class="px-3 py-1.5 bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+                ☁️ Cloud History
+            </button>
             <!-- Phase 1.6 DB Inspector Trigger Button -->
             <button id="btnToggleInspector" data-action="toggle-inspector" class="px-3 py-1.5 bg-[#0f111a] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-1.5 transition duration-150 cursor-pointer">
                 🗄️ Inspector

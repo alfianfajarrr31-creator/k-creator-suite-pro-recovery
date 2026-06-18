@@ -144,7 +144,8 @@ export default function App() {
                 databaseLogs: [] as string[],
                 generationHistory: [] as any[],
                 authSession: null as any,
-                authUser: null as any
+                authUser: null as any,
+                cloudProjects: [] as any[]
             },
             listeners: [] as Array<(state: any, oldState: any) => void>,
             subscribe(fn: (state: any, oldState: any) => void) {
@@ -349,6 +350,163 @@ export default function App() {
                     btn.innerHTML = originalText;
                 }
             }
+        }
+
+
+
+        function formatCloudDate(value: string) {
+            if (!value) return '-';
+            try {
+                return new Date(value).toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return value;
+            }
+        }
+
+        function closeCloudHistoryModal() {
+            const modal = document.getElementById('cloudHistoryModal');
+            if (modal) modal.remove();
+        }
+
+        function renderCloudHistoryModal(projects: any[]) {
+            closeCloudHistoryModal();
+
+            const modal = document.createElement('div');
+            modal.id = 'cloudHistoryModal';
+            modal.className = 'fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4';
+
+            const rows = projects.length ? projects.map((item: any) => {
+                const title = escapeHTML(item.title || 'Untitled Project');
+                const date = escapeHTML(formatCloudDate(item.updated_at || item.created_at));
+                const id = escapeHTML(item.id || '');
+                const sceneCount = item.content?.storyboard?.scenes?.length || item.content?.scenes?.length || 0;
+                const theme = escapeHTML(item.content?.theme || item.content?.storyboard?.youtube_title || 'Cloud project');
+                return `
+                    <div class="group border border-slate-800 bg-[#0b0d14] hover:bg-slate-900/80 hover:border-sky-500/30 rounded-2xl p-4 transition">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-sm font-bold text-slate-100 truncate">${title}</h4>
+                                <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${theme}</p>
+                                <div class="flex flex-wrap items-center gap-2 mt-3 text-[10px] text-slate-500 font-mono">
+                                    <span class="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/10">${sceneCount} scene</span>
+                                    <span>${date}</span>
+                                </div>
+                            </div>
+                            <button data-action="load-cloud-project" data-id="${id}" class="shrink-0 px-3 py-1.5 rounded-xl bg-sky-600/15 hover:bg-sky-600/30 border border-sky-500/20 text-sky-300 text-xs font-bold transition cursor-pointer">
+                                Load
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('') : `
+                <div class="border border-dashed border-slate-800 rounded-2xl p-8 text-center">
+                    <div class="text-3xl mb-3">☁️</div>
+                    <h4 class="text-sm font-bold text-slate-200">Belum ada project cloud</h4>
+                    <p class="text-xs text-slate-500 mt-1">Generate storyboard, lalu klik Save to Cloud.</p>
+                </div>
+            `;
+
+            modal.innerHTML = `
+                <div class="w-full max-w-3xl max-h-[82vh] overflow-hidden rounded-3xl bg-[#08090e] border border-slate-800 shadow-2xl flex flex-col">
+                    <div class="p-5 border-b border-slate-800 flex items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-100">☁️ Cloud History</h3>
+                            <p class="text-xs text-slate-400 mt-1">Project tersimpan di Supabase milik akun Google aktif.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button data-action="refresh-cloud-history" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition cursor-pointer">Refresh</button>
+                            <button data-action="close-cloud-history" class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 text-xs font-semibold transition cursor-pointer">Close</button>
+                        </div>
+                    </div>
+                    <div class="p-5 overflow-y-auto custom-scrollbar space-y-3">
+                        ${rows}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        async function openCloudHistory() {
+            if (!isSupabaseConfigured()) {
+                showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                return;
+            }
+
+            const user = AppStore.state.authUser;
+            if (!user?.id) {
+                showToast('Login Google dulu untuk membuka Cloud History.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnCloudHistory') as HTMLButtonElement | null;
+            const originalText = btn?.innerHTML || '☁️ Cloud History';
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '☁️ Loading...';
+                }
+
+                const { data, error } = await supabase
+                    .from('projects')
+                    .select('id,title,content,created_at,updated_at')
+                    .eq('user_id', user.id)
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+
+                AppStore.setState({ cloudProjects: data || [] });
+                renderCloudHistoryModal(data || []);
+                addDBLog(`Cloud history dimuat: ${(data || []).length} project`, 'success');
+            } catch (err: any) {
+                console.error('Gagal membuka Cloud History:', err);
+                showToast(err?.message || 'Gagal membuka Cloud History.', 'error');
+                addDBLog(`Cloud history gagal: ${err?.message || err}`, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        }
+
+        async function loadCloudProject(projectId: string) {
+            const item = AppStore.state.cloudProjects.find((p: any) => p.id === projectId);
+            if (!item) {
+                showToast('Project cloud tidak ditemukan di daftar aktif. Klik Refresh.', 'error');
+                return;
+            }
+
+            const content = item.content || {};
+            const storyboard = content.storyboard || content;
+            const ratio = content.ratio || '16:9';
+            const theme = content.theme || item.title || '';
+
+            if (!storyboard || !storyboard.scenes) {
+                showToast('Data storyboard cloud tidak valid.', 'error');
+                return;
+            }
+
+            AppStore.setState({
+                activeStoryboardData: storyboard,
+                activeRatio: ratio,
+                currentActiveHistoryId: item.id
+            });
+
+            const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement | null;
+            if (themeInput) themeInput.value = theme;
+
+            Views.renderStoryboard(storyboard, ratio);
+            closeCloudHistoryModal();
+            showToast('Project cloud berhasil dimuat ke canvas.', 'success');
+            addDBLog(`Cloud project dimuat: ${item.title || item.id}`, 'success');
         }
 
         async function logWorkflowActivity(actionText: string, actionType = 'info') {
@@ -1705,6 +1863,33 @@ export default function App() {
 
             if (target.closest('[data-action="save-cloud-project"]')) {
                 await saveActiveProjectToCloud();
+                return;
+            }
+
+            if (target.closest('[data-action="open-cloud-history"]')) {
+                await openCloudHistory();
+                return;
+            }
+
+            if (target.closest('[data-action="refresh-cloud-history"]')) {
+                await openCloudHistory();
+                return;
+            }
+
+            if (target.closest('[data-action="close-cloud-history"]')) {
+                closeCloudHistoryModal();
+                return;
+            }
+
+            const loadCloudBtn = target.closest('[data-action="load-cloud-project"]');
+            if (loadCloudBtn) {
+                const id = loadCloudBtn.getAttribute('data-id') || '';
+                await loadCloudProject(id);
+                return;
+            }
+
+            if (target.id === 'cloudHistoryModal') {
+                closeCloudHistoryModal();
                 return;
             }
 
