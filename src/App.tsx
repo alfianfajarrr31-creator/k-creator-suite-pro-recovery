@@ -417,8 +417,9 @@ export default function App() {
                 const id = escapeHTML(item.id || '');
                 const sceneCount = item.content?.storyboard?.scenes?.length || item.content?.scenes?.length || 0;
                 const theme = escapeHTML(item.content?.theme || item.content?.storyboard?.youtube_title || 'Cloud project');
+                const searchText = escapeHTML(`${item.title || ''} ${item.content?.theme || ''} ${item.content?.storyboard?.youtube_title || ''}`.toLowerCase());
                 return `
-                    <div class="group border border-slate-800 bg-[#0b0d14] hover:bg-slate-900/80 hover:border-sky-500/30 rounded-2xl p-4 transition">
+                    <div data-cloud-project-card="true" data-search="${searchText}" class="group border border-slate-800 bg-[#0b0d14] hover:bg-slate-900/80 hover:border-sky-500/30 rounded-2xl p-4 transition">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0 flex-1">
                                 <h4 class="text-sm font-bold text-slate-100 truncate">${title}</h4>
@@ -462,13 +463,40 @@ export default function App() {
                             <button data-action="close-cloud-history" class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 text-xs font-semibold transition cursor-pointer">Close</button>
                         </div>
                     </div>
-                    <div class="p-5 overflow-y-auto custom-scrollbar space-y-3">
+                    <div class="px-5 pt-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div class="relative flex-1">
+                                <input id="cloudHistorySearch" type="text" placeholder="Cari project cloud..." class="w-full bg-slate-950/80 border border-slate-800 focus:border-sky-500/50 outline-none rounded-2xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 transition" />
+                            </div>
+                            <div id="cloudHistoryCounter" class="text-[11px] text-slate-500 font-mono px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-800">
+                                ${projects.length} project
+                            </div>
+                        </div>
+                    </div>
+                    <div id="cloudHistoryList" class="p-5 overflow-y-auto custom-scrollbar space-y-3">
                         ${rows}
                     </div>
                 </div>
             `;
 
             document.body.appendChild(modal);
+
+            const searchInput = document.getElementById('cloudHistorySearch') as HTMLInputElement | null;
+            const counter = document.getElementById('cloudHistoryCounter');
+            const cards = Array.from(document.querySelectorAll('[data-cloud-project-card]')) as HTMLElement[];
+            if (searchInput && cards.length) {
+                searchInput.addEventListener('input', () => {
+                    const query = searchInput.value.trim().toLowerCase();
+                    let visible = 0;
+                    cards.forEach((card) => {
+                        const haystack = card.getAttribute('data-search') || '';
+                        const match = !query || haystack.includes(query);
+                        card.classList.toggle('hidden', !match);
+                        if (match) visible += 1;
+                    });
+                    if (counter) counter.textContent = `${visible} / ${cards.length} project`;
+                });
+            }
         }
 
         async function openCloudHistory() {
