@@ -495,6 +495,132 @@ export default function App() {
         }
 
 
+        function buildFullStoryboardPackageText(storyboardData: any) {
+            const theme = (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value?.trim() || '';
+            const title = generateSmartProjectTitle(storyboardData, theme);
+            const scenes = Array.isArray(storyboardData?.scenes) ? storyboardData.scenes : [];
+            const lines: string[] = [];
+            lines.push(`PROJECT TITLE: ${title}`);
+            if (theme) lines.push(`PROJECT THEME: ${theme}`);
+            lines.push(`EXPORTED FROM: K Creator Suite Pro`);
+            lines.push(`EXPORTED AT: ${new Date().toLocaleString('id-ID')}`);
+            lines.push('');
+            lines.push(`YOUTUBE TITLE: ${storyboardData?.youtube_title || '-'}`);
+            lines.push('');
+            lines.push('YOUTUBE DESCRIPTION:');
+            lines.push(storyboardData?.youtube_description || '-');
+            lines.push('');
+            lines.push('TIKTOK CAPTION:');
+            lines.push(storyboardData?.tiktok_caption || '-');
+            lines.push('');
+            lines.push('INSTAGRAM CAPTION:');
+            lines.push(storyboardData?.instagram_caption || '-');
+            lines.push('');
+            lines.push('VIRAL HASHTAGS:');
+            lines.push(storyboardData?.viral_hashtags || '-');
+            lines.push('');
+            lines.push('THUMBNAIL PROMPT:');
+            lines.push(storyboardData?.thumbnail_prompt || '-');
+            lines.push('');
+            lines.push('==============================');
+            lines.push('FULL SCENE PACKAGES');
+            lines.push('==============================');
+            scenes.forEach((scene: any, index: number) => {
+                lines.push('');
+                lines.push(buildScenePackageText(scene, index));
+                if (index < scenes.length - 1) {
+                    lines.push('');
+                    lines.push('------------------------------');
+                }
+            });
+            return lines.join('\n');
+        }
+
+        function buildAllNarrationText(storyboardData: any) {
+            const scenes = Array.isArray(storyboardData?.scenes) ? storyboardData.scenes : [];
+            const lines: string[] = [];
+            scenes.forEach((scene: any, index: number) => {
+                const sceneNumber = scene?.scene_number || index + 1;
+                lines.push(`SCENE ${sceneNumber}`);
+                lines.push(scene?.narrator_script || '-');
+                if (index < scenes.length - 1) lines.push('');
+            });
+            return lines.join('\n');
+        }
+
+        function buildAllImagePromptsText(storyboardData: any) {
+            const scenes = Array.isArray(storyboardData?.scenes) ? storyboardData.scenes : [];
+            const lines: string[] = [];
+            scenes.forEach((scene: any, index: number) => {
+                const sceneNumber = scene?.scene_number || index + 1;
+                const { imagePrompt } = getSceneVisualPrompts(scene);
+                lines.push(`SCENE ${sceneNumber}`);
+                lines.push(imagePrompt || '-');
+                if (index < scenes.length - 1) {
+                    lines.push('');
+                    lines.push('---');
+                    lines.push('');
+                }
+            });
+            return lines.join('\n');
+        }
+
+        function buildAllVideoPromptsText(storyboardData: any) {
+            const scenes = Array.isArray(storyboardData?.scenes) ? storyboardData.scenes : [];
+            const lines: string[] = [];
+            scenes.forEach((scene: any, index: number) => {
+                const sceneNumber = scene?.scene_number || index + 1;
+                const { videoPrompt } = getSceneVisualPrompts(scene);
+                lines.push(`SCENE ${sceneNumber}`);
+                lines.push(videoPrompt || '-');
+                if (index < scenes.length - 1) {
+                    lines.push('');
+                    lines.push('---');
+                    lines.push('');
+                }
+            });
+            return lines.join('\n');
+        }
+
+        async function copyTextToClipboard(text: string, successMessage: string) {
+            try {
+                if (!text || !text.trim()) {
+                    showToast('Tidak ada teks untuk disalin.', 'warning');
+                    return;
+                }
+                await navigator.clipboard.writeText(text);
+                showToast(successMessage, 'success');
+            } catch (error) {
+                console.error('Clipboard copy failed:', error);
+                showToast('Gagal menyalin ke clipboard. Coba lagi.', 'error');
+            }
+        }
+
+        function copyActiveStoryboardBulk(type: 'full' | 'narration' | 'image' | 'video') {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes) || storyboardData.scenes.length === 0) {
+                showToast('Belum ada storyboard aktif untuk disalin.', 'warning');
+                return;
+            }
+
+            if (type === 'full') {
+                copyTextToClipboard(buildFullStoryboardPackageText(storyboardData), 'Full Storyboard Package berhasil disalin!');
+                return;
+            }
+            if (type === 'narration') {
+                copyTextToClipboard(buildAllNarrationText(storyboardData), 'Semua narasi berhasil disalin!');
+                return;
+            }
+            if (type === 'image') {
+                copyTextToClipboard(buildAllImagePromptsText(storyboardData), 'Semua Text-to-Image prompt berhasil disalin!');
+                return;
+            }
+            if (type === 'video') {
+                copyTextToClipboard(buildAllVideoPromptsText(storyboardData), 'Semua Image-to-Video prompt berhasil disalin!');
+            }
+        }
+
+
         function exportActiveProjectAsTxt() {
             const storyboardData = AppStore.state.activeStoryboardData;
             if (!storyboardData) {
@@ -2543,6 +2669,13 @@ export default function App() {
                     switchTab('voice');
                     showToast("Semua narasi berhasil ditransfer!", "success");
                 }
+                return;
+            }
+
+            const copyBulkBtn = target.closest('[data-action="copy-bulk-storyboard"]');
+            if (copyBulkBtn) {
+                const copyType = copyBulkBtn.getAttribute('data-copy-type') || 'full';
+                copyActiveStoryboardBulk(copyType as 'full' | 'narration' | 'image' | 'video');
                 return;
             }
 

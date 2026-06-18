@@ -20,7 +20,16 @@ Patch aman setelah auto-save:
 - Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, atau logic generate utama.
 
 
-## Patch: Copy Scene Package
-- Menambahkan tombol Copy Scene Package pada setiap scene.
-- Menyalin deskripsi adegan, narasi/TTS, text-to-image prompt, dan image-to-video prompt dalam satu paket.
-- Tidak mengubah GeminiService, api/index.ts, model Gemini, atau logic generator utama.
+## Patch: Bulk Copy Storyboard Package
+
+Added safe bulk copy actions for the active storyboard:
+- Copy Full Storyboard Package
+- Copy All Narration
+- Copy All Text-to-Image Prompts
+- Copy All Image-to-Video Prompts
+
+Changed files:
+- `src/App.tsx`
+- `src/HtmlContent.ts`
+
+This patch does not touch Gemini service, API endpoints, Supabase save/load logic, auth, TTS, or generation logic.
