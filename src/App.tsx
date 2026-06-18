@@ -472,6 +472,29 @@ export default function App() {
             return { title, text: lines.join('\n') };
         }
 
+        function buildScenePackageText(scene: any, index: number) {
+            const { imagePrompt, videoPrompt } = getSceneVisualPrompts(scene);
+            const sceneNumber = scene?.scene_number || index + 1;
+            const duration = scene?.estimated_duration || 8;
+            const lines: string[] = [];
+            lines.push(`SCENE ${sceneNumber} - COMPLETE PACKAGE`);
+            lines.push(`Duration: ${duration}s`);
+            lines.push('');
+            lines.push('[SCENE DESCRIPTION]');
+            lines.push(scene?.scene_description || '-');
+            lines.push('');
+            lines.push('[TTS / NARRATION SCRIPT]');
+            lines.push(scene?.narrator_script || '-');
+            lines.push('');
+            lines.push('[TEXT TO IMAGE PROMPT]');
+            lines.push(imagePrompt || '-');
+            lines.push('');
+            lines.push('[IMAGE TO VIDEO PROMPT]');
+            lines.push(videoPrompt || '-');
+            return lines.join('\n');
+        }
+
+
         function exportActiveProjectAsTxt() {
             const storyboardData = AppStore.state.activeStoryboardData;
             if (!storyboardData) {
@@ -1483,7 +1506,10 @@ export default function App() {
                             </div>
 
                             <!-- 5. Generate TTS Button (Kirim ke Voice Lab) -->
-                            <div class="pt-3 border-t border-slate-800/60 flex justify-end">
+                            <div class="pt-3 border-t border-slate-800/60 flex flex-wrap justify-end gap-2">
+                                <button class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="copy-scene-package" data-index="${index}">
+                                    📦 Copy Scene Package
+                                </button>
                                 <button class="btn-send-scene bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/10" data-action="send-scene-script" data-index="${index}">
                                     🎙️ Kirim ke Voice Lab (Generate TTS) ↗
                                 </button>
@@ -2814,6 +2840,19 @@ export default function App() {
                         switchTab('voice');
                         showToast("Narasi adegan berhasil dikirim ke Voice Lab!", "success");
                     }
+                }
+                return;
+            }
+
+            const copyScenePackageBtn = target.closest('[data-action="copy-scene-package"]');
+            if (copyScenePackageBtn) {
+                const idx = parseInt(copyScenePackageBtn.getAttribute('data-index') || '0', 10);
+                const scene = AppStore.state.activeStoryboardData?.scenes[idx];
+                if (scene) {
+                    const textPackage = buildScenePackageText(scene, idx);
+                    navigator.clipboard.writeText(textPackage).then(() => {
+                        showToast("Paket scene lengkap berhasil disalin!", "success");
+                    });
                 }
                 return;
             }

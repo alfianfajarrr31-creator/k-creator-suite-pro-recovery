@@ -18,3 +18,9 @@ Patch aman setelah auto-save:
 - Tambah tombol Export TXT untuk download paket storyboard lengkap.
 - Tambah tombol JSON untuk backup data structured.
 - Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, atau logic generate utama.
+
+
+## Patch: Copy Scene Package
+- Menambahkan tombol Copy Scene Package pada setiap scene.
+- Menyalin deskripsi adegan, narasi/TTS, text-to-image prompt, dan image-to-video prompt dalam satu paket.
+- Tidak mengubah GeminiService, api/index.ts, model Gemini, atau logic generator utama.
