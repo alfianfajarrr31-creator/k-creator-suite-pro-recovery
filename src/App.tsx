@@ -653,6 +653,141 @@ export default function App() {
         }
 
 
+        function markActiveStoryboardDirty(label = 'Edited') {
+            const user = AppStore.state.authUser;
+            setCloudSaveStatus(user?.id ? 'unsaved' : 'guest', user?.id ? label : 'Guest Draft');
+        }
+
+        function getSceneEditValue(id: string) {
+            const el = document.getElementById(id) as HTMLTextAreaElement | HTMLInputElement | null;
+            return el ? el.value.trim() : '';
+        }
+
+        function updateSceneAtIndex(index: number, updates: any, successMessage = 'Scene berhasil diperbarui.') {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes) || !storyboardData.scenes[index]) {
+                showToast('Scene tidak ditemukan.', 'error');
+                return false;
+            }
+
+            const cloned = JSON.parse(JSON.stringify(storyboardData));
+            cloned.scenes[index] = {
+                ...cloned.scenes[index],
+                ...updates,
+                scene_number: cloned.scenes[index].scene_number || index + 1,
+                estimated_duration: updates.estimated_duration || cloned.scenes[index].estimated_duration || 8
+            };
+
+            AppStore.setState({ activeStoryboardData: cloned });
+            Views.renderStoryboard(cloned, AppStore.state.activeRatio);
+            markActiveStoryboardDirty('Edited');
+            showToast(successMessage, 'success');
+            return true;
+        }
+
+        function saveSceneManualEdits(index: number) {
+            const scene = AppStore.state.activeStoryboardData?.scenes?.[index];
+            if (!scene) {
+                showToast('Scene tidak ditemukan.', 'error');
+                return;
+            }
+
+            const sceneNumber = scene.scene_number || index + 1;
+            updateSceneAtIndex(index, {
+                scene_description: getSceneEditValue(`editSceneDescription_${index}`) || scene.scene_description || '',
+                narrator_script: getSceneEditValue(`editNarration_${index}`) || scene.narrator_script || '',
+                imagePrompt: getSceneEditValue(`editImagePrompt_${index}`) || scene.imagePrompt || scene.text_to_image || '',
+                videoPrompt: getSceneEditValue(`editVideoPrompt_${index}`) || scene.videoPrompt || scene.camera_movement || '',
+                camera_movement: getSceneEditValue(`editVideoPrompt_${index}`) || scene.camera_movement || '',
+                estimated_duration: parseInt(getSceneEditValue(`editDuration_${index}`), 10) || scene.estimated_duration || 8
+            }, `Scene ${sceneNumber} berhasil diedit. Klik Save / Update Cloud untuk simpan permanen.`);
+        }
+
+        function buildSceneRegenerationTheme(scene: any, index: number, feedback: string) {
+            const storyboardData = AppStore.state.activeStoryboardData || {};
+            const theme = (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value?.trim() || storyboardData.youtube_title || 'Untitled project';
+            const { imagePrompt, videoPrompt } = getSceneVisualPrompts(scene);
+            const sceneNumber = scene?.scene_number || index + 1;
+
+            return `Regenerate ONLY ONE SCENE for an existing short-form video project. Do not create multiple scenes. The output must contain exactly 1 improved scene in the scenes array.\n\nPROJECT CONTEXT:\nTheme: ${theme}\nYouTube title: ${storyboardData.youtube_title || '-'}\nExisting project description: ${storyboardData.youtube_description || '-'}\n\nCURRENT SCENE ${sceneNumber}:\nScene description: ${scene?.scene_description || '-'}\nNarration: ${scene?.narrator_script || '-'}\nText-to-image prompt: ${imagePrompt || '-'}\nImage-to-video prompt: ${videoPrompt || '-'}\nDuration: ${scene?.estimated_duration || 8}s\n\nUSER FEEDBACK / ISSUE TO FIX:\n${feedback || 'Improve this scene so it feels more cinematic, clearer, and more reliable for AI video generation.'}\n\nREGENERATION RULES:\n- Keep it as Scene ${sceneNumber}.\n- Preserve the core story continuity.\n- Improve the weak part based on user feedback.\n- If the video prompt failed in Veo/Kling, rewrite it with clearer physical motion, simpler camera path, and stronger layer separation.\n- Avoid impossible motion, confusing camera instructions, and static slideshow wording.\n- The imagePrompt must remain a clean English text-to-image prompt.\n- The videoPrompt must use the bracketed layer format: [CHARACTER MOTION], [EMOTIONAL PERFORMANCE], [SECONDARY CHARACTER MOTION], [BACKGROUND MOTION], [ENVIRONMENT MOTION], [ATMOSPHERE], [CAMERA], [CINEMATIC DETAILS], [VISUAL HOOK].\n- Narration must remain in Indonesian.\n- Return one scene only.`;
+        }
+
+        async function regenerateSceneWithFeedback(index: number) {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            const scene = storyboardData?.scenes?.[index];
+            if (!scene) {
+                showToast('Scene tidak ditemukan untuk regenerate.', 'error');
+                return;
+            }
+
+            const feedback = getSceneEditValue(`regenFeedback_${index}`);
+            if (!feedback) {
+                showToast('Tulis komentar dulu, misalnya: prompt video gagal di Veo, gerakannya kurang jelas.', 'warning');
+                return;
+            }
+
+            const btn = document.querySelector(`[data-action="regenerate-scene"][data-index="${index}"]`) as HTMLButtonElement | null;
+            const originalText = btn?.innerHTML || '♻️ Regenerate Scene';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '♻️ Regenerating...';
+            }
+
+            try {
+                const narratorStyle = (document.getElementById('narratorStyle') as HTMLSelectElement | null)?.value || 'narator_dokumenter';
+                let animStyle = (document.getElementById('animationStyle') as HTMLSelectElement | null)?.value || 'Claymation Animation';
+                if (animStyle === 'Gaya Kustom') {
+                    animStyle = (document.getElementById('customStyleInput') as HTMLInputElement | null)?.value?.trim() || 'Cinematic 2D';
+                }
+                const baseConstraints = (document.getElementById('constraintsInput') as HTMLTextAreaElement | null)?.value?.trim() || '';
+                const sceneDuration = String(scene.estimated_duration || (document.getElementById('sceneDuration') as HTMLInputElement | null)?.value || 8);
+                const regenTheme = buildSceneRegenerationTheme(scene, index, feedback);
+                const regenConstraints = [
+                    baseConstraints,
+                    'Regenerate exactly one scene only. Keep JSON schema valid. This is a scene-level repair, not a full storyboard rewrite.',
+                    `User repair note: ${feedback}`
+                ].filter(Boolean).join('\n');
+
+                showToast(`Regenerating Scene ${scene.scene_number || index + 1}...`, 'success');
+                const result = await GeminiService.generateStoryboard(
+                    regenTheme,
+                    narratorStyle,
+                    animStyle,
+                    regenConstraints,
+                    false,
+                    AppStore.state.activeRatio,
+                    'manual',
+                    '1',
+                    sceneDuration,
+                    AppStore.state.globalApiKey
+                );
+
+                if (!result.success) {
+                    showToast(result.error || 'Regenerate scene gagal.', 'error');
+                    return;
+                }
+
+                const replacement = result.data?.scenes?.[0];
+                if (!replacement) {
+                    showToast('AI tidak mengembalikan scene pengganti yang valid.', 'error');
+                    return;
+                }
+
+                replacement.scene_number = scene.scene_number || index + 1;
+                replacement.estimated_duration = replacement.estimated_duration || scene.estimated_duration || 8;
+                updateSceneAtIndex(index, replacement, `Scene ${replacement.scene_number} berhasil di-regenerate. Review dulu sebelum Save / Update Cloud.`);
+            } catch (err: any) {
+                console.error('Regenerate scene failed:', err);
+                showToast(err?.message || 'Regenerate scene gagal.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        }
+
+
         async function saveActiveProjectToCloud(silent = false) {
             if (!isSupabaseConfigured()) {
                 if (!silent) showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
@@ -1631,7 +1766,63 @@ export default function App() {
                                 </p>
                             </div>
 
-                            <!-- 5. Generate TTS Button (Kirim ke Voice Lab) -->
+                            <!-- 5. Scene Edit & Regenerate Lab -->
+                            <div class="space-y-3 border border-slate-800/70 bg-[#0b0d13] rounded-2xl p-4">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                    <div>
+                                        <h4 class="text-[10px] font-bold text-amber-300 uppercase tracking-widest font-mono">✍️ Scene Edit & Regenerate Lab</h4>
+                                        <p class="text-[10px] text-slate-500 mt-1">Edit manual atau beri komentar lalu regenerate scene ini saja.</p>
+                                    </div>
+                                    <button class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-[10px] font-bold transition cursor-pointer" data-action="toggle-scene-editor" data-index="${index}">
+                                        Buka / Tutup Editor
+                                    </button>
+                                </div>
+
+                                <div id="sceneEditor_${index}" class="hidden space-y-3 pt-2">
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                        <div class="md:col-span-3 space-y-1.5">
+                                            <label class="text-[9px] font-bold text-indigo-300 uppercase tracking-widest">Scene Description</label>
+                                            <textarea id="editSceneDescription_${index}" class="w-full min-h-[90px] rounded-xl bg-[#07080d] border border-slate-800 p-3 text-xs text-slate-200 outline-none focus:border-indigo-500 resize-y">${escapeHTML(sceneDescToShow || '')}</textarea>
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[9px] font-bold text-indigo-300 uppercase tracking-widest">Duration</label>
+                                            <input id="editDuration_${index}" type="number" min="3" max="20" value="${scene.estimated_duration || 8}" class="w-full rounded-xl bg-[#07080d] border border-slate-800 p-3 text-xs text-slate-200 outline-none focus:border-indigo-500">
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">TTS / Narration Script</label>
+                                        <textarea id="editNarration_${index}" class="w-full min-h-[90px] rounded-xl bg-[#07080d] border border-slate-800 p-3 text-xs text-slate-200 outline-none focus:border-emerald-500 resize-y">${escapeHTML(scene.narrator_script || '')}</textarea>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-purple-300 uppercase tracking-widest">Text-to-Image Prompt</label>
+                                        <textarea id="editImagePrompt_${index}" class="w-full min-h-[120px] rounded-xl bg-[#07080d] border border-slate-800 p-3 text-xs text-slate-200 font-mono outline-none focus:border-purple-500 resize-y">${escapeHTML(imagePromptToShow || '')}</textarea>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-teal-300 uppercase tracking-widest">Image-to-Video Prompt</label>
+                                        <textarea id="editVideoPrompt_${index}" class="w-full min-h-[150px] rounded-xl bg-[#07080d] border border-slate-800 p-3 text-xs text-slate-200 font-mono outline-none focus:border-teal-500 resize-y">${escapeHTML(videoPromptToShow || '')}</textarea>
+                                    </div>
+
+                                    <div class="space-y-1.5 border-t border-slate-800/70 pt-3">
+                                        <label class="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Komentar Regenerate</label>
+                                        <textarea id="regenFeedback_${index}" class="w-full min-h-[80px] rounded-xl bg-[#07080d] border border-amber-500/20 p-3 text-xs text-slate-200 outline-none focus:border-amber-500 resize-y" placeholder="Contoh: ini di Veo failed generate, gerakan kamera terlalu rumit, tolong bikin prompt video lebih simpel dan jelas."></textarea>
+                                        <p class="text-[9px] text-slate-500">Regenerate hanya mengganti scene ini. Scene lain tetap aman.</p>
+                                    </div>
+
+                                    <div class="flex flex-wrap justify-end gap-2 pt-1">
+                                        <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold py-2 px-4 rounded-xl text-[10px] transition cursor-pointer" data-action="save-scene-edits" data-index="${index}">
+                                            💾 Save Manual Edit
+                                        </button>
+                                        <button class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/25 font-bold py-2 px-4 rounded-xl text-[10px] transition cursor-pointer" data-action="regenerate-scene" data-index="${index}">
+                                            ♻️ Regenerate Scene
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. Generate TTS Button (Kirim ke Voice Lab) -->
                             <div class="pt-3 border-t border-slate-800/60 flex flex-wrap justify-end gap-2">
                                 <button class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="copy-scene-package" data-index="${index}">
                                     📦 Copy Scene Package
@@ -2974,6 +3165,28 @@ export default function App() {
                         showToast("Narasi adegan berhasil dikirim ke Voice Lab!", "success");
                     }
                 }
+                return;
+            }
+
+            const toggleSceneEditorBtn = target.closest('[data-action="toggle-scene-editor"]');
+            if (toggleSceneEditorBtn) {
+                const idx = toggleSceneEditorBtn.getAttribute('data-index') || '0';
+                const editor = document.getElementById(`sceneEditor_${idx}`);
+                if (editor) editor.classList.toggle('hidden');
+                return;
+            }
+
+            const saveSceneEditsBtn = target.closest('[data-action="save-scene-edits"]');
+            if (saveSceneEditsBtn) {
+                const idx = parseInt(saveSceneEditsBtn.getAttribute('data-index') || '0', 10);
+                saveSceneManualEdits(idx);
+                return;
+            }
+
+            const regenSceneBtn = target.closest('[data-action="regenerate-scene"]');
+            if (regenSceneBtn) {
+                const idx = parseInt(regenSceneBtn.getAttribute('data-index') || '0', 10);
+                await regenerateSceneWithFeedback(idx);
                 return;
             }
 

@@ -19,17 +19,11 @@ Patch aman setelah auto-save:
 - Tambah tombol JSON untuk backup data structured.
 - Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, atau logic generate utama.
 
+## Patch: Scene Edit & Regenerate Lab
 
-## Patch: Bulk Copy Storyboard Package
-
-Added safe bulk copy actions for the active storyboard:
-- Copy Full Storyboard Package
-- Copy All Narration
-- Copy All Text-to-Image Prompts
-- Copy All Image-to-Video Prompts
-
-Changed files:
-- `src/App.tsx`
-- `src/HtmlContent.ts`
-
-This patch does not touch Gemini service, API endpoints, Supabase save/load logic, auth, TTS, or generation logic.
+Tambahan fitur aman untuk workflow review scene:
+- Edit manual Scene Description, TTS/Narration, Text-to-Image Prompt, Image-to-Video Prompt, dan Duration per scene.
+- Box komentar per scene untuk instruksi perbaikan.
+- Regenerate hanya scene terpilih berdasarkan feedback user, tanpa rewrite seluruh storyboard.
+- Scene yang diedit/regenerate ditandai sebagai Edited/Unsaved sampai user klik Save / Update Cloud.
+- Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, Supabase Auth, Cloud History, Export, atau fitur generate utama.
