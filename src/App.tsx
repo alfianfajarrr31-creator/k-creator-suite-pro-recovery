@@ -501,34 +501,56 @@ export default function App() {
 
             const modal = document.createElement('div');
             modal.id = 'cloudHistoryModal';
-            modal.className = 'fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4';
+            modal.className = 'fixed inset-0 z-[70] bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5';
 
-            const rows = projects.length ? projects.map((item: any) => {
+            const safeProjects = Array.isArray(projects) ? projects : [];
+            const totalScenes = safeProjects.reduce((sum: number, item: any) => {
+                const scenes = item.content?.storyboard?.scenes || item.content?.scenes || [];
+                return sum + (Array.isArray(scenes) ? scenes.length : 0);
+            }, 0);
+
+            const rows = safeProjects.length ? safeProjects.map((item: any, index: number) => {
                 const title = escapeHTML(item.title || 'Untitled Project');
                 const date = escapeHTML(formatCloudDate(item.updated_at || item.created_at));
                 const id = escapeHTML(item.id || '');
                 const sceneCount = item.content?.storyboard?.scenes?.length || item.content?.scenes?.length || 0;
-                const theme = escapeHTML(item.content?.theme || item.content?.storyboard?.youtube_title || 'Cloud project');
-                const searchText = escapeHTML(`${item.title || ''} ${item.content?.theme || ''} ${item.content?.storyboard?.youtube_title || ''}`.toLowerCase());
+                const themeRaw = item.content?.theme || item.content?.storyboard?.youtube_title || 'Cloud project';
+                const theme = escapeHTML(themeRaw);
+                const searchText = escapeHTML(`${item.title || ''} ${themeRaw || ''} ${item.content?.storyboard?.youtube_title || ''}`.toLowerCase());
+                const activeBadge = AppStore.state.activeCloudProjectId === item.id
+                    ? '<span class="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Active</span>'
+                    : '';
+                const recentBadge = index === 0
+                    ? '<span class="px-2 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Latest</span>'
+                    : '';
                 return `
-                    <div data-cloud-project-card="true" data-search="${searchText}" class="group border border-slate-800 bg-[#0b0d14] hover:bg-slate-900/80 hover:border-sky-500/30 rounded-2xl p-4 transition">
-                        <div class="flex items-start justify-between gap-3">
+                    <div data-cloud-project-card="true" data-search="${searchText}" class="group border border-slate-800/80 bg-gradient-to-br from-slate-950 to-[#080a12] hover:from-slate-900 hover:to-[#0b1020] hover:border-sky-500/35 rounded-2xl p-4 transition shadow-lg shadow-black/10">
+                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                             <div class="min-w-0 flex-1">
-                                <h4 class="text-sm font-bold text-slate-100 truncate">${title}</h4>
-                                <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${theme}</p>
-                                <div class="flex flex-wrap items-center gap-2 mt-3 text-[10px] text-slate-500 font-mono">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 text-lg">🎬</div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h4 class="text-sm sm:text-base font-bold text-slate-100 truncate max-w-full">${title}</h4>
+                                            ${activeBadge}
+                                            ${recentBadge}
+                                        </div>
+                                        <p class="text-[11px] sm:text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${theme}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mt-4 text-[10px] text-slate-500 font-mono">
                                     <span class="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/10">${sceneCount} scene</span>
-                                    <span>${date}</span>
+                                    <span class="px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-800">${date}</span>
                                 </div>
                             </div>
-                            <div class="shrink-0 flex items-center gap-2">
-                                <button data-action="load-cloud-project" data-id="${id}" class="px-3 py-1.5 rounded-xl bg-sky-600/15 hover:bg-sky-600/30 border border-sky-500/20 text-sky-300 text-xs font-bold transition cursor-pointer">
+                            <div class="shrink-0 grid grid-cols-3 lg:flex lg:flex-col gap-2 min-w-[210px]">
+                                <button data-action="load-cloud-project" data-id="${id}" class="px-3 py-2 rounded-xl bg-sky-600/15 hover:bg-sky-600/30 border border-sky-500/20 text-sky-300 text-xs font-bold transition cursor-pointer">
                                     Load
                                 </button>
-                                <button data-action="rename-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-1.5 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer">
+                                <button data-action="rename-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-2 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 text-xs font-bold transition cursor-pointer">
                                     Rename
                                 </button>
-                                <button data-action="delete-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-1.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-400 text-xs font-bold transition cursor-pointer">
+                                <button data-action="delete-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-2 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-400 text-xs font-bold transition cursor-pointer">
                                     Delete
                                 </button>
                             </div>
@@ -536,36 +558,58 @@ export default function App() {
                     </div>
                 `;
             }).join('') : `
-                <div class="border border-dashed border-slate-800 rounded-2xl p-8 text-center">
-                    <div class="text-3xl mb-3">☁️</div>
-                    <h4 class="text-sm font-bold text-slate-200">Belum ada project cloud</h4>
-                    <p class="text-xs text-slate-500 mt-1">Generate storyboard, lalu klik Save to Cloud.</p>
+                <div class="border border-dashed border-slate-800 rounded-3xl p-10 text-center bg-slate-950/40">
+                    <div class="text-4xl mb-4">☁️</div>
+                    <h4 class="text-base font-bold text-slate-200">Belum ada project cloud</h4>
+                    <p class="text-xs text-slate-500 mt-2 max-w-sm mx-auto">Generate storyboard, lalu klik Save / Update Cloud. Project yang tersimpan akan muncul di sini.</p>
                 </div>
             `;
 
             modal.innerHTML = `
-                <div class="w-full max-w-3xl max-h-[82vh] overflow-hidden rounded-3xl bg-[#08090e] border border-slate-800 shadow-2xl flex flex-col">
-                    <div class="p-5 border-b border-slate-800 flex items-center justify-between gap-3">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-100">☁️ Cloud History</h3>
-                            <p class="text-xs text-slate-400 mt-1">Project tersimpan di Supabase milik akun Google aktif.</p>
+                <div class="w-full max-w-5xl max-h-[86vh] overflow-hidden rounded-[2rem] bg-[#070910] border border-slate-800 shadow-2xl flex flex-col">
+                    <div class="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-[#0b1020] to-slate-950">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-9 h-9 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">☁️</span>
+                                    <div>
+                                        <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">Cloud History</h3>
+                                        <p class="text-xs text-slate-400 mt-0.5">Project tersimpan di Supabase milik akun Google aktif.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button data-action="refresh-cloud-history" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition cursor-pointer">↻ Refresh</button>
+                                <button data-action="close-cloud-history" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 text-xs font-bold transition cursor-pointer">Close</button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button data-action="refresh-cloud-history" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition cursor-pointer">Refresh</button>
-                            <button data-action="close-cloud-history" class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 text-xs font-semibold transition cursor-pointer">Close</button>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+                            <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3">
+                                <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Projects</p>
+                                <p class="text-lg font-black text-slate-100">${safeProjects.length}</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3">
+                                <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Scenes</p>
+                                <p class="text-lg font-black text-slate-100">${totalScenes}</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 col-span-2">
+                                <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Mode</p>
+                                <p class="text-sm font-bold text-emerald-300 mt-1">Login Cloud Sync Active</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="px-5 pt-5">
+                    <div class="px-5 sm:px-6 pt-5">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div class="relative flex-1">
-                                <input id="cloudHistorySearch" type="text" placeholder="Cari project cloud..." class="w-full bg-slate-950/80 border border-slate-800 focus:border-sky-500/50 outline-none rounded-2xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 transition" />
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔎</span>
+                                <input id="cloudHistorySearch" type="text" placeholder="Cari project, tema, atau judul..." class="w-full bg-slate-950/80 border border-slate-800 focus:border-sky-500/50 outline-none rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 transition" />
                             </div>
-                            <div id="cloudHistoryCounter" class="text-[11px] text-slate-500 font-mono px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-800">
-                                ${projects.length} project
+                            <div id="cloudHistoryCounter" class="text-[11px] text-slate-500 font-mono px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-800 text-center">
+                                ${safeProjects.length} project
                             </div>
                         </div>
                     </div>
-                    <div id="cloudHistoryList" class="p-5 overflow-y-auto custom-scrollbar space-y-3">
+                    <div id="cloudHistoryList" class="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-3">
                         ${rows}
                     </div>
                 </div>
@@ -586,7 +630,7 @@ export default function App() {
                         card.classList.toggle('hidden', !match);
                         if (match) visible += 1;
                     });
-                    if (counter) counter.textContent = `${visible} / ${cards.length} project`;
+                    if (counter) counter.textContent = query ? `${visible} / ${cards.length} project` : `${cards.length} project`;
                 });
             }
         }
