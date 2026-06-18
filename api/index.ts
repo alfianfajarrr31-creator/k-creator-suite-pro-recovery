@@ -16,7 +16,7 @@ app.get("/api/health", (req, res) => {
 // 1. STORYBOARD PROXY ENDPOINT
 app.post("/api/gemini/storyboard", async (req, res) => {
     try {
-        const { theme, narratorStyle, animStyle, constraints, includeCta, activeRatio, activeSceneMode, sceneCountInput, sceneDuration } = req.body;
+        const { theme, narratorStyle, animStyle, constraints, includeCta, activeRatio, activeSceneMode, sceneCountInput, sceneDuration, outputLanguage = "mixed" } = req.body;
         
         const finalKey = process.env.GEMINI_API_KEY;
         if (!finalKey) {
@@ -32,6 +32,14 @@ app.post("/api/gemini/storyboard", async (req, res) => {
         }
         let durationInfo = `Each scene should be approx ${sceneDuration || 8} seconds long in pacing.`;
 
+        const languageMode = String(outputLanguage || "mixed");
+        let languageInstruction = "Mixed Recommended: scene_description and narrator_script must be in Bahasa Indonesia; thumbnail_prompt, imagePrompt, and videoPrompt must be in clear English for best Veo/Kling/Image AI compatibility.";
+        if (languageMode === "id") {
+            languageInstruction = "Bahasa Indonesia: write all user-facing outputs in Bahasa Indonesia, including captions, scene_description, narrator_script, thumbnail_prompt, imagePrompt, and videoPrompt. Keep the videoPrompt bracket labels exactly in English, but write the descriptions after each bracket in Bahasa Indonesia.";
+        } else if (languageMode === "en") {
+            languageInstruction = "English: write all user-facing outputs in English, including captions, scene_description, narrator_script, thumbnail_prompt, imagePrompt, and videoPrompt.";
+        }
+
         const systemPrompt = `You are K-Director, an elite AI Storyboard Director & Visual Prompt Engineer.
 Create a highly engaging, viral-optimized video storyboard and complete social media distribution package based on the user's theme.
 Your output MUST be entirely in valid JSON format matching the schema provided. DO NOT output markdown codeblocks (no \`\`\`json). Just the raw JSON object.
@@ -41,25 +49,26 @@ Narrator Voice & Tone: ${narratorStyle}
 Aspect Ratio Target: ${activeRatio}
 Scene Constraints: ${sceneCountInfo}
 Pacing/Duration: ${durationInfo}
+Output Language Directive: ${languageInstruction}
 Special User Instructions/Constraints: ${constraints ? constraints : "None"}
 Include Viral Call to Action Scene at the end: ${includeCta}
 
 Your JSON MUST contain the following fields:
-1. "youtube_title": A catchy, clickable, viral-optimized title for YouTube Shorts.
-2. "youtube_description": Description including video summary, structured outline, call-to-actions, and video chapters.
-3. "tiktok_caption": A high-converting TikTok caption.
-4. "instagram_caption": An engaging Instagram Reel caption.
+1. "youtube_title": A catchy, clickable, viral-optimized title for YouTube Shorts, following Output Language Directive.
+2. "youtube_description": Description including video summary, structured outline, call-to-actions, and video chapters, following Output Language Directive.
+3. "tiktok_caption": A high-converting TikTok caption, following Output Language Directive.
+4. "instagram_caption": An engaging Instagram Reel caption, following Output Language Directive.
 5. "viral_hashtags": Space-separated trending hashtags.
-6. "thumbnail_prompt": A professional, detailed image prompt to generate YouTube thumbnail (Art Style: "${animStyle}").
+6. "thumbnail_prompt": A professional, detailed image prompt to generate YouTube thumbnail (Art Style: "${animStyle}"), following Output Language Directive.
 7. "scenes": An array of scene objects.
 
 For EACH scene, generate:
 - "scene_number": Integer starting from 1
-- "scene_description": Detailed landscape/character scene descriptive overview (in Indonesian).
-- "narrator_script": Spoken voiceover text (in Indonesian).
+- "scene_description": Detailed landscape/character scene descriptive overview, following Output Language Directive.
+- "narrator_script": Spoken voiceover text, following Output Language Directive.
 - "camera_movement": Precise professional camera motion direction.
-- "imagePrompt": Technical Text-to-Image prompt in English including subject, pose, clothes, environment, and lighting (matching "${animStyle} style").
-- "videoPrompt": High-fidelity Image-to-Video motion prompt in English. Must strictly specify each bracketed layer:
+- "imagePrompt": Technical Text-to-Image prompt including subject, pose, clothes, environment, and lighting (matching "${animStyle} style"), following Output Language Directive.
+- "videoPrompt": High-fidelity Image-to-Video motion prompt following Output Language Directive. Must strictly specify each bracketed layer:
   [CHARACTER MOTION] (Actions, hair/cloth sways, facial movements of subject)
   [EMOTIONAL PERFORMANCE] (Explicit emotional expression, surprise, grit, breathing details)
   [SECONDARY CHARACTER MOTION] (Ambient background person/animal actions)

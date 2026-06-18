@@ -708,8 +708,10 @@ export default function App() {
             const theme = (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value?.trim() || storyboardData.youtube_title || 'Untitled project';
             const { imagePrompt, videoPrompt } = getSceneVisualPrompts(scene);
             const sceneNumber = scene?.scene_number || index + 1;
+            const languageMode = getStoryboardOutputLanguage();
+            const languageInstruction = getStoryboardOutputLanguageInstruction(languageMode);
 
-            return `Regenerate ONLY ONE SCENE for an existing short-form video project. Do not create multiple scenes. The output must contain exactly 1 improved scene in the scenes array.\n\nPROJECT CONTEXT:\nTheme: ${theme}\nYouTube title: ${storyboardData.youtube_title || '-'}\nExisting project description: ${storyboardData.youtube_description || '-'}\n\nCURRENT SCENE ${sceneNumber}:\nScene description: ${scene?.scene_description || '-'}\nNarration: ${scene?.narrator_script || '-'}\nText-to-image prompt: ${imagePrompt || '-'}\nImage-to-video prompt: ${videoPrompt || '-'}\nDuration: ${scene?.estimated_duration || 8}s\n\nUSER FEEDBACK / ISSUE TO FIX:\n${feedback || 'Improve this scene so it feels more cinematic, clearer, and more reliable for AI video generation.'}\n\nREGENERATION RULES:\n- Keep it as Scene ${sceneNumber}.\n- Preserve the core story continuity.\n- Improve the weak part based on user feedback.\n- If the video prompt failed in Veo/Kling, rewrite it with clearer physical motion, simpler camera path, and stronger layer separation.\n- Avoid impossible motion, confusing camera instructions, and static slideshow wording.\n- The imagePrompt must remain a clean English text-to-image prompt.\n- The videoPrompt must use the bracketed layer format: [CHARACTER MOTION], [EMOTIONAL PERFORMANCE], [SECONDARY CHARACTER MOTION], [BACKGROUND MOTION], [ENVIRONMENT MOTION], [ATMOSPHERE], [CAMERA], [CINEMATIC DETAILS], [VISUAL HOOK].\n- Narration must remain in Indonesian.\n- Return one scene only.`;
+            return `Regenerate ONLY ONE SCENE for an existing short-form video project. Do not create multiple scenes. The output must contain exactly 1 improved scene in the scenes array.\n\nPROJECT CONTEXT:\nTheme: ${theme}\nYouTube title: ${storyboardData.youtube_title || '-'}\nExisting project description: ${storyboardData.youtube_description || '-'}\n\nCURRENT SCENE ${sceneNumber}:\nScene description: ${scene?.scene_description || '-'}\nNarration: ${scene?.narrator_script || '-'}\nText-to-image prompt: ${imagePrompt || '-'}\nImage-to-video prompt: ${videoPrompt || '-'}\nDuration: ${scene?.estimated_duration || 8}s\n\nUSER FEEDBACK / ISSUE TO FIX:\n${feedback || 'Improve this scene so it feels more cinematic, clearer, and more reliable for AI video generation.'}\n\nREGENERATION RULES:\n- Keep it as Scene ${sceneNumber}.\n- Preserve the core story continuity.\n- Improve the weak part based on user feedback.\n- If the video prompt failed in Veo/Kling, rewrite it with clearer physical motion, simpler camera path, and stronger layer separation.\n- Avoid impossible motion, confusing camera instructions, and static slideshow wording.\n- Follow this language instruction exactly: ${languageInstruction}\n- The videoPrompt must use the bracketed layer format: [CHARACTER MOTION], [EMOTIONAL PERFORMANCE], [SECONDARY CHARACTER MOTION], [BACKGROUND MOTION], [ENVIRONMENT MOTION], [ATMOSPHERE], [CAMERA], [CINEMATIC DETAILS], [VISUAL HOOK].\n- Return one scene only.`;
         }
 
         async function regenerateSceneWithFeedback(index: number) {
@@ -759,7 +761,8 @@ export default function App() {
                     'manual',
                     '1',
                     sceneDuration,
-                    AppStore.state.globalApiKey
+                    AppStore.state.globalApiKey,
+                    getStoryboardOutputLanguage()
                 );
 
                 if (!result.success) {
@@ -779,6 +782,176 @@ export default function App() {
             } catch (err: any) {
                 console.error('Regenerate scene failed:', err);
                 showToast(err?.message || 'Regenerate scene gagal.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        }
+
+
+        function getStoryboardOutputLanguage() {
+            return (document.getElementById('outputLanguage') as HTMLSelectElement | null)?.value || 'mixed';
+        }
+
+        function getStoryboardOutputLanguageLabel(language = getStoryboardOutputLanguage()) {
+            const map: Record<string, string> = {
+                mixed: 'Mixed Recommended',
+                id: 'Bahasa Indonesia',
+                en: 'English'
+            };
+            return map[language] || map.mixed;
+        }
+
+        function getStoryboardOutputLanguageInstruction(language = getStoryboardOutputLanguage()) {
+            if (language === 'id') {
+                return `OUTPUT LANGUAGE MODE: Bahasa Indonesia. Write all user-facing outputs in Bahasa Indonesia, including scene_description, narrator_script, youtube_title, captions, thumbnail_prompt, imagePrompt, and videoPrompt. Keep technical bracket labels for videoPrompt exactly as written in English, but the descriptive content after each bracket should be in Bahasa Indonesia.`;
+            }
+            if (language === 'en') {
+                return `OUTPUT LANGUAGE MODE: English. Write all user-facing outputs in English, including scene_description, narrator_script, captions, thumbnail_prompt, imagePrompt, and videoPrompt.`;
+            }
+            return `OUTPUT LANGUAGE MODE: Mixed Recommended. Write scene_description and narrator_script in Bahasa Indonesia. Write technical visual prompts, thumbnail_prompt, imagePrompt, and videoPrompt in clear English for better compatibility with Veo, Kling, PixVerse, and image generators.`;
+        }
+
+        function getTargetedRegenLabel(target: string) {
+            const map: Record<string, string> = {
+                description: 'Scene Description',
+                narration: 'TTS / Narration',
+                image: 'Text-to-Image Prompt',
+                video: 'Image-to-Video Prompt'
+            };
+            return map[target] || 'Selected Field';
+        }
+
+        function buildTargetedRegenerationTheme(scene: any, index: number, feedback: string, target: string) {
+            const storyboardData = AppStore.state.activeStoryboardData || {};
+            const theme = (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value?.trim() || storyboardData.youtube_title || 'Untitled project';
+            const { imagePrompt, videoPrompt } = getSceneVisualPrompts(scene);
+            const sceneNumber = scene?.scene_number || index + 1;
+            const targetLabel = getTargetedRegenLabel(target);
+            const languageMode = getStoryboardOutputLanguage();
+            const languageInstruction = getStoryboardOutputLanguageInstruction(languageMode);
+
+            const targetRules: Record<string, string> = {
+                description: '- Rewrite ONLY the scene_description so it is clearer, more cinematic, and visually precise. Keep narration, image prompt, and video prompt consistent with the new description.',
+                narration: '- Rewrite ONLY the narrator_script. Make it punchier for Shorts/Reels, emotional, and easy for TTS. Follow the selected output language mode.',
+                image: '- Rewrite ONLY the imagePrompt. Make it clean, detailed, and compatible with the existing scene. Follow the selected output language mode.',
+                video: '- Rewrite ONLY the videoPrompt. If Veo/Kling/PixVerse failed, make the motion clearer, simpler, physically possible, and less contradictory. Keep the bracketed layer format exactly.'
+            };
+
+            return `Regenerate a single field for ONE SCENE in an existing short-form video project. Return exactly 1 scene in the scenes array, but improve primarily this field: ${targetLabel}.
+
+PROJECT CONTEXT:
+Theme: ${theme}
+YouTube title: ${storyboardData.youtube_title || '-'}
+Existing project description: ${storyboardData.youtube_description || '-'}
+
+CURRENT SCENE ${sceneNumber}:
+Scene description: ${scene?.scene_description || '-'}
+Narration: ${scene?.narrator_script || '-'}
+Text-to-image prompt: ${imagePrompt || '-'}
+Image-to-video prompt: ${videoPrompt || '-'}
+Duration: ${scene?.estimated_duration || 8}s
+
+USER FEEDBACK / ISSUE TO FIX:
+${feedback || 'Improve the selected field while preserving the story continuity.'}
+
+TARGET FIELD RULES:
+${targetRules[target] || targetRules.video}
+
+GENERAL RULES:
+- Keep it as Scene ${sceneNumber}.
+- Preserve story continuity with the previous and next scenes.
+- Do not rewrite the whole storyboard.
+- Follow this language instruction exactly: ${languageInstruction}
+- The videoPrompt must use this bracketed layer format when present: [CHARACTER MOTION], [EMOTIONAL PERFORMANCE], [SECONDARY CHARACTER MOTION], [BACKGROUND MOTION], [ENVIRONMENT MOTION], [ATMOSPHERE], [CAMERA], [CINEMATIC DETAILS], [VISUAL HOOK].
+- Return one scene only.`;
+        }
+
+        async function regenerateSceneFieldWithFeedback(index: number, target: string) {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            const scene = storyboardData?.scenes?.[index];
+            if (!scene) {
+                showToast('Scene tidak ditemukan untuk regenerate field.', 'error');
+                return;
+            }
+
+            const feedback = getSceneEditValue(`regenFeedback_${index}`);
+            if (!feedback) {
+                showToast('Tulis komentar dulu agar AI tahu bagian mana yang harus diperbaiki.', 'warning');
+                return;
+            }
+
+            const btn = document.querySelector(`[data-action="regenerate-scene-field"][data-index="${index}"][data-target="${target}"]`) as HTMLButtonElement | null;
+            const originalText = btn?.innerHTML || 'Regenerate Field';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '♻️ Fixing...';
+            }
+
+            try {
+                const narratorStyle = (document.getElementById('narratorStyle') as HTMLSelectElement | null)?.value || 'narator_dokumenter';
+                let animStyle = (document.getElementById('animationStyle') as HTMLSelectElement | null)?.value || 'Claymation Animation';
+                if (animStyle === 'Gaya Kustom') {
+                    animStyle = (document.getElementById('customStyleInput') as HTMLInputElement | null)?.value?.trim() || 'Cinematic 2D';
+                }
+                const baseConstraints = (document.getElementById('constraintsInput') as HTMLTextAreaElement | null)?.value?.trim() || '';
+                const sceneDuration = String(scene.estimated_duration || (document.getElementById('sceneDuration') as HTMLInputElement | null)?.value || 8);
+                const regenTheme = buildTargetedRegenerationTheme(scene, index, feedback, target);
+                const regenConstraints = [
+                    baseConstraints,
+                    `Targeted scene repair only. Improve primarily: ${getTargetedRegenLabel(target)}. Keep JSON schema valid.`,
+                    `User repair note: ${feedback}`
+                ].filter(Boolean).join('\n');
+
+                showToast(`Regenerating ${getTargetedRegenLabel(target)} Scene ${scene.scene_number || index + 1}...`, 'success');
+                const result = await GeminiService.generateStoryboard(
+                    regenTheme,
+                    narratorStyle,
+                    animStyle,
+                    regenConstraints,
+                    false,
+                    AppStore.state.activeRatio,
+                    'manual',
+                    '1',
+                    sceneDuration,
+                    AppStore.state.globalApiKey,
+                    getStoryboardOutputLanguage()
+                );
+
+                if (!result.success) {
+                    showToast(result.error || 'Regenerate field gagal.', 'error');
+                    return;
+                }
+
+                const replacement = result.data?.scenes?.[0];
+                if (!replacement) {
+                    showToast('AI tidak mengembalikan field pengganti yang valid.', 'error');
+                    return;
+                }
+
+                const currentPrompts = getSceneVisualPrompts(scene);
+                const nextPrompts = getSceneVisualPrompts(replacement);
+                const updates: any = { scene_number: scene.scene_number || index + 1 };
+
+                if (target === 'description') {
+                    updates.scene_description = replacement.scene_description || scene.scene_description || '';
+                } else if (target === 'narration') {
+                    updates.narrator_script = replacement.narrator_script || scene.narrator_script || '';
+                } else if (target === 'image') {
+                    updates.imagePrompt = nextPrompts.imagePrompt || replacement.imagePrompt || replacement.text_to_image || currentPrompts.imagePrompt || '';
+                    updates.text_to_image = updates.imagePrompt;
+                } else if (target === 'video') {
+                    updates.videoPrompt = nextPrompts.videoPrompt || replacement.videoPrompt || replacement.camera_movement || currentPrompts.videoPrompt || '';
+                    updates.camera_movement = updates.videoPrompt;
+                }
+
+                updates.estimated_duration = scene.estimated_duration || 8;
+                updateSceneAtIndex(index, updates, `${getTargetedRegenLabel(target)} Scene ${scene.scene_number || index + 1} berhasil diperbaiki. Review dulu sebelum Save / Update Cloud.`);
+            } catch (err: any) {
+                console.error('Regenerate scene field failed:', err);
+                showToast(err?.message || 'Regenerate field gagal.', 'error');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -815,6 +988,7 @@ export default function App() {
                 title,
                 theme,
                 ratio: AppStore.state.activeRatio,
+                outputLanguage: getStoryboardOutputLanguage(),
                 saved_from: 'k-creator-suite-pro',
                 saved_at: new Date().toISOString(),
                 storyboard: storyboardData
@@ -1109,6 +1283,12 @@ export default function App() {
 
             const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement | null;
             if (themeInput) themeInput.value = theme;
+
+            const outputLanguageSelect = document.getElementById('outputLanguage') as HTMLSelectElement | null;
+            const savedLanguage = content.outputLanguage || content.storyboard?.outputLanguage || 'mixed';
+            if (outputLanguageSelect && ['mixed', 'id', 'en'].includes(savedLanguage)) {
+                outputLanguageSelect.value = savedLanguage;
+            }
 
             Views.renderStoryboard(storyboard, ratio);
             setCloudSaveStatus('saved', 'Loaded from Cloud');
@@ -1806,9 +1986,24 @@ export default function App() {
                                     </div>
 
                                     <div class="space-y-1.5 border-t border-slate-800/70 pt-3">
-                                        <label class="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Komentar Regenerate</label>
+                                        <label class="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Komentar Regenerate / Repair Note</label>
                                         <textarea id="regenFeedback_${index}" class="w-full min-h-[80px] rounded-xl bg-[#07080d] border border-amber-500/20 p-3 text-xs text-slate-200 outline-none focus:border-amber-500 resize-y" placeholder="Contoh: ini di Veo failed generate, gerakan kamera terlalu rumit, tolong bikin prompt video lebih simpel dan jelas."></textarea>
-                                        <p class="text-[9px] text-slate-500">Regenerate hanya mengganti scene ini. Scene lain tetap aman.</p>
+                                        <p class="text-[9px] text-slate-500">Pilih regenerate field tertentu kalau hanya prompt video / image / TTS yang bermasalah. Pilih Regenerate Scene kalau satu scene perlu diperbaiki total.</p>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        <button class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="description" data-index="${index}">
+                                            ✍️ Fix Desc
+                                        </button>
+                                        <button class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="narration" data-index="${index}">
+                                            🎙️ Fix TTS
+                                        </button>
+                                        <button class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="image" data-index="${index}">
+                                            🖼️ Fix Image Prompt
+                                        </button>
+                                        <button class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="video" data-index="${index}">
+                                            🎥 Fix Video Prompt
+                                        </button>
                                     </div>
 
                                     <div class="flex flex-wrap justify-end gap-2 pt-1">
@@ -1816,7 +2011,7 @@ export default function App() {
                                             💾 Save Manual Edit
                                         </button>
                                         <button class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/25 font-bold py-2 px-4 rounded-xl text-[10px] transition cursor-pointer" data-action="regenerate-scene" data-index="${index}">
-                                            ♻️ Regenerate Scene
+                                            ♻️ Regenerate Full Scene
                                         </button>
                                     </div>
                                 </div>
@@ -2348,7 +2543,7 @@ export default function App() {
             let result;
             try {
                 result = await GeminiService.generateStoryboard(
-                    theme, narratorStyle, animStyle, constraints, includeCta, AppStore.state.activeRatio, AppStore.state.activeSceneMode, sceneCount, sceneDurVal, AppStore.state.globalApiKey
+                    theme, narratorStyle, animStyle, constraints, includeCta, AppStore.state.activeRatio, AppStore.state.activeSceneMode, sceneCount, sceneDurVal, AppStore.state.globalApiKey, getStoryboardOutputLanguage()
                 );
             } finally {
                 clearInterval(progressInterval);
@@ -2365,6 +2560,7 @@ export default function App() {
             }
 
             const parsedData = result.data;
+            parsedData.outputLanguage = getStoryboardOutputLanguage();
             AppStore.setState({ activeStoryboardData: parsedData });
 
             const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLSelectElement)?.value || "Anime";
@@ -3180,6 +3376,14 @@ export default function App() {
             if (saveSceneEditsBtn) {
                 const idx = parseInt(saveSceneEditsBtn.getAttribute('data-index') || '0', 10);
                 saveSceneManualEdits(idx);
+                return;
+            }
+
+            const regenSceneFieldBtn = target.closest('[data-action="regenerate-scene-field"]');
+            if (regenSceneFieldBtn) {
+                const idx = parseInt(regenSceneFieldBtn.getAttribute('data-index') || '0', 10);
+                const regenTarget = regenSceneFieldBtn.getAttribute('data-target') || 'video';
+                await regenerateSceneFieldWithFeedback(idx, regenTarget);
                 return;
             }
 

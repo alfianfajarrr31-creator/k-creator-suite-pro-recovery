@@ -19,11 +19,22 @@ Patch aman setelah auto-save:
 - Tambah tombol JSON untuk backup data structured.
 - Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, atau logic generate utama.
 
-## Patch: Scene Edit & Regenerate Lab
+## Patch: Targeted Field Regenerate
 
-Tambahan fitur aman untuk workflow review scene:
-- Edit manual Scene Description, TTS/Narration, Text-to-Image Prompt, Image-to-Video Prompt, dan Duration per scene.
-- Box komentar per scene untuk instruksi perbaikan.
-- Regenerate hanya scene terpilih berdasarkan feedback user, tanpa rewrite seluruh storyboard.
-- Scene yang diedit/regenerate ditandai sebagai Edited/Unsaved sampai user klik Save / Update Cloud.
-- Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, Supabase Auth, Cloud History, Export, atau fitur generate utama.
+Menambahkan tombol repair spesifik di Scene Edit & Regenerate Lab:
+
+- Fix Desc
+- Fix TTS
+- Fix Image Prompt
+- Fix Video Prompt
+- Regenerate Full Scene tetap tersedia
+
+Fitur ini memakai komentar user di box Regenerate / Repair Note, lalu hanya memperbaiki field yang dipilih. Cocok untuk kasus seperti prompt video gagal di Veo/Kling tanpa perlu regenerate seluruh scene.
+
+Tidak mengubah GeminiService, api/index.ts, model Gemini, Supabase Auth, Cloud History, Export, Bulk Copy, atau flow generate utama.
+
+## Patch: Output Language Selector
+- Menambahkan pilihan Bahasa Output Storyboard: Mixed Recommended, Bahasa Indonesia, English.
+- Pilihan bahasa dikirim ke backend storyboard dan dipakai saat generate maupun regenerate scene/field.
+- Mode Bahasa Indonesia membuat imagePrompt/videoPrompt bisa ditulis dalam Bahasa Indonesia, dengan bracket video tetap standar English agar format stabil.
+- Tidak mengubah Gemini model, TTS endpoint, Supabase save/load/history, atau logic core generator.

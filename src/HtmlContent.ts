@@ -130,6 +130,17 @@ export const HTML_CONTENT = `
                     </select>
                 </div>
 
+                <!-- Output Language Selector -->
+                <div class="space-y-2 border-t border-slate-800/40 pt-3">
+                    <label class="block text-xs font-semibold text-slate-400">Bahasa Output Storyboard</label>
+                    <select id="outputLanguage" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-indigo-500 outline-none transition">
+                        <option value="mixed" selected>Mixed Recommended (Narasi Indonesia, Prompt Visual English)</option>
+                        <option value="id">Bahasa Indonesia (Semua Output)</option>
+                        <option value="en">English (All Output)</option>
+                    </select>
+                    <p class="text-[9px] text-slate-500 leading-relaxed font-semibold">Pilih Indonesia kalau ingin prompt lebih mudah dikoreksi manual. Mixed lebih aman untuk Veo/Kling.</p>
+                </div>
+
                 <!-- Animation Art Style Selector -->
                 <div class="space-y-2 border-t border-slate-800/40 pt-3">
                     <label class="block text-xs font-semibold text-slate-400">Gaya Animasi & Visual</label>
