@@ -145,7 +145,8 @@ export default function App() {
                 generationHistory: [] as any[],
                 authSession: null as any,
                 authUser: null as any,
-                cloudProjects: [] as any[]
+                cloudProjects: [] as any[],
+                activeCloudProjectId: null as string | null
             },
             listeners: [] as Array<(state: any, oldState: any) => void>,
             subscribe(fn: (state: any, oldState: any) => void) {
@@ -294,58 +295,87 @@ export default function App() {
         }
 
 
-        async function saveActiveProjectToCloud() {
+        async function saveActiveProjectToCloud(silent = false) {
             if (!isSupabaseConfigured()) {
-                showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
-                return;
+                if (!silent) showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                return null;
             }
 
             const user = AppStore.state.authUser;
             if (!user?.id) {
-                showToast('Login Google dulu untuk menyimpan project ke cloud.', 'error');
-                return;
+                if (!silent) showToast('Login Google dulu untuk menyimpan project ke cloud.', 'error');
+                return null;
             }
 
             const storyboardData = AppStore.state.activeStoryboardData;
             if (!storyboardData) {
-                showToast('Belum ada storyboard aktif untuk disimpan.', 'error');
-                return;
+                if (!silent) showToast('Belum ada storyboard aktif untuk disimpan.', 'error');
+                return null;
             }
 
             const theme = (document.getElementById('themeInput') as HTMLTextAreaElement)?.value?.trim() || '';
             const title = storyboardData.youtube_title || theme || 'Untitled Project';
             const btn = document.getElementById('btnSaveCloudProject') as HTMLButtonElement | null;
             const originalText = btn?.innerHTML || '☁️ Save to Cloud';
+            const existingCloudId = AppStore.state.activeCloudProjectId;
+            const contentPayload = {
+                title,
+                theme,
+                ratio: AppStore.state.activeRatio,
+                saved_from: 'k-creator-suite-pro',
+                saved_at: new Date().toISOString(),
+                storyboard: storyboardData
+            };
 
             try {
-                if (btn) {
+                if (btn && !silent) {
                     btn.disabled = true;
-                    btn.innerHTML = '☁️ Saving...';
+                    btn.innerHTML = existingCloudId ? '☁️ Updating...' : '☁️ Saving...';
                 }
 
-                const { error } = await supabase.from('projects').insert({
-                    user_id: user.id,
-                    title,
-                    content: {
-                        title,
-                        theme,
-                        ratio: AppStore.state.activeRatio,
-                        saved_from: 'k-creator-suite-pro',
-                        saved_at: new Date().toISOString(),
-                        storyboard: storyboardData
-                    }
-                });
+                let savedId = existingCloudId;
 
-                if (error) throw error;
+                if (existingCloudId) {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .update({
+                            title,
+                            content: contentPayload,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingCloudId)
+                        .eq('user_id', user.id)
+                        .select('id')
+                        .single();
 
-                showToast('Project berhasil disimpan ke Supabase Cloud.', 'success');
-                addDBLog(`Cloud save berhasil: ${title}`, 'success');
+                    if (error) throw error;
+                    savedId = data?.id || existingCloudId;
+                } else {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .insert({
+                            user_id: user.id,
+                            title,
+                            content: contentPayload
+                        })
+                        .select('id')
+                        .single();
+
+                    if (error) throw error;
+                    savedId = data?.id || null;
+                }
+
+                AppStore.setState({ activeCloudProjectId: savedId });
+                if (!silent) showToast(existingCloudId ? 'Project cloud berhasil diperbarui.' : 'Project berhasil disimpan ke Supabase Cloud.', 'success');
+                addDBLog(`${silent ? 'Auto-save cloud' : 'Cloud save'} berhasil: ${title}`, 'success');
+                return savedId;
             } catch (err: any) {
                 console.error('Cloud save gagal:', err);
-                showToast(err?.message || 'Gagal menyimpan project ke cloud.', 'error');
+                if (!silent) showToast(err?.message || 'Gagal menyimpan project ke cloud.', 'error');
                 addDBLog(`Cloud save gagal: ${err?.message || err}`, 'error');
+                return null;
             } finally {
-                if (btn) {
+                if (btn && !silent) {
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }
@@ -497,7 +527,8 @@ export default function App() {
             AppStore.setState({
                 activeStoryboardData: storyboard,
                 activeRatio: ratio,
-                currentActiveHistoryId: item.id
+                currentActiveHistoryId: item.id,
+                activeCloudProjectId: item.id
             });
 
             const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement | null;
@@ -1620,7 +1651,7 @@ export default function App() {
             try {
                 await ProjectRepo.put(newProject);
                 await syncProjectsAndRender();
-                AppStore.setState({ currentActiveHistoryId: projectId });
+                AppStore.setState({ currentActiveHistoryId: projectId, activeCloudProjectId: null });
 
                 const photoBlob = AppStore.state.characterImageBlob;
                 if (photoBlob) {
@@ -1643,6 +1674,14 @@ export default function App() {
 
                 Views.renderStoryboard(parsedData, AppStore.state.activeRatio);
                 showToast("Naskah visual storyboard berhasil dirumuskan!", "success");
+
+                if (AppStore.state.authUser?.id && isSupabaseConfigured()) {
+                    saveActiveProjectToCloud(true).then((cloudId) => {
+                        if (cloudId) {
+                            showToast("Project otomatis tersimpan ke cloud.", "success");
+                        }
+                    });
+                }
             } catch (err) {
                 console.error("Gagal memproses pasca-generasi storyboard:", err);
                 showToast("Gagal mengamankan draf data ke penyimpanan.", "error");
