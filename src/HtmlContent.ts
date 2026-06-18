@@ -405,6 +405,12 @@ export const HTML_CONTENT = `
                             <button id="btnCopyAllPrompts" data-action="copy-all-prompts" class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                 Copy All Prompts
                             </button>
+                            <button id="btnExportTxt" data-action="export-project-txt" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                ⬇️ Export TXT
+                            </button>
+                            <button id="btnExportJson" data-action="export-project-json" class="bg-slate-600/15 hover:bg-slate-600/25 text-slate-300 border border-slate-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                {} JSON
+                            </button>
                         </div>
                     </div>
 

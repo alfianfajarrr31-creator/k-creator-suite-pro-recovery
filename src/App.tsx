@@ -384,6 +384,126 @@ export default function App() {
         }
 
 
+        function getSceneVisualPrompts(scene: any) {
+            let imagePrompt = scene?.imagePrompt || "";
+            let videoPrompt = scene?.videoPrompt || scene?.camera_movement || "";
+
+            if (!imagePrompt && scene?.visual_prompt_details) {
+                const p = scene.visual_prompt_details;
+                imagePrompt = [
+                    p.scene_description ? `Scene: ${p.scene_description}.` : '',
+                    p.main_character_action ? `Main Subject: ${p.main_character_action}.` : '',
+                    p.secondary_character_action ? `Supporting Activity: ${p.secondary_character_action}.` : '',
+                    p.environment_motion ? `Environment Activity: ${p.environment_motion}.` : '',
+                    p.lighting ? `Lighting: ${p.lighting}.` : '',
+                    p.atmosphere ? `Mood: ${p.atmosphere}.` : '',
+                ].filter(Boolean).join(' ');
+            } else if (!imagePrompt) {
+                imagePrompt = scene?.text_to_image || "";
+            }
+
+            return { imagePrompt, videoPrompt };
+        }
+
+        function safeFilename(value: string) {
+            return cleanProjectTitlePart(value || 'k-creator-project')
+                .replace(/[^a-z0-9\-\s_]/gi, '')
+                .replace(/\s+/g, '-')
+                .slice(0, 70)
+                .toLowerCase() || 'k-creator-project';
+        }
+
+        function downloadTextFile(filename: string, content: string, mimeType = 'text/plain;charset=utf-8') {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function buildExportText(storyboardData: any) {
+            const theme = (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value?.trim() || '';
+            const title = generateSmartProjectTitle(storyboardData, theme);
+            const scenes = Array.isArray(storyboardData?.scenes) ? storyboardData.scenes : [];
+
+            const lines: string[] = [];
+            lines.push(`K CREATOR SUITE PRO - EXPORT`);
+            lines.push(`Title: ${title}`);
+            lines.push(`Exported: ${new Date().toLocaleString('id-ID')}`);
+            if (theme) lines.push(`Theme: ${theme}`);
+            lines.push('');
+            lines.push('==============================');
+            lines.push('SOCIAL PACKAGE');
+            lines.push('==============================');
+            lines.push(`YouTube Title:\n${storyboardData?.youtube_title || '-'}`);
+            lines.push('');
+            lines.push(`YouTube Description:\n${storyboardData?.youtube_description || '-'}`);
+            lines.push('');
+            lines.push(`TikTok Caption:\n${storyboardData?.tiktok_caption || '-'}`);
+            lines.push('');
+            lines.push(`Instagram Caption:\n${storyboardData?.instagram_caption || '-'}`);
+            lines.push('');
+            lines.push(`Hashtags:\n${storyboardData?.viral_hashtags || '-'}`);
+            lines.push('');
+            lines.push(`Thumbnail Prompt:\n${storyboardData?.thumbnail_prompt || '-'}`);
+            lines.push('');
+            lines.push('==============================');
+            lines.push('SCENES');
+            lines.push('==============================');
+
+            scenes.forEach((scene: any, index: number) => {
+                const { imagePrompt, videoPrompt } = getSceneVisualPrompts(scene);
+                lines.push('');
+                lines.push(`SCENE ${scene?.scene_number || index + 1} (${scene?.estimated_duration || 8}s)`);
+                lines.push('------------------------------');
+                lines.push(`[SCENE DESCRIPTION]\n${scene?.scene_description || '-'}`);
+                lines.push('');
+                lines.push(`[TTS / NARRATION]\n${scene?.narrator_script || '-'}`);
+                lines.push('');
+                lines.push(`[TEXT TO IMAGE PROMPT]\n${imagePrompt || '-'}`);
+                lines.push('');
+                lines.push(`[IMAGE TO VIDEO PROMPT]\n${videoPrompt || '-'}`);
+            });
+
+            return { title, text: lines.join('\n') };
+        }
+
+        function exportActiveProjectAsTxt() {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData) {
+                showToast('Belum ada storyboard aktif untuk diexport.', 'warning');
+                return;
+            }
+            const { title, text } = buildExportText(storyboardData);
+            downloadTextFile(`${safeFilename(title)}.txt`, text);
+            showToast('Project berhasil diexport ke TXT.', 'success');
+        }
+
+        function exportActiveProjectAsJson() {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData) {
+                showToast('Belum ada storyboard aktif untuk diexport.', 'warning');
+                return;
+            }
+            const theme = (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value?.trim() || '';
+            const title = generateSmartProjectTitle(storyboardData, theme);
+            const payload = {
+                title,
+                theme,
+                ratio: AppStore.state.activeRatio,
+                activeCloudProjectId: AppStore.state.activeCloudProjectId,
+                exported_at: new Date().toISOString(),
+                storyboard: storyboardData
+            };
+            downloadTextFile(`${safeFilename(title)}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+            showToast('Project berhasil diexport ke JSON.', 'success');
+        }
+
+
         async function saveActiveProjectToCloud(silent = false) {
             if (!isSupabaseConfigured()) {
                 if (!silent) showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
@@ -2427,6 +2547,16 @@ export default function App() {
                 navigator.clipboard.writeText(allPrompts).then(() => {
                     showToast("Semua prompt visual video berhasil disalin!", "success");
                 });
+                return;
+            }
+
+            if (target.closest('[data-action="export-project-txt"]')) {
+                exportActiveProjectAsTxt();
+                return;
+            }
+
+            if (target.closest('[data-action="export-project-json"]')) {
+                exportActiveProjectAsJson();
                 return;
             }
 

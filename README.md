@@ -12,10 +12,9 @@ Patch aman setelah auto-save:
 - Menambahkan counter jumlah project yang tampil.
 - Tidak mengubah GeminiService, api/index.ts, model Gemini, atau logic generate utama.
 
-## Patch: Cloud History UI Polish
 
-- Merapikan modal Cloud History agar lebih nyaman dipakai.
-- Menambahkan summary kecil jumlah project, total scene, dan status cloud sync.
-- Menambahkan badge Latest / Active pada project.
-- Membuat tombol Load / Rename / Delete lebih rapi dan responsif.
-- Tidak mengubah GeminiService, api/index.ts, model Gemini, prompt generator, TTS, atau logic generate utama.
+## Patch: Export TXT + JSON
+
+- Tambah tombol Export TXT untuk download paket storyboard lengkap.
+- Tambah tombol JSON untuk backup data structured.
+- Tidak mengubah GeminiService, api/index.ts, model Gemini, TTS, atau logic generate utama.
