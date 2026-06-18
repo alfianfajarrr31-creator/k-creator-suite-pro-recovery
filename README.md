@@ -1,3 +1,6 @@
-K Creator Suite Pro Recovery + Supabase Auth + Save to Cloud + Cloud History + Safe Auto Save
+# K Creator Suite Pro - Delete Cloud Project Patch
 
-Patch ini menambahkan auto-save aman untuk user login dan update cloud project tanpa mengubah Gemini engine.
+Patch aman setelah auto-save:
+- Tambah tombol Delete di Cloud History.
+- Menghapus project dari Supabase hanya untuk user yang sedang login.
+- Tidak mengubah GeminiService, api/index.ts, atau prompt generator.

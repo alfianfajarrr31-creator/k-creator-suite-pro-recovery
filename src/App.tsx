@@ -428,9 +428,14 @@ export default function App() {
                                     <span>${date}</span>
                                 </div>
                             </div>
-                            <button data-action="load-cloud-project" data-id="${id}" class="shrink-0 px-3 py-1.5 rounded-xl bg-sky-600/15 hover:bg-sky-600/30 border border-sky-500/20 text-sky-300 text-xs font-bold transition cursor-pointer">
-                                Load
-                            </button>
+                            <div class="shrink-0 flex items-center gap-2">
+                                <button data-action="load-cloud-project" data-id="${id}" class="px-3 py-1.5 rounded-xl bg-sky-600/15 hover:bg-sky-600/30 border border-sky-500/20 text-sky-300 text-xs font-bold transition cursor-pointer">
+                                    Load
+                                </button>
+                                <button data-action="delete-cloud-project" data-id="${id}" data-title="${title}" class="px-3 py-1.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-400 text-xs font-bold transition cursor-pointer">
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -539,6 +544,53 @@ export default function App() {
             showToast('Project cloud berhasil dimuat ke canvas.', 'success');
             addDBLog(`Cloud project dimuat: ${item.title || item.id}`, 'success');
         }
+
+        async function deleteCloudProject(projectId: string) {
+            if (!isSupabaseConfigured()) {
+                showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                return;
+            }
+
+            const user = AppStore.state.authUser;
+            if (!user?.id) {
+                showToast('Login Google dulu untuk menghapus project cloud.', 'error');
+                return;
+            }
+
+            const item = AppStore.state.cloudProjects.find((p: any) => p.id === projectId);
+            const title = item?.title || 'project ini';
+            const confirmed = window.confirm(`Hapus project cloud "${title}"? Data ini akan hilang dari Supabase.`);
+            if (!confirmed) return;
+
+            try {
+                const { error } = await supabase
+                    .from('projects')
+                    .delete()
+                    .eq('id', projectId)
+                    .eq('user_id', user.id);
+
+                if (error) throw error;
+
+                const remainingProjects = AppStore.state.cloudProjects.filter((p: any) => p.id !== projectId);
+                const updates: any = { cloudProjects: remainingProjects };
+                if (AppStore.state.activeCloudProjectId === projectId) {
+                    updates.activeCloudProjectId = null;
+                }
+                if (AppStore.state.currentActiveHistoryId === projectId) {
+                    updates.currentActiveHistoryId = null;
+                }
+
+                AppStore.setState(updates);
+                renderCloudHistoryModal(remainingProjects);
+                showToast('Project cloud berhasil dihapus.', 'success');
+                addDBLog(`Cloud project dihapus: ${title}`, 'success');
+            } catch (err: any) {
+                console.error('Gagal menghapus cloud project:', err);
+                showToast(err?.message || 'Gagal menghapus project cloud.', 'error');
+                addDBLog(`Cloud delete gagal: ${err?.message || err}`, 'error');
+            }
+        }
+
 
         async function logWorkflowActivity(actionText: string, actionType = 'info') {
             try {
@@ -1924,6 +1976,13 @@ export default function App() {
             if (loadCloudBtn) {
                 const id = loadCloudBtn.getAttribute('data-id') || '';
                 await loadCloudProject(id);
+                return;
+            }
+
+            const deleteCloudBtn = target.closest('[data-action="delete-cloud-project"]');
+            if (deleteCloudBtn) {
+                const id = deleteCloudBtn.getAttribute('data-id') || '';
+                await deleteCloudProject(id);
                 return;
             }
 
