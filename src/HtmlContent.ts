@@ -45,6 +45,15 @@ export const HTML_CONTENT = `
         </nav>
 
         <div class="flex items-center gap-2 md:gap-4">
+            <div id="authStatusBadge" class="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-500/10 border border-slate-700 text-[10px] font-semibold text-slate-400 max-w-[240px] truncate">
+                <span id="authUserLabel">Guest Mode</span>
+            </div>
+            <button id="btnLoginGoogle" data-action="login-google" class="px-3 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/30 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-1.5 transition duration-150 cursor-pointer">
+                🔐 Login Google
+            </button>
+            <button id="btnLogoutGoogle" data-action="logout-google" class="hidden px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+                Logout
+            </button>
             <!-- Phase 1.6 DB Inspector Trigger Button -->
             <button id="btnToggleInspector" data-action="toggle-inspector" class="px-3 py-1.5 bg-[#0f111a] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-1.5 transition duration-150 cursor-pointer">
                 🗄️ Inspector

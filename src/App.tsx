@@ -3,6 +3,7 @@ import { HTML_CONTENT } from './HtmlContent';
 import { dbContainer, BaseRepository, ProjectRepo, CharacterRepo, VoiceRepo, SettingsRepo } from './Repositories';
 import { GeminiService, sanitizeAndCleanJSON, validateStoryboardPayload } from './GeminiService';
 import { audioState, AudioMemoryRegistry, pcmToWav, responseToWavBuffer, AudioEngine } from './AudioHelper';
+import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 
 const DB_NAME = 'KCreatorSuiteDB';
 const DB_VERSION = 3;
@@ -141,7 +142,9 @@ export default function App() {
                 storyboardHistory: [] as any[],
                 currentActiveHistoryId: null as string | null,
                 databaseLogs: [] as string[],
-                generationHistory: [] as any[]
+                generationHistory: [] as any[],
+                authSession: null as any,
+                authUser: null as any
             },
             listeners: [] as Array<(state: any, oldState: any) => void>,
             subscribe(fn: (state: any, oldState: any) => void) {
@@ -192,6 +195,100 @@ export default function App() {
             const container = document.getElementById('dbLogsContainer');
             if (container) {
                 container.innerHTML = logs.join('');
+            }
+        }
+
+
+        function renderAuthUI() {
+            const user = AppStore.state.authUser;
+            const label = document.getElementById('authUserLabel');
+            const loginBtn = document.getElementById('btnLoginGoogle');
+            const logoutBtn = document.getElementById('btnLogoutGoogle');
+            const badge = document.getElementById('authStatusBadge');
+
+            if (!label || !loginBtn || !logoutBtn || !badge) return;
+
+            if (!isSupabaseConfigured()) {
+                label.innerText = 'Supabase belum siap';
+                badge.className = 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-semibold text-amber-400';
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                return;
+            }
+
+            if (user) {
+                const displayName = user.user_metadata?.full_name || user.email || 'User aktif';
+                label.innerText = displayName;
+                badge.className = 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-400 max-w-[240px] truncate';
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+            } else {
+                label.innerText = 'Guest Mode';
+                badge.className = 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-500/10 border border-slate-700 text-[10px] font-semibold text-slate-400';
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        async function initSupabaseAuth() {
+            renderAuthUI();
+            if (!isSupabaseConfigured()) {
+                console.warn('Supabase env belum lengkap. Login Google dinonaktifkan sementara.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (error) {
+                    console.warn('Gagal membaca session Supabase:', error.message);
+                }
+                AppStore.setState({
+                    authSession: data?.session || null,
+                    authUser: data?.session?.user || null
+                });
+                renderAuthUI();
+            } catch (err) {
+                console.warn('Auth init Supabase gagal:', err);
+                AppStore.setState({ authSession: null, authUser: null });
+                renderAuthUI();
+            }
+
+            supabase.auth.onAuthStateChange((_event, session) => {
+                AppStore.setState({
+                    authSession: session || null,
+                    authUser: session?.user || null
+                });
+                renderAuthUI();
+            });
+        }
+
+        async function signInWithGoogle() {
+            if (!isSupabaseConfigured()) {
+                showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                return;
+            }
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) {
+                console.error('Login Google gagal:', error);
+                showToast('Login Google gagal. Cek Supabase Google Provider.', 'error');
+            }
+        }
+
+        async function signOutGoogle() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                AppStore.setState({ authSession: null, authUser: null });
+                renderAuthUI();
+                showToast('Berhasil logout dari Google.', 'success');
+            } catch (err) {
+                console.error('Logout gagal:', err);
+                showToast('Logout gagal.', 'error');
             }
         }
 
@@ -1537,6 +1634,16 @@ export default function App() {
         const clickHandler = async (e: MouseEvent) => {
             const target = e.target as HTMLElement;
 
+            if (target.closest('[data-action="login-google"]')) {
+                await signInWithGoogle();
+                return;
+            }
+
+            if (target.closest('[data-action="logout-google"]')) {
+                await signOutGoogle();
+                return;
+            }
+
             // Mobile responsive side controls drawer logic
             const backdropBtn = target.closest('#sidebarBackdrop');
             if (backdropBtn) {
@@ -2537,6 +2644,8 @@ export default function App() {
         document.addEventListener('input', inputHandler);
         document.addEventListener('change', changeHandler);
         window.addEventListener('unload', unloadHandler);
+
+        initSupabaseAuth();
 
         // IndexedDB dynamic connection & migrations on first open
         const dbRequest = indexedDB.open(DB_NAME, DB_VERSION);
