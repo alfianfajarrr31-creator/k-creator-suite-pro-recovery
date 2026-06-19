@@ -88,3 +88,9 @@ Tidak mengubah:
 - Supabase auth/save/history
 - scene editor/regenerate
 - export/copy logic
+
+## ARC 3 Final Patch — Scene Action Cleanup
+- Merapikan tombol aksi scene agar tidak terlalu ramai.
+- Tombol utama yang tetap terlihat: Edit / Repair, Copy Package, Voice Lab.
+- Aksi tambahan Add Scene, Duplicate, Delete dipindahkan ke menu More Scene Actions.
+- Tidak mengubah GeminiService, API backend, Supabase, prompt generator, TTS, export/copy logic, atau cloud history.

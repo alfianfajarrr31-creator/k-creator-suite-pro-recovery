@@ -2243,23 +2243,39 @@ GENERAL RULES:
                                 </div>
                             </div>
 
-                            <!-- 6. Generate TTS Button (Kirim ke Voice Lab) -->
-                            <div class="pt-3 border-t border-slate-800/60 flex flex-wrap justify-end gap-2">
-                                <button class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="copy-scene-package" data-index="${index}">
-                                    📦 Copy Scene Package
-                                </button>
-                                <button class="bg-sky-600/15 hover:bg-sky-600/25 text-sky-300 border border-sky-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="add-scene-after" data-index="${index}">
-                                    ➕ Add After
-                                </button>
-                                <button class="bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="duplicate-scene" data-index="${index}">
-                                    📋 Duplicate
-                                </button>
-                                <button class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-300 border border-rose-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="delete-scene" data-index="${index}">
-                                    🗑️ Delete
-                                </button>
-                                <button class="btn-send-scene bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/10" data-action="send-scene-script" data-index="${index}">
-                                    🎙️ Kirim ke Voice Lab (Generate TTS) ↗
-                                </button>
+                            <!-- 6. Scene Action Bar (Daily v1 cleanup) -->
+                            <div class="pt-3 border-t border-slate-800/60 space-y-2">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        <button class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/25 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="toggle-scene-editor" data-index="${index}">
+                                            ✍️ Edit / Repair
+                                        </button>
+                                        <button class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="copy-scene-package" data-index="${index}">
+                                            📦 Copy Package
+                                        </button>
+                                        <button class="btn-send-scene bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/10" data-action="send-scene-script" data-index="${index}">
+                                            🎙️ Voice Lab ↗
+                                        </button>
+                                    </div>
+
+                                    <details class="group relative">
+                                        <summary class="list-none select-none cursor-pointer bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5">
+                                            ⋯ More Scene Actions
+                                        </summary>
+                                        <div class="mt-2 lg:absolute lg:right-0 lg:top-full lg:z-30 bg-[#090b11] border border-slate-800 rounded-2xl p-2 shadow-2xl shadow-black/40 min-w-[220px] grid gap-1.5">
+                                            <button class="w-full bg-sky-600/15 hover:bg-sky-600/25 text-sky-300 border border-sky-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="add-scene-after" data-index="${index}">
+                                                ➕ Add Scene After
+                                            </button>
+                                            <button class="w-full bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="duplicate-scene" data-index="${index}">
+                                                📋 Duplicate Scene
+                                            </button>
+                                            <button class="w-full bg-rose-600/10 hover:bg-rose-600/20 text-rose-300 border border-rose-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="delete-scene" data-index="${index}">
+                                                🗑️ Delete Scene
+                                            </button>
+                                        </div>
+                                    </details>
+                                </div>
+                                <p class="text-[9px] text-slate-600 text-right">Daily v1: tombol utama tetap terlihat, aksi tambahan disimpan agar scene tidak terlalu penuh.</p>
                             </div>
                         </div>
                     `;
