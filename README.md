@@ -61,3 +61,9 @@ These presets only fill the repair comment box. Existing targeted regenerate but
 - Menambahkan tombol `Clear History` untuk membersihkan riwayat versi scene tertentu.
 - Maksimal 8 snapshot per scene agar state tetap ringan.
 - Tidak mengubah GeminiService, api/index.ts, model Gemini, Supabase Auth, Cloud History, Export, atau Bulk Copy.
+
+## Patch: Scene Management + Category Trim
+- Added scene-level actions: Add After, Duplicate, Delete.
+- Removed project category selector from the main generator flow to simplify multi-user product UX.
+- Simplified auto-title generation so titles no longer depend on project category.
+- Fixed scene undo safety bug.

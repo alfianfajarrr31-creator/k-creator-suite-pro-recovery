@@ -107,17 +107,7 @@ export const HTML_CONTENT = `
                     <textarea id="themeInput" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-indigo-500 outline-none transition h-20 resize-none" placeholder="Contoh: Pembahasan detail pulau manusia ikan One piece..."></textarea>
                 </div>
 
-                <!-- Project Category Selector for new workflow projects -->
-                <div class="space-y-2 border-t border-slate-800/40 pt-3">
-                    <label class="block text-xs font-semibold text-slate-400">Kategori Proyek</label>
-                    <select id="projectCategorySelect" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-indigo-500 outline-none transition">
-                        <option value="Anime">Anime</option>
-                        <option value="Satire">Satire</option>
-                        <option value="Construction">Construction</option>
-                        <option value="Fakta Unik">Fakta Unik</option>
-                        <option value="Motivasi">Motivasi</option>
-                    </select>
-                </div>
+                <input type="hidden" id="projectCategorySelect" value="Storyboard">
 
                 <!-- Narrator style choice -->
                 <div class="space-y-2 border-t border-slate-800/40 pt-3">
@@ -294,14 +284,6 @@ export const HTML_CONTENT = `
                                     <option value="Exported">Exported</option>
                                     <option value="Published">Published</option>
                                 </select>
-                                <select id="workflowFilterCategory" class="rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-indigo-500 outline-none">
-                                    <option value="">Semua Kategori</option>
-                                    <option value="Anime">Anime</option>
-                                    <option value="Satire">Satire</option>
-                                    <option value="Construction">Construction</option>
-                                    <option value="Fakta Unik">Fakta Unik</option>
-                                    <option value="Motivasi">Motivasi</option>
-                                </select>
                                 <select id="workflowSortSelect" class="rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-indigo-500 outline-none">
                                     <option value="created_at-desc">Terbaru (Latest)</option>
                                     <option value="created_at-asc">Terlama (Oldest)</option>
@@ -342,7 +324,7 @@ export const HTML_CONTENT = `
                                         </th>
                                         <th class="p-3">Judul Projek</th>
                                         <th class="p-3">Tema & Bahasan</th>
-                                        <th class="p-3">Tags & Kategori</th>
+                                        <th class="p-3">Tags</th>
                                         <th class="p-3">Status</th>
                                         <th class="p-3">Tanggal Dibuat</th>
                                         <th class="p-3 text-right">Aksi</th>

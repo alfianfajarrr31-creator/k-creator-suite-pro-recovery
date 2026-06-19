@@ -328,7 +328,6 @@ export default function App() {
             const aiTitle = cleanProjectTitlePart(storyboardData?.youtube_title || storyboardData?.title || '');
             const topicRaw = cleanProjectTitlePart(theme || aiTitle || 'Untitled Project');
             const animationStyle = cleanProjectTitlePart(getSelectedAnimationStyleLabel());
-            const category = cleanProjectTitlePart((document.getElementById('projectCategorySelect') as HTMLSelectElement | null)?.value || '');
 
             const shortTopic = topicRaw
                 .replace(/^(bahas|membahas|tentang|animasi tentang|buat|bikin|konten tentang)\s+/i, '')
@@ -348,7 +347,7 @@ export default function App() {
             if (aiTitle && aiTitle.length <= 70 && !/^Project Storyboard/i.test(aiTitle)) {
                 title = aiTitle;
             } else {
-                title = [shortTopic || 'Untitled Project', styleToken, category && category !== 'Anime' ? category : 'Storyboard']
+                title = [shortTopic || 'Untitled Project', styleToken || 'Storyboard']
                     .filter(Boolean)
                     .join(' - ');
             }
@@ -697,7 +696,6 @@ export default function App() {
                 return;
             }
 
-            pushSceneVersionSnapshot(index, successMessage.includes('Regenerate') || successMessage.includes('diperbaiki') ? 'Before AI regenerate' : 'Before manual edit');
             const cloned = JSON.parse(JSON.stringify(storyboardData));
             cloned.scenes[index] = {
                 ...previous.scene,
@@ -767,6 +765,107 @@ export default function App() {
                 camera_movement: getSceneEditValue(`editVideoPrompt_${index}`) || scene.camera_movement || '',
                 estimated_duration: parseInt(getSceneEditValue(`editDuration_${index}`), 10) || scene.estimated_duration || 8
             }, `Scene ${sceneNumber} berhasil diedit. Klik Save / Update Cloud untuk simpan permanen.`);
+        }
+
+
+        function resequenceStoryboardScenes(storyboardData: any) {
+            if (!storyboardData || !Array.isArray(storyboardData.scenes)) return storyboardData;
+            storyboardData.scenes = storyboardData.scenes.map((scene: any, idx: number) => ({
+                ...scene,
+                scene_number: idx + 1
+            }));
+            return storyboardData;
+        }
+
+        function createDraftScene(afterIndex: number) {
+            const storyboardData = AppStore.state.activeStoryboardData || {};
+            const scenes = Array.isArray(storyboardData.scenes) ? storyboardData.scenes : [];
+            const reference = scenes[afterIndex] || scenes[scenes.length - 1] || {};
+            const nextNumber = Math.max(1, afterIndex + 2);
+            const duration = reference.estimated_duration || parseInt((document.getElementById('sceneDuration') as HTMLInputElement | null)?.value || '8', 10) || 8;
+            const lang = getStoryboardOutputLanguage();
+            const isIndonesian = lang === 'id';
+
+            return {
+                scene_number: nextNumber,
+                scene_description: isIndonesian
+                    ? `Draft scene baru ${nextNumber}. Tulis atau regenerate adegan ini agar sesuai alur cerita.`
+                    : `New draft scene ${nextNumber}. Edit or regenerate this scene to fit the story flow.`,
+                narrator_script: isIndonesian
+                    ? `Narasi draft untuk scene ${nextNumber}. Silakan edit atau gunakan Regenerate Full Scene.`
+                    : `Draft narration for scene ${nextNumber}. Edit it or use Regenerate Full Scene.`,
+                imagePrompt: isIndonesian
+                    ? `Prompt gambar draft untuk scene ${nextNumber}, mengikuti gaya visual project aktif, komposisi vertikal sinematik, detail karakter dan lingkungan jelas.`
+                    : `Draft text-to-image prompt for scene ${nextNumber}, matching the active project visual style, cinematic vertical composition, clear character and environment details.`,
+                videoPrompt: isIndonesian
+                    ? `[CHARACTER MOTION] Gerakan karakter utama dibuat jelas dan sederhana. [EMOTIONAL PERFORMANCE] Ekspresi mengikuti emosi scene. [SECONDARY CHARACTER MOTION] Elemen pendukung bergerak natural. [BACKGROUND MOTION] Latar bergerak halus. [ENVIRONMENT MOTION] Atmosfer lingkungan terasa hidup. [ATMOSPHERE] Mood mengikuti alur cerita. [CAMERA] Kamera bergerak sederhana dan aman untuk AI video. [CINEMATIC DETAILS] Detail sinematik, depth of field, lighting terarah. [VISUAL HOOK] Hook visual kuat dalam 1 detik pertama.`
+                    : `[CHARACTER MOTION] The main character movement is clear and simple. [EMOTIONAL PERFORMANCE] Expression matches the scene emotion. [SECONDARY CHARACTER MOTION] Supporting elements move naturally. [BACKGROUND MOTION] Background moves subtly. [ENVIRONMENT MOTION] The environment feels alive. [ATMOSPHERE] Mood follows the story flow. [CAMERA] Simple AI-video-safe camera movement. [CINEMATIC DETAILS] Cinematic detail, depth of field, directed lighting. [VISUAL HOOK] Strong visual hook in the first second.`,
+                camera_movement: `[CAMERA] Simple AI-video-safe camera movement.`,
+                estimated_duration: duration,
+                visual_prompt_details: {
+                    scene_description: reference.scene_description || '',
+                    main_character_action: '',
+                    secondary_character_action: '',
+                    environment_motion: '',
+                    camera_movement: '',
+                    lighting: '',
+                    atmosphere: '',
+                    technical_notes: 'Draft scene created manually from Scene Tools.'
+                }
+            };
+        }
+
+        function duplicateSceneAtIndex(index: number) {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes) || !storyboardData.scenes[index]) {
+                showToast('Scene tidak ditemukan untuk duplicate.', 'error');
+                return;
+            }
+            const cloned = JSON.parse(JSON.stringify(storyboardData));
+            const copiedScene = JSON.parse(JSON.stringify(cloned.scenes[index]));
+            copiedScene.scene_description = `${copiedScene.scene_description || ''}${copiedScene.scene_description ? ' ' : ''}(Duplicated draft)`;
+            cloned.scenes.splice(index + 1, 0, copiedScene);
+            resequenceStoryboardScenes(cloned);
+            AppStore.setState({ activeStoryboardData: cloned, sceneVersionHistory: {} });
+            Views.renderStoryboard(cloned, AppStore.state.activeRatio);
+            markActiveStoryboardDirty('Scene duplicated');
+            showToast(`Scene ${index + 1} berhasil diduplikasi.`, 'success');
+        }
+
+        function addDraftSceneAfterIndex(index: number) {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes)) {
+                showToast('Belum ada storyboard aktif untuk tambah scene.', 'error');
+                return;
+            }
+            const cloned = JSON.parse(JSON.stringify(storyboardData));
+            const safeIndex = Math.max(0, Math.min(index, cloned.scenes.length - 1));
+            cloned.scenes.splice(safeIndex + 1, 0, createDraftScene(safeIndex));
+            resequenceStoryboardScenes(cloned);
+            AppStore.setState({ activeStoryboardData: cloned, sceneVersionHistory: {} });
+            Views.renderStoryboard(cloned, AppStore.state.activeRatio);
+            markActiveStoryboardDirty('Scene added');
+            showToast('Draft scene baru ditambahkan. Edit atau klik Regenerate Full Scene.', 'success');
+        }
+
+        function deleteSceneAtIndex(index: number) {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes) || !storyboardData.scenes[index]) {
+                showToast('Scene tidak ditemukan untuk dihapus.', 'error');
+                return;
+            }
+            if (storyboardData.scenes.length <= 1) {
+                showToast('Minimal harus ada 1 scene.', 'warning');
+                return;
+            }
+            const cloned = JSON.parse(JSON.stringify(storyboardData));
+            const sceneNumber = cloned.scenes[index].scene_number || index + 1;
+            cloned.scenes.splice(index, 1);
+            resequenceStoryboardScenes(cloned);
+            AppStore.setState({ activeStoryboardData: cloned, sceneVersionHistory: {} });
+            Views.renderStoryboard(cloned, AppStore.state.activeRatio);
+            markActiveStoryboardDirty('Scene deleted');
+            showToast(`Scene ${sceneNumber} dihapus. Klik Save / Update Cloud untuk simpan.`, 'success');
         }
 
         function buildSceneRegenerationTheme(scene: any, index: number, feedback: string) {
@@ -2140,6 +2239,15 @@ GENERAL RULES:
                                 <button class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="copy-scene-package" data-index="${index}">
                                     📦 Copy Scene Package
                                 </button>
+                                <button class="bg-sky-600/15 hover:bg-sky-600/25 text-sky-300 border border-sky-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="add-scene-after" data-index="${index}">
+                                    ➕ Add After
+                                </button>
+                                <button class="bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="duplicate-scene" data-index="${index}">
+                                    📋 Duplicate
+                                </button>
+                                <button class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-300 border border-rose-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="delete-scene" data-index="${index}">
+                                    🗑️ Delete
+                                </button>
                                 <button class="btn-send-scene bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/10" data-action="send-scene-script" data-index="${index}">
                                     🎙️ Kirim ke Voice Lab (Generate TTS) ↗
                                 </button>
@@ -2430,7 +2538,7 @@ GENERAL RULES:
                     title: `Uji Coba Projek ${dummyId.substring(0, 8)}`,
                     theme: "Pengujian stabilitas database K Creator Suite Pro 2.2.",
                     status: 'Draft',
-                    category: 'Anime',
+                    category: 'Storyboard',
                     source_project_id: null,
                     tags: ['Test', 'Demo'],
                     isFavorite: false,
@@ -2681,7 +2789,7 @@ GENERAL RULES:
             parsedData.outputLanguage = getStoryboardOutputLanguage();
             AppStore.setState({ activeStoryboardData: parsedData, sceneVersionHistory: {} });
 
-            const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLSelectElement)?.value || "Anime";
+            const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLInputElement | HTMLSelectElement | null)?.value || "Storyboard";
             const projectId = generateSecureId();
             const smartProjectTitle = generateSmartProjectTitle(parsedData, theme);
             const newProject = {
@@ -3534,6 +3642,30 @@ GENERAL RULES:
             if (regenSceneBtn) {
                 const idx = parseInt(regenSceneBtn.getAttribute('data-index') || '0', 10);
                 await regenerateSceneWithFeedback(idx);
+                return;
+            }
+
+
+            const addSceneBtn = target.closest('[data-action="add-scene-after"]');
+            if (addSceneBtn) {
+                const idx = parseInt(addSceneBtn.getAttribute('data-index') || '0', 10);
+                addDraftSceneAfterIndex(idx);
+                return;
+            }
+
+            const duplicateSceneBtn = target.closest('[data-action="duplicate-scene"]');
+            if (duplicateSceneBtn) {
+                const idx = parseInt(duplicateSceneBtn.getAttribute('data-index') || '0', 10);
+                duplicateSceneAtIndex(idx);
+                return;
+            }
+
+            const deleteSceneBtn = target.closest('[data-action="delete-scene"]');
+            if (deleteSceneBtn) {
+                const idx = parseInt(deleteSceneBtn.getAttribute('data-index') || '0', 10);
+                if (confirm(`Hapus scene ${idx + 1}?`)) {
+                    deleteSceneAtIndex(idx);
+                }
                 return;
             }
 
