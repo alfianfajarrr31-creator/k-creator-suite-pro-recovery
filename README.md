@@ -38,3 +38,17 @@ Tidak mengubah GeminiService, api/index.ts, model Gemini, Supabase Auth, Cloud H
 - Pilihan bahasa dikirim ke backend storyboard dan dipakai saat generate maupun regenerate scene/field.
 - Mode Bahasa Indonesia membuat imagePrompt/videoPrompt bisa ditulis dalam Bahasa Indonesia, dengan bracket video tetap standar English agar format stabil.
 - Tidak mengubah Gemini model, TTS endpoint, Supabase save/load/history, atau logic core generator.
+
+## Patch: Regenerate Preset Buttons
+
+Added quick repair preset buttons inside each Scene Edit & Regenerate Lab:
+- Veo Failed
+- Kling Failed
+- Too Static
+- Too Complex
+- More Emotional
+- More Viral
+- Image Mismatch
+- TTS Flat
+
+These presets only fill the repair comment box. Existing targeted regenerate buttons still control what gets regenerated, so users can combine a preset with Fix Video Prompt, Fix Image Prompt, Fix TTS, Fix Desc, or Regenerate Full Scene.

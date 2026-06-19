@@ -791,6 +791,38 @@ export default function App() {
         }
 
 
+        function getRegenPresetText(preset: string) {
+            const presets: Record<string, string> = {
+                veo_failed: 'Ini di Veo failed generate. Tolong perbaiki supaya instruksi video lebih sederhana, jelas, tidak kontradiktif, gerakan kamera tidak terlalu rumit, dan semua motion bisa dilakukan secara fisik.',
+                kling_failed: 'Ini di Kling gagal atau hasilnya aneh. Tolong buat prompt video lebih stabil, motion lebih natural, objek tidak berubah bentuk, kamera lebih sederhana, dan durasi gerakan sesuai scene.',
+                too_static: 'Scene ini terlalu statis. Tolong tambahkan motion kecil yang natural pada karakter, background, atmosphere, dan visual hook, tapi jangan terlalu ramai.',
+                too_complex: 'Prompt ini terlalu kompleks. Tolong sederhanakan instruksi visual, kurangi gerakan kamera yang berlebihan, fokus pada satu aksi utama, dan buat lebih mudah dipahami AI video generator.',
+                more_emotional: 'Tolong buat scene ini lebih emosional dan cinematic. Perkuat ekspresi karakter, mood, tension, lighting, dan visual hook tanpa mengubah inti cerita.',
+                more_viral: 'Tolong buat scene ini lebih cocok untuk Shorts/Reels. Perkuat hook visual 1-2 detik pertama, buat lebih dramatis, jelas, dan mudah bikin penonton berhenti scroll.',
+                image_not_match: 'Text-to-image prompt belum sesuai scene. Tolong perjelas karakter utama, pose, ekspresi, environment, lighting, composition, aspect ratio, dan style agar hasil gambar lebih konsisten.',
+                tts_flat: 'Narasi TTS terasa datar. Tolong buat lebih natural, emosional, pendek, enak dibaca voice over, dan lebih cocok untuk konten Shorts Indonesia.'
+            };
+            return presets[preset] || '';
+        }
+
+        function applyRegenPreset(index: number, preset: string) {
+            const feedbackEl = document.getElementById(`regenFeedback_${index}`) as HTMLTextAreaElement | null;
+            if (!feedbackEl) {
+                showToast('Box komentar regenerate tidak ditemukan.', 'error');
+                return;
+            }
+            const presetText = getRegenPresetText(preset);
+            if (!presetText) {
+                showToast('Preset tidak ditemukan.', 'error');
+                return;
+            }
+            const current = feedbackEl.value.trim();
+            feedbackEl.value = current ? `${current}\n\n${presetText}` : presetText;
+            feedbackEl.focus();
+            showToast('Preset komentar ditambahkan. Pilih Fix field atau Regenerate Full Scene.', 'success');
+        }
+
+
         function getStoryboardOutputLanguage() {
             return (document.getElementById('outputLanguage') as HTMLSelectElement | null)?.value || 'mixed';
         }
@@ -1988,7 +2020,17 @@ GENERAL RULES:
                                     <div class="space-y-1.5 border-t border-slate-800/70 pt-3">
                                         <label class="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Komentar Regenerate / Repair Note</label>
                                         <textarea id="regenFeedback_${index}" class="w-full min-h-[80px] rounded-xl bg-[#07080d] border border-amber-500/20 p-3 text-xs text-slate-200 outline-none focus:border-amber-500 resize-y" placeholder="Contoh: ini di Veo failed generate, gerakan kamera terlalu rumit, tolong bikin prompt video lebih simpel dan jelas."></textarea>
-                                        <p class="text-[9px] text-slate-500">Pilih regenerate field tertentu kalau hanya prompt video / image / TTS yang bermasalah. Pilih Regenerate Scene kalau satu scene perlu diperbaiki total.</p>
+                                        <p class="text-[9px] text-slate-500">Pilih preset cepat di bawah, atau tulis komentar manual. Setelah itu klik Fix field tertentu atau Regenerate Full Scene.</p>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5 pt-1">
+                                            <button class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="veo_failed" data-index="${index}">Veo Failed</button>
+                                            <button class="bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="kling_failed" data-index="${index}">Kling Failed</button>
+                                            <button class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="too_static" data-index="${index}">Too Static</button>
+                                            <button class="bg-slate-500/10 hover:bg-slate-500/20 text-slate-300 border border-slate-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="too_complex" data-index="${index}">Too Complex</button>
+                                            <button class="bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="more_emotional" data-index="${index}">More Emotional</button>
+                                            <button class="bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="more_viral" data-index="${index}">More Viral</button>
+                                            <button class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="image_not_match" data-index="${index}">Image Mismatch</button>
+                                            <button class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-1.5 px-2 rounded-lg text-[8px] transition cursor-pointer" data-action="apply-regen-preset" data-preset="tts_flat" data-index="${index}">TTS Flat</button>
+                                        </div>
                                     </div>
 
                                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -3376,6 +3418,14 @@ GENERAL RULES:
             if (saveSceneEditsBtn) {
                 const idx = parseInt(saveSceneEditsBtn.getAttribute('data-index') || '0', 10);
                 saveSceneManualEdits(idx);
+                return;
+            }
+
+            const regenPresetBtn = target.closest('[data-action="apply-regen-preset"]');
+            if (regenPresetBtn) {
+                const idx = parseInt(regenPresetBtn.getAttribute('data-index') || '0', 10);
+                const preset = regenPresetBtn.getAttribute('data-preset') || '';
+                applyRegenPreset(idx, preset);
                 return;
             }
 
