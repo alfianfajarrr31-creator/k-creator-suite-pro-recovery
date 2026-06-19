@@ -146,7 +146,8 @@ export default function App() {
                 authSession: null as any,
                 authUser: null as any,
                 cloudProjects: [] as any[],
-                activeCloudProjectId: null as string | null
+                activeCloudProjectId: null as string | null,
+                sceneVersionHistory: {} as Record<string, any[]>
             },
             listeners: [] as Array<(state: any, oldState: any) => void>,
             subscribe(fn: (state: any, oldState: any) => void) {
@@ -652,6 +653,71 @@ export default function App() {
             showToast('Project berhasil diexport ke JSON.', 'success');
         }
 
+
+        function getSceneHistoryKey(index: number) {
+            const scene = AppStore.state.activeStoryboardData?.scenes?.[index];
+            return String(scene?.scene_number || index + 1);
+        }
+
+        function getSceneVersionCount(index: number) {
+            const key = getSceneHistoryKey(index);
+            return (AppStore.state.sceneVersionHistory?.[key] || []).length;
+        }
+
+        function pushSceneVersionSnapshot(index: number, reason = 'Before edit') {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            const scene = storyboardData?.scenes?.[index];
+            if (!scene) return;
+            const key = getSceneHistoryKey(index);
+            const history = { ...(AppStore.state.sceneVersionHistory || {}) };
+            const stack = Array.isArray(history[key]) ? [...history[key]] : [];
+            stack.unshift({
+                id: generateSecureId(),
+                reason,
+                saved_at: new Date().toISOString(),
+                scene: JSON.parse(JSON.stringify(scene))
+            });
+            history[key] = stack.slice(0, 8);
+            AppStore.setState({ sceneVersionHistory: history });
+        }
+
+        function undoLastSceneVersion(index: number) {
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes) || !storyboardData.scenes[index]) {
+                showToast('Scene tidak ditemukan untuk undo.', 'error');
+                return;
+            }
+
+            const key = getSceneHistoryKey(index);
+            const history = { ...(AppStore.state.sceneVersionHistory || {}) };
+            const stack = Array.isArray(history[key]) ? [...history[key]] : [];
+            const previous = stack.shift();
+            if (!previous?.scene) {
+                showToast('Belum ada versi sebelumnya untuk scene ini.', 'warning');
+                return;
+            }
+
+            pushSceneVersionSnapshot(index, successMessage.includes('Regenerate') || successMessage.includes('diperbaiki') ? 'Before AI regenerate' : 'Before manual edit');
+            const cloned = JSON.parse(JSON.stringify(storyboardData));
+            cloned.scenes[index] = {
+                ...previous.scene,
+                scene_number: previous.scene.scene_number || cloned.scenes[index].scene_number || index + 1
+            };
+            history[key] = stack;
+            AppStore.setState({ activeStoryboardData: cloned, sceneVersionHistory: history });
+            Views.renderStoryboard(cloned, AppStore.state.activeRatio);
+            markActiveStoryboardDirty('Undo');
+            showToast(`Scene ${cloned.scenes[index].scene_number || index + 1} dikembalikan ke versi sebelumnya.`, 'success');
+        }
+
+        function clearSceneVersionHistory(index: number) {
+            const key = getSceneHistoryKey(index);
+            const history = { ...(AppStore.state.sceneVersionHistory || {}) };
+            history[key] = [];
+            AppStore.setState({ sceneVersionHistory: history });
+            Views.renderStoryboard(AppStore.state.activeStoryboardData, AppStore.state.activeRatio);
+            showToast('Version history scene dibersihkan.', 'success');
+        }
 
         function markActiveStoryboardDirty(label = 'Edited') {
             const user = AppStore.state.authUser;
@@ -1310,7 +1376,8 @@ GENERAL RULES:
                 activeStoryboardData: storyboard,
                 activeRatio: ratio,
                 currentActiveHistoryId: item.id,
-                activeCloudProjectId: item.id
+                activeCloudProjectId: item.id,
+                sceneVersionHistory: {}
             });
 
             const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement | null;
@@ -1984,10 +2051,19 @@ GENERAL RULES:
                                     <div>
                                         <h4 class="text-[10px] font-bold text-amber-300 uppercase tracking-widest font-mono">✍️ Scene Edit & Regenerate Lab</h4>
                                         <p class="text-[10px] text-slate-500 mt-1">Edit manual atau beri komentar lalu regenerate scene ini saja.</p>
+                                        <p class="text-[9px] text-slate-600 mt-1">Version History: ${getSceneVersionCount(index)} versi tersimpan untuk undo.</p>
                                     </div>
-                                    <button class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-[10px] font-bold transition cursor-pointer" data-action="toggle-scene-editor" data-index="${index}">
-                                        Buka / Tutup Editor
-                                    </button>
+                                    <div class="flex flex-wrap gap-1.5 justify-end">
+                                        <button class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-[10px] font-bold transition cursor-pointer" data-action="undo-scene-version" data-index="${index}">
+                                            ↩️ Undo Last
+                                        </button>
+                                        <button class="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-500 rounded-xl text-[10px] font-bold transition cursor-pointer" data-action="clear-scene-version-history" data-index="${index}">
+                                            Clear History
+                                        </button>
+                                        <button class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-[10px] font-bold transition cursor-pointer" data-action="toggle-scene-editor" data-index="${index}">
+                                            Buka / Tutup Editor
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div id="sceneEditor_${index}" class="hidden space-y-3 pt-2">
@@ -2603,7 +2679,7 @@ GENERAL RULES:
 
             const parsedData = result.data;
             parsedData.outputLanguage = getStoryboardOutputLanguage();
-            AppStore.setState({ activeStoryboardData: parsedData });
+            AppStore.setState({ activeStoryboardData: parsedData, sceneVersionHistory: {} });
 
             const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLSelectElement)?.value || "Anime";
             const projectId = generateSecureId();
@@ -3311,6 +3387,7 @@ GENERAL RULES:
                         currentActiveHistoryId: id,
                         activeStoryboardData: project.data_json,
                         activeRatio: project.ratio || '16:9',
+                        sceneVersionHistory: {},
                         currentlyOpenDrawerId: null
                     });
                     const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement;
@@ -3411,6 +3488,22 @@ GENERAL RULES:
                 const idx = toggleSceneEditorBtn.getAttribute('data-index') || '0';
                 const editor = document.getElementById(`sceneEditor_${idx}`);
                 if (editor) editor.classList.toggle('hidden');
+                return;
+            }
+
+            const undoSceneVersionBtn = target.closest('[data-action="undo-scene-version"]');
+            if (undoSceneVersionBtn) {
+                const idx = parseInt(undoSceneVersionBtn.getAttribute('data-index') || '0', 10);
+                undoLastSceneVersion(idx);
+                return;
+            }
+
+            const clearSceneVersionBtn = target.closest('[data-action="clear-scene-version-history"]');
+            if (clearSceneVersionBtn) {
+                const idx = parseInt(clearSceneVersionBtn.getAttribute('data-index') || '0', 10);
+                if (confirm('Hapus version history scene ini? Scene aktif tidak akan ikut terhapus.')) {
+                    clearSceneVersionHistory(idx);
+                }
                 return;
             }
 
@@ -3637,7 +3730,8 @@ GENERAL RULES:
                     AppStore.setState({
                         currentActiveHistoryId: id,
                         activeStoryboardData: item.data,
-                        activeRatio: item.ratio
+                        activeRatio: item.ratio,
+                        sceneVersionHistory: {}
                     });
                     const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement;
                     if (themeInput) themeInput.value = item.theme;

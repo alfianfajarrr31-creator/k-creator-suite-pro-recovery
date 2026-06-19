@@ -52,3 +52,12 @@ Added quick repair preset buttons inside each Scene Edit & Regenerate Lab:
 - TTS Flat
 
 These presets only fill the repair comment box. Existing targeted regenerate buttons still control what gets regenerated, so users can combine a preset with Fix Video Prompt, Fix Image Prompt, Fix TTS, Fix Desc, or Regenerate Full Scene.
+
+
+## Patch: Scene Version History / Undo
+
+- Menambahkan snapshot otomatis sebelum manual edit, targeted regenerate, dan full regenerate scene.
+- Menambahkan tombol `Undo Last` di setiap Scene Edit & Regenerate Lab.
+- Menambahkan tombol `Clear History` untuk membersihkan riwayat versi scene tertentu.
+- Maksimal 8 snapshot per scene agar state tetap ringan.
+- Tidak mengubah GeminiService, api/index.ts, model Gemini, Supabase Auth, Cloud History, Export, atau Bulk Copy.
