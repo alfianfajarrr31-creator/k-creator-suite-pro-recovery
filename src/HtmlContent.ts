@@ -438,72 +438,112 @@ export const HTML_CONTENT = `
                     <!-- Storyboard Contents Stack (Appears dynamically) -->
                     <div id="storyboardContainer" class="hidden space-y-6">
                         
-                        <!-- Viral Distribution Kit Panel -->
-                        <div class="bg-[#08090e] border border-indigo-500/15 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-                            <div class="flex items-center gap-2 mb-4 border-b border-slate-855 pb-3">
-                                <span class="text-xl">🚀</span>
-                                <div>
-                                    <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Viral Distribution & Optimization Kit</h3>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">Materi copy promosi otomatis buatan AI untuk menembus FYP TikTok, Reels, & Shorts.</p>
+                        <!-- Scenes deck list (Main Focus is now at the top!) -->
+                        <div id="scenesContainer" class="space-y-4"></div>
+
+                        <!-- Collapsible Publishing Package Section at the bottom -->
+                        <div class="bg-[#08090e] border border-slate-800 rounded-2xl shadow-2xl relative overflow-hidden">
+                            <!-- Collapsible Trigger Header -->
+                            <button id="btnTogglePublishingPackage" data-action="toggle-publishing-package" class="w-full text-left p-5 flex items-center justify-between hover:bg-slate-900/40 transition cursor-pointer select-none">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl">📦</span>
+                                    <div>
+                                        <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                                            Publishing Package 
+                                            <span class="text-[8px] lowercase bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/20 font-mono">caption, hashtags, hooks & thumbnail</span>
+                                        </h3>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">Materi asisten publikasi otomatis buatan AI untuk menembus FYP TikTok, Reels, & Shorts.</p>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Distribution Cards Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Col 1: YouTube Shorts and Hashtags -->
-                                <div class="space-y-4">
-                                    <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <span class="text-[10px] font-bold text-rose-455 uppercase font-sans tracking-wide">YouTube Shorts Title</span>
-                                            <button id="btnCopyYtTitle" data-action="copy-field" data-field-id="ytTitleText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
-                                        </div>
-                                        <p id="ytTitleText" class="text-xs font-bold text-slate-200 leading-relaxed"></p>
-                                    </div>
-                                    <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <span class="text-[10px] font-bold text-red-500 uppercase font-sans tracking-wide">YouTube Shorts Description</span>
-                                            <button id="btnCopyYtDesc" data-action="copy-field" data-field-id="ytDescText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
-                                        </div>
-                                        <p id="ytDescText" class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto custom-scrollbar"></p>
-                                    </div>
-                                    <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <span class="text-[10px] font-bold text-indigo-400 uppercase font-sans tracking-wide">Viral Hashtags</span>
-                                            <button id="btnCopyHashtags" data-action="copy-field" data-field-id="hashtagsText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
-                                        </div>
-                                        <p id="hashtagsText" class="text-xs text-indigo-300 font-semibold font-mono tracking-wide"></p>
+                                <div class="flex items-center gap-2">
+                                    <span id="publishingPackageToggleLabel" class="text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-slate-900 px-2 py-1 rounded">Buka / Tutup</span>
+                                    <span id="publishingPackageToggleIcon" class="text-xs transition-transform duration-200 transform">▼</span>
+                                </div>
+                            </button>
+
+                            <!-- Collapsible Content (Default: collapsed/hidden) -->
+                            <div id="publishingPackageContent" class="hidden border-t border-slate-855/60 p-5 space-y-5 bg-[#0a0b11]">
+                                <!-- Action Row for Regeneration -->
+                                <div class="flex flex-wrap items-center justify-between gap-3 bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">⚡ Asisten Optimasi Publishing</span>
+                                    <div class="flex items-center gap-2">
+                                        <button id="btnRegenThumbnailText" data-action="regen-thumbnail-text" class="bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/25 px-2.5 py-1.5 rounded-lg text-[9px] font-bold transition flex items-center gap-1 cursor-pointer">
+                                            🔄 Regen Thumbnail Text
+                                        </button>
+                                        <button id="btnRegenPublishingPackage" data-action="regen-publishing-package" class="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/25 px-2.5 py-1.5 rounded-lg text-[9px] font-bold transition flex items-center gap-1 cursor-pointer">
+                                            🔄 Regen Full Package
+                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- Col 2: Social Media & Cover Prompt -->
-                                <div class="space-y-4">
-                                    <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <span class="text-[10px] font-bold text-teal-400 uppercase font-sans tracking-wide">TikTok Caption</span>
-                                            <button id="btnCopyTiktokCaption" data-action="copy-field" data-field-id="tiktokCaptionText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                <!-- Distribution Cards Grid -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Col 1: YouTube Shorts and Hashtags -->
+                                    <div class="space-y-4">
+                                        <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-rose-455 uppercase font-sans tracking-wide">YouTube Shorts Title</span>
+                                                <button id="btnCopyYtTitle" data-action="copy-field" data-field-id="ytTitleText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                            </div>
+                                            <p id="ytTitleText" class="text-xs font-bold text-slate-200 leading-relaxed"></p>
                                         </div>
-                                        <p id="tiktokCaptionText" class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto custom-scrollbar"></p>
+                                        <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-red-500 uppercase font-sans tracking-wide">YouTube Shorts Description</span>
+                                                <button id="btnCopyYtDesc" data-action="copy-field" data-field-id="ytDescText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                            </div>
+                                            <p id="ytDescText" class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto custom-scrollbar"></p>
+                                        </div>
+                                        <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-indigo-400 uppercase font-sans tracking-wide">Viral Hashtags</span>
+                                                <button id="btnCopyHashtags" data-action="copy-field" data-field-id="hashtagsText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                            </div>
+                                            <p id="hashtagsText" class="text-xs text-indigo-300 font-semibold font-mono tracking-wide"></p>
+                                        </div>
                                     </div>
-                                    <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <span class="text-[10px] font-bold text-pink-400 uppercase font-sans tracking-wide">Instagram Caption</span>
-                                            <button id="btnCopyIgCaption" data-action="copy-field" data-field-id="igCaptionText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+
+                                    <!-- Col 2: Social Media & Cover Prompt -->
+                                    <div class="space-y-4">
+                                        <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-teal-400 uppercase font-sans tracking-wide">TikTok Caption</span>
+                                                <button id="btnCopyTiktokCaption" data-action="copy-field" data-field-id="tiktokCaptionText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                            </div>
+                                            <p id="tiktokCaptionText" class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto custom-scrollbar"></p>
                                         </div>
-                                        <p id="igCaptionText" class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto custom-scrollbar"></p>
-                                    </div>
-                                    <div class="bg-gradient-to-tr from-indigo-950/20 to-purple-950/20 p-3 rounded-xl border border-indigo-500/20">
-                                        <div class="flex justify-between items-center mb-1.5">
-                                            <span class="text-[10px] font-bold text-indigo-300 uppercase font-sans tracking-wider flex items-center gap-1">✨ Cover / Thumbnail Prompt</span>
-                                            <button id="btnCopyThumbnailPrompt" data-action="copy-field" data-field-id="thumbnailPromptText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin Prompt</button>
+                                        <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-pink-400 uppercase font-sans tracking-wide">Instagram Caption</span>
+                                                <button id="btnCopyIgCaption" data-action="copy-field" data-field-id="igCaptionText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                            </div>
+                                            <p id="igCaptionText" class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto custom-scrollbar"></p>
                                         </div>
-                                        <p id="thumbnailPromptText" class="text-[11px] text-slate-300 leading-relaxed font-mono bg-black/40 p-2.5 rounded-lg border border-slate-800/80 max-h-24 overflow-y-auto custom-scrollbar"></p>
+
+                                        <!-- Editable Hook Thumbnail Text (New Feature) -->
+                                        <div class="bg-gradient-to-tr from-amber-950/20 to-indigo-950/20 p-3 rounded-xl border border-amber-500/20 space-y-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[10px] font-bold text-amber-400 uppercase font-sans tracking-wide flex items-center gap-1">🎟️ Thumbnail Text</span>
+                                                <button id="btnCopyThumbnailText" data-action="copy-input-field" data-field-id="thumbnailTextValue" class="text-[9px] text-slate-400 hover:text-amber-300 font-mono font-bold cursor-pointer transition">Salin Teks</button>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <input type="text" id="thumbnailTextVal" class="w-full text-xs font-bold text-amber-200 bg-black/40 border border-amber-500/15 rounded-lg p-2 focus:border-amber-500/80 focus:outline-none transition" placeholder="Masukkan teks utama thumbnail di sini...">
+                                                <input type="text" id="thumbnailTextAltVal" class="w-full text-[11px] text-slate-450 bg-black/20 border border-slate-800/80 rounded-lg p-1.5 focus:border-indigo-500/50 focus:outline-none transition" placeholder="Alternatif Teks Hook...">
+                                            </div>
+                                            <p class="text-[9px] text-slate-400 mt-1 italic">Kalau tidak suka, ganti teks thumbnail di sini.</p>
+                                        </div>
+
+                                        <div class="bg-gradient-to-tr from-indigo-950/20 to-purple-950/20 p-3 rounded-xl border border-indigo-500/20 font-sans">
+                                            <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-indigo-300 uppercase font-sans tracking-wider flex items-center gap-1">✨ Cover / Thumbnail Prompt</span>
+                                                <button id="btnCopyThumbnailPrompt" data-action="copy-field" data-field-id="thumbnailPromptText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin Prompt</button>
+                                            </div>
+                                            <p id="thumbnailPromptText" class="text-[11px] text-slate-300 leading-relaxed font-mono bg-black/40 p-2.5 rounded-lg border border-slate-800/80 max-h-24 overflow-y-auto custom-scrollbar"></p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Scenes deck list -->
-                        <div id="scenesContainer" class="space-y-4"></div>
                     </div>
                 </div>
             </section>

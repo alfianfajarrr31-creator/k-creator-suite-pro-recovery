@@ -60,7 +60,9 @@ Your JSON MUST contain the following fields:
 4. "instagram_caption": An engaging Instagram Reel caption, following Output Language Directive.
 5. "viral_hashtags": Space-separated trending hashtags.
 6. "thumbnail_prompt": A professional, detailed image prompt to generate YouTube thumbnail (Art Style: "${animStyle}"), following Output Language Directive.
-7. "scenes": An array of scene objects.
+7. "thumbnail_text": A punchy visual hook text to write directly on the youtube thumbnail image (max 3-5 words, e.g. "RAHASIA GELAP!"). Must follow Output Language Directive.
+8. "thumbnail_text_alt": A single strong alternative hook text to write on the thumbnail image (max 3-5 words). Must follow Output Language Directive.
+9. "scenes": An array of scene objects.
 
 For EACH scene, generate:
 - "scene_number": Integer starting from 1
@@ -98,6 +100,8 @@ For EACH scene, generate:
                         instagram_caption: { type: "STRING" },
                         viral_hashtags: { type: "STRING" },
                         thumbnail_prompt: { type: "STRING" },
+                        thumbnail_text: { type: "STRING" },
+                        thumbnail_text_alt: { type: "STRING" },
                         scenes: {
                             type: "ARRAY",
                             items: {
@@ -123,7 +127,7 @@ For EACH scene, generate:
                             }
                         }
                     },
-                    required: ["youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "scenes"]
+                    required: ["youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "thumbnail_text", "thumbnail_text_alt", "scenes"]
                 }
             }
         };
@@ -209,6 +213,120 @@ For EACH scene, generate:
         return res.json(data);
     } catch (error: any) {
         console.error("Storyboard backend error:", error);
+        return res.status(500).json({ success: false, error: error.message || String(error) });
+    }
+});
+
+// 1.5. REGENERATE SINGLE THUMBNAIL TEXT ENDPOINT
+app.post("/api/gemini/regenerate-thumbnail-text", async (req, res) => {
+    try {
+        const { theme, currentStoryboardText, currentYoutubeTitle } = req.body;
+        const finalKey = process.env.GEMINI_API_KEY;
+        if (!finalKey) {
+            return res.status(400).json({ success: false, error: "Environment GEMINI_API_KEY belum dikonfigurasi" });
+        }
+
+        const systemPrompt = `You are an elite viral designer. Create a fresh, highly clickable Thumbnail Text visual hook and image generation prompt based on the user's theme and storyboard.
+Your output MUST be entirely in valid JSON format. DO NOT output markdown codeblocks. Just the raw JSON object.
+JSON fields:
+1. "thumbnail_text": visual hook text (max 3-5 words)
+2. "thumbnail_text_alt": unique alternate hook text (max 3-5 words)
+3. "thumbnail_prompt": highly-detailed visual illustration prompt for the thumbnail image.`;
+
+        const payload = {
+            contents: [{ parts: [{ text: `Theme: ${theme}\nTitle: ${currentYoutubeTitle}\nStoryboard reference:\n${currentStoryboardText}` }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        thumbnail_text: { type: "STRING" },
+                        thumbnail_text_alt: { type: "STRING" },
+                        thumbnail_prompt: { type: "STRING" }
+                    },
+                    required: ["thumbnail_text", "thumbnail_text_alt", "thumbnail_prompt"]
+                }
+            }
+        };
+
+        const validatedUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${finalKey}`;
+        const rawResponse = await fetch(validatedUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-Agent": "aistudio-build" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!rawResponse.ok) {
+            return res.status(rawResponse.status).json({ success: false, error: `Gagal re-generate thumbnail text (${rawResponse.status})` });
+        }
+
+        const data = await rawResponse.json();
+        return res.json(data);
+    } catch (error: any) {
+        console.error("Regenerate thumbnail text error:", error);
+        return res.status(500).json({ success: false, error: error.message || String(error) });
+    }
+});
+
+// 1.6. REGENERATE FULL PUBLISHING PACKAGE ENDPOINT
+app.post("/api/gemini/regenerate-publishing", async (req, res) => {
+    try {
+        const { theme, narratorStyle, animStyle, outputLanguage, currentStoryboardText } = req.body;
+        const finalKey = process.env.GEMINI_API_KEY;
+        if (!finalKey) {
+            return res.status(400).json({ success: false, error: "Environment GEMINI_API_KEY belum dikonfigurasi" });
+        }
+
+        const systemPrompt = `You are K-Director, an elite AI Social Media distribution agent. Create a revised, hyper-optimized social media publishing package matching the specified output language.
+Your output MUST be entirely in valid JSON format. DO NOT output markdown codeblocks. Just the raw JSON object.
+JSON fields:
+1. "youtube_title": catchy Shorts title
+2. "youtube_description": structured Shorts description
+3. "tiktok_caption": high-converting TikTok caption
+4. "instagram_caption": engaging IG caption
+5. "viral_hashtags": space-separated hashtags
+6. "thumbnail_prompt": professional cover generation prompt
+7. "thumbnail_text": hook text (max 3-5 words)
+8. "thumbnail_text_alt": alternate hook text (max 3-5 words)`;
+
+        const payload = {
+            contents: [{ parts: [{ text: `Theme: ${theme}\nVoice: ${narratorStyle}\nArt Style: ${animStyle}\nLanguage: ${outputLanguage}\nStoryboard reference:\n${currentStoryboardText}` }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        youtube_title: { type: "STRING" },
+                        youtube_description: { type: "STRING" },
+                        tiktok_caption: { type: "STRING" },
+                        instagram_caption: { type: "STRING" },
+                        viral_hashtags: { type: "STRING" },
+                        thumbnail_prompt: { type: "STRING" },
+                        thumbnail_text: { type: "STRING" },
+                        thumbnail_text_alt: { type: "STRING" }
+                    },
+                    required: ["youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "thumbnail_text", "thumbnail_text_alt"]
+                }
+            }
+        };
+
+        const validatedUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${finalKey}`;
+        const rawResponse = await fetch(validatedUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-Agent": "aistudio-build" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!rawResponse.ok) {
+            return res.status(rawResponse.status).json({ success: false, error: `Gagal re-generate publishing package (${rawResponse.status})` });
+        }
+
+        const data = await rawResponse.json();
+        return res.json(data);
+    } catch (error: any) {
+        console.error("Regenerate publishing package error:", error);
         return res.status(500).json({ success: false, error: error.message || String(error) });
     }
 });

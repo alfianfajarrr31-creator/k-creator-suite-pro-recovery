@@ -2062,6 +2062,15 @@ GENERAL RULES:
                 const tprompt = document.getElementById('thumbnailPromptText');
                 if (tprompt) tprompt.innerText = data.thumbnail_prompt;
 
+                const thumbText = document.getElementById('thumbnailTextVal') as HTMLInputElement | null;
+                if (thumbText) {
+                    thumbText.value = data.thumbnail_text || data.thumbnail_hook || (data.youtube_title ? data.youtube_title.split("|")[0].trim() : "RAHASIA BARU!");
+                }
+                const thumbTextAlt = document.getElementById('thumbnailTextAltVal') as HTMLInputElement | null;
+                if (thumbTextAlt) {
+                    thumbTextAlt.value = data.thumbnail_text_alt || "TIPS VIRAL";
+                }
+
                 const deck = document.getElementById('scenesContainer');
                 if (!deck) return;
                 deck.innerHTML = "";
@@ -3049,9 +3058,223 @@ GENERAL RULES:
             }
         }
 
+        function getActiveStoryboardTextReference() {
+            const data = AppStore.state.activeStoryboardData;
+            if (!data || !data.scenes) return "No active storyboard.";
+            return data.scenes.map((s: any) => `Scene ${s.scene_number}: ${s.scene_description}\nVoice narration: ${s.narrator_script}`).join("\n\n");
+        }
+
+        async function regenerateThumbnailTextOnly() {
+            const activeData = AppStore.state.activeStoryboardData;
+            if (!activeData) {
+                showToast("Belum ada storyboard aktif untuk di-regenerate.", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('btnRegenThumbnailText') as HTMLButtonElement | null;
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ Generating...";
+            }
+            updateGlobalStatus("Memperbarui Cover Hook...", "amber");
+
+            try {
+                const currentText = getActiveStoryboardTextReference();
+                const theme = (document.getElementById('themeInput') as HTMLTextAreaElement)?.value || "";
+                const title = activeData.youtube_title || "";
+
+                const response = await fetch("/api/gemini/regenerate-thumbnail-text", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        theme,
+                        currentStoryboardText: currentText,
+                        currentYoutubeTitle: title
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Gagal memperoleh respons re-enforcement dari server.");
+                }
+
+                const json = await response.json();
+                const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                const cleanedJsonText = sanitizeAndCleanJSON(rawText);
+                const parsed = JSON.parse(cleanedJsonText);
+
+                if (parsed.thumbnail_text) {
+                    // Update active storyboard data in memory
+                    activeData.thumbnail_text = parsed.thumbnail_text;
+                    activeData.thumbnail_text_alt = parsed.thumbnail_text_alt || "";
+                    activeData.thumbnail_prompt = parsed.thumbnail_prompt || "";
+
+                    const thumbText = document.getElementById('thumbnailTextVal') as HTMLInputElement | null;
+                    if (thumbText) thumbText.value = parsed.thumbnail_text;
+                    const thumbTextAlt = document.getElementById('thumbnailTextAltVal') as HTMLInputElement | null;
+                    if (thumbTextAlt) thumbTextAlt.value = parsed.thumbnail_text_alt || "";
+                    const promptText = document.getElementById('thumbnailPromptText');
+                    if (promptText) promptText.innerText = parsed.thumbnail_prompt;
+
+                    // Autosave changes
+                    const currentId = AppStore.state.currentActiveHistoryId;
+                    if (currentId) {
+                        const project = await ProjectRepo.get(currentId);
+                        if (project) {
+                            project.data_json = activeData;
+                            project.thumbnail_prompt = parsed.thumbnail_prompt;
+                            await ProjectRepo.put(project);
+                        }
+                    }
+
+                    showToast("Teks & Prompt Thumbnail berhasil diperbarui!", "success");
+                    await logWorkflowActivity("Memperbarui data visual cover thumbnail via AI", "success");
+                }
+            } catch (err: any) {
+                console.error("Regen thumbnail error:", err);
+                showToast("Gagal memperbarui thumbnail text: " + (err.message || err), "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "🔄 Regen Thumbnail Text";
+                }
+                updateGlobalStatus("Director Studio Active", "indigo");
+            }
+        }
+
+        async function regeneratePublishingPackageOnly() {
+            const activeData = AppStore.state.activeStoryboardData;
+            if (!activeData) {
+                showToast("Belum ada storyboard aktif untuk di-regenerate.", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('btnRegenPublishingPackage') as HTMLButtonElement | null;
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ Generating...";
+            }
+            updateGlobalStatus("Memperbarui Publishing Kit...", "amber");
+
+            try {
+                const currentText = getActiveStoryboardTextReference();
+                const theme = (document.getElementById('themeInput') as HTMLTextAreaElement)?.value || "";
+                const narratorStyle = (document.getElementById('narratorStyle') as HTMLSelectElement)?.value || "default";
+                const animStyle = (document.getElementById('animationStyle') as HTMLSelectElement)?.value || "default";
+                const outputLanguage = getStoryboardOutputLanguage();
+
+                const response = await fetch("/api/gemini/regenerate-publishing", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        theme,
+                        narratorStyle,
+                        animStyle,
+                        outputLanguage,
+                        currentStoryboardText: currentText
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Gagal memperoleh respons publishing dari server.");
+                }
+
+                const json = await response.json();
+                const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                const cleanedJsonText = sanitizeAndCleanJSON(rawText);
+                const parsed = JSON.parse(cleanedJsonText);
+
+                if (parsed.youtube_title) {
+                    // Update active storyboard data in memory
+                    activeData.youtube_title = parsed.youtube_title;
+                    activeData.youtube_description = parsed.youtube_description;
+                    activeData.tiktok_caption = parsed.tiktok_caption;
+                    activeData.instagram_caption = parsed.instagram_caption;
+                    activeData.viral_hashtags = parsed.viral_hashtags;
+                    activeData.thumbnail_prompt = parsed.thumbnail_prompt;
+                    activeData.thumbnail_text = parsed.thumbnail_text;
+                    activeData.thumbnail_text_alt = parsed.thumbnail_text_alt || "";
+
+                    // Run standard renderer bindings
+                    Views.renderStoryboard(activeData, AppStore.state.activeRatio);
+
+                    // Autosave changes
+                    const currentId = AppStore.state.currentActiveHistoryId;
+                    if (currentId) {
+                        const project = await ProjectRepo.get(currentId);
+                        if (project) {
+                            project.data_json = activeData;
+                            project.thumbnail_prompt = parsed.thumbnail_prompt;
+                            await ProjectRepo.put(project);
+                        }
+                    }
+
+                    showToast("Publishing Package berhasil di-regenerate secara penuh!", "success");
+                    await logWorkflowActivity("Memperbarui asisten optimistis materi publishing", "success");
+                }
+            } catch (err: any) {
+                console.error("Regen publishing package error:", err);
+                showToast("Gagal memperbarui publishing package: " + (err.message || err), "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "🔄 Regen Full Package";
+                }
+                updateGlobalStatus("Director Studio Active", "indigo");
+            }
+        }
+
         // Event delegation handlers
         const clickHandler = async (e: MouseEvent) => {
             const target = e.target as HTMLElement;
+
+            // 1. Toggle Publishing Package Accordion
+            if (target.closest('[data-action="toggle-publishing-package"]')) {
+                const content = document.getElementById('publishingPackageContent');
+                const icon = document.getElementById('publishingPackageToggleIcon');
+                const label = document.getElementById('publishingPackageToggleLabel');
+                if (content && icon) {
+                    const isHidden = content.classList.contains('hidden');
+                    if (isHidden) {
+                        content.classList.remove('hidden');
+                        icon.style.transform = 'rotate(180deg)';
+                        if (label) label.innerText = "Tutup Paket";
+                    } else {
+                        content.classList.add('hidden');
+                        icon.style.transform = 'rotate(0deg)';
+                        if (label) label.innerText = "Buka / Tutup";
+                    }
+                }
+                return;
+            }
+
+            // 2. Copy Input Field (values from elements instead of innerText)
+            const copyInputFieldBtn = target.closest('[data-action="copy-input-field"]');
+            if (copyInputFieldBtn) {
+                const fieldId = copyInputFieldBtn.getAttribute('data-field-id') || '';
+                let elemId = "";
+                if (fieldId === "thumbnailTextValue") {
+                    elemId = "thumbnailTextVal";
+                }
+                const inputElem = document.getElementById(elemId) as HTMLInputElement | null;
+                if (inputElem) {
+                    navigator.clipboard.writeText(inputElem.value).then(() => {
+                        showToast(`Teks "${inputElem.value}" berhasil disalin!`, "success");
+                    });
+                }
+                return;
+            }
+
+            // 3. Regen Thumbnail Text action
+            if (target.closest('[data-action="regen-thumbnail-text"]')) {
+                await regenerateThumbnailTextOnly();
+                return;
+            }
+
+            // 4. Regen Full Publishing Package action
+            if (target.closest('[data-action="regen-publishing-package"]')) {
+                await regeneratePublishingPackageOnly();
+                return;
+            }
 
             if (target.closest('[data-action="login-google"]')) {
                 await signInWithGoogle();
@@ -4008,6 +4231,26 @@ GENERAL RULES:
                 const vol = parseFloat((target as HTMLInputElement).value);
                 if (AudioEngine.gainNode) {
                     AudioEngine.gainNode.gain.setValueAtTime(vol, AudioEngine.ctx.currentTime);
+                }
+            }
+            if (target.id === 'thumbnailTextVal' || target.id === 'thumbnailTextAltVal') {
+                const activeData = AppStore.state.activeStoryboardData;
+                if (activeData) {
+                    const primaryInput = document.getElementById('thumbnailTextVal') as HTMLInputElement | null;
+                    const altInput = document.getElementById('thumbnailTextAltVal') as HTMLInputElement | null;
+                    activeData.thumbnail_text = primaryInput ? primaryInput.value : activeData.thumbnail_text;
+                    activeData.thumbnail_text_alt = altInput ? altInput.value : activeData.thumbnail_text_alt;
+                    
+                    // Save to active project
+                    const currentId = AppStore.state.currentActiveHistoryId;
+                    if (currentId) {
+                        ProjectRepo.get(currentId).then((project) => {
+                            if (project) {
+                                project.data_json = activeData;
+                                ProjectRepo.put(project);
+                            }
+                        });
+                    }
                 }
             }
         };
