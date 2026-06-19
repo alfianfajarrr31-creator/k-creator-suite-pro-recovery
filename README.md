@@ -68,7 +68,23 @@ These presets only fill the repair comment box. Existing targeted regenerate but
 - Simplified auto-title generation so titles no longer depend on project category.
 - Fixed scene undo safety bug.
 
-## UI Cleanup Patch
-- API key manual input disembunyikan dari Director dan Voice Lab karena aplikasi memakai server-side `GEMINI_API_KEY` dari Vercel Environment Variables.
-- Character Library dan Activity Timeline dipindahkan ke panel `Advanced Tools` yang collapsed by default agar workspace generate lebih bersih.
-- Voice TTS tidak lagi meminta API key manual di UI.
+
+## Patch: Daily Use v1 — Layout Breathing Room
+
+Focus patch untuk menutup Fase **Arc 1: Rescue & Stabilize** menuju **Daily Use v1**.
+
+Perubahan:
+- Canvas utama diperlebar dari `max-w-4xl` ke `max-w-7xl` supaya hasil scene lebih lega.
+- Header canvas dibuat sticky dan lebih compact.
+- Tombol utama tetap terlihat: Save/Update Cloud dan Voice Lab.
+- Tombol copy/export dipindahkan ke menu `Output Tools` supaya header tidak terlalu penuh.
+- Storyboard Scenes diberi area fokus khusus dan tetap berada sebelum Publishing Package.
+- Publishing Package tetap di bawah dan collapsed.
+
+Tidak mengubah:
+- GeminiService.ts
+- api/index.ts
+- model Gemini
+- Supabase auth/save/history
+- scene editor/regenerate
+- export/copy logic

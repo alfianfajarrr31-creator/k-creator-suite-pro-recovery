@@ -388,40 +388,51 @@ export const HTML_CONTENT = `
                     </details>
                 </div>
 
-                <div class="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-6">
+                <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col gap-4">
                     <!-- Heading banner -->
-                    <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-855 pb-5 gap-3">
+                    <div class="sticky top-0 z-20 -mx-2 md:-mx-3 px-2 md:px-3 py-3 bg-[#05060a]/92 backdrop-blur-xl flex flex-col md:flex-row md:items-start justify-between border-b border-slate-855 gap-3">
                         <div>
                             <h2 id="storyboardTitle" class="text-lg md:text-xl font-bold text-slate-100 tracking-tight">Project Storyboard Canvas</h2>
                             <p id="storyboardSub" class="text-xs text-slate-400 mt-1">Gunakan formulir kontrol di kiri untuk menghasilkan rancangan tiga pilar teks produksi video Anda.</p>
                         </div>
-                        <div id="exportBar" class="hidden flex flex-wrap items-center gap-2">
-                            <!-- Global Narration Forwarder to Voice Lab -->
-                            <button id="btnTransferAllScenes" data-action="transfer-all-scenes" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer">
-                                🎙️ Kirim Semua Narasi ke Voice Lab
-                            </button>
+                        <div id="exportBar" class="hidden flex flex-wrap items-center justify-start md:justify-end gap-2 md:max-w-xl">
+                            <!-- Primary actions stay visible for daily use -->
                             <button id="btnSaveCloudProject" data-action="save-cloud-project" class="bg-sky-600/15 hover:bg-sky-600/25 text-sky-400 border border-sky-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                 ☁️ Save / Update Cloud
                             </button>
                             <span id="cloudSaveStatus" class="hidden px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-slate-900/70 text-slate-500 border-slate-800">Unsaved</span>
-                            <button id="btnCopyFullStoryboard" data-action="copy-bulk-storyboard" data-copy-type="full" class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
-                                📦 Copy Full Package
+                            <button id="btnTransferAllScenes" data-action="transfer-all-scenes" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                🎙️ Voice Lab
                             </button>
-                            <button id="btnCopyAllNarration" data-action="copy-bulk-storyboard" data-copy-type="narration" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
-                                🎙️ Copy Narration
-                            </button>
-                            <button id="btnCopyAllImages" data-action="copy-bulk-storyboard" data-copy-type="image" class="bg-purple-600/15 hover:bg-purple-600/25 text-purple-400 border border-purple-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
-                                🎨 Copy Image Prompts
-                            </button>
-                            <button id="btnCopyAllVideos" data-action="copy-bulk-storyboard" data-copy-type="video" class="bg-teal-600/15 hover:bg-teal-600/25 text-teal-400 border border-teal-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
-                                🎥 Copy Video Prompts
-                            </button>
-                            <button id="btnExportTxt" data-action="export-project-txt" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
-                                ⬇️ Export TXT
-                            </button>
-                            <button id="btnExportJson" data-action="export-project-json" class="bg-slate-600/15 hover:bg-slate-600/25 text-slate-300 border border-slate-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
-                                {} JSON
-                            </button>
+
+                            <!-- Secondary output tools are grouped to reduce header clutter -->
+                            <details class="relative group">
+                                <summary class="list-none select-none bg-slate-800/70 hover:bg-slate-800 text-slate-300 border border-slate-700/70 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                    ⚡ Output Tools <span class="text-[9px] text-slate-500">copy/export</span>
+                                </summary>
+                                <div class="absolute right-0 mt-2 w-72 z-40 rounded-2xl border border-slate-800 bg-[#08090e] shadow-2xl p-3 grid gap-2">
+                                    <button id="btnCopyFullStoryboard" data-action="copy-bulk-storyboard" data-copy-type="full" class="w-full bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                        📦 Copy Full Package
+                                    </button>
+                                    <button id="btnCopyAllNarration" data-action="copy-bulk-storyboard" data-copy-type="narration" class="w-full bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                        🎙️ Copy Narration
+                                    </button>
+                                    <button id="btnCopyAllImages" data-action="copy-bulk-storyboard" data-copy-type="image" class="w-full bg-purple-600/15 hover:bg-purple-600/25 text-purple-400 border border-purple-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                        🎨 Copy Image Prompts
+                                    </button>
+                                    <button id="btnCopyAllVideos" data-action="copy-bulk-storyboard" data-copy-type="video" class="w-full bg-teal-600/15 hover:bg-teal-600/25 text-teal-400 border border-teal-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                        🎥 Copy Video Prompts
+                                    </button>
+                                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                                        <button id="btnExportTxt" data-action="export-project-txt" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                            ⬇️ TXT
+                                        </button>
+                                        <button id="btnExportJson" data-action="export-project-json" class="bg-slate-600/15 hover:bg-slate-600/25 text-slate-300 border border-slate-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                            {} JSON
+                                        </button>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
                     </div>
 
@@ -445,10 +456,19 @@ export const HTML_CONTENT = `
                     </div>
 
                     <!-- Storyboard Contents Stack (Appears dynamically) -->
-                    <div id="storyboardContainer" class="hidden space-y-6">
+                    <div id="storyboardContainer" class="hidden space-y-4">
                         
-                        <!-- Scenes deck list (Main Focus is now at the top!) -->
-                        <div id="scenesContainer" class="space-y-4"></div>
+                        <!-- Scenes deck list (Daily Use main focus) -->
+                        <div class="rounded-2xl border border-indigo-500/10 bg-indigo-500/[0.03] p-3 md:p-4">
+                            <div class="mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div>
+                                    <h3 class="text-xs font-bold text-slate-200 uppercase tracking-widest">🎬 Storyboard Scenes</h3>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Area utama review, edit, regenerate, copy scene, dan susun ulang alur visual.</p>
+                                </div>
+                                <span class="text-[9px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-lg font-bold uppercase tracking-wider">Daily Focus</span>
+                            </div>
+                            <div id="scenesContainer" class="space-y-4"></div>
+                        </div>
 
                         <!-- Collapsible Publishing Package Section at the bottom -->
                         <div class="bg-[#08090e] border border-slate-800 rounded-2xl shadow-2xl relative overflow-hidden">
@@ -663,7 +683,7 @@ export const HTML_CONTENT = `
 
             <!-- Right Workspace Panel (Voice Canvas) -->
             <section class="flex-1 p-6 overflow-y-auto flex flex-col bg-[#030406] relative">
-                <div class="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-6">
+                <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col gap-4">
 
                     <!-- Voice Banner -->
                     <div class="border-b border-slate-855 pb-5">
