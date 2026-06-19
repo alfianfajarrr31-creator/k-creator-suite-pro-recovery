@@ -88,16 +88,15 @@ export const HTML_CONTENT = `
                     <p class="text-xs text-slate-400 leading-relaxed">Atur naskah visual, pergerakan kamera, dan durasi video Anda.</p>
                 </div>
 
-                <!-- Shared API Key Input Field -->
+                <!-- API handled server-side: keep hidden field for legacy sync only -->
+                <input type="hidden" id="directorApiKey" value="">
                 <div class="space-y-2 border-t border-slate-800/40 pt-3">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-xs font-semibold text-slate-400">Gemini API Key</label>
-                        <span class="text-[10px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded font-semibold">Shared Key</span>
-                    </div>
-                    <input type="password" id="directorApiKey" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-indigo-500 outline-none transition" placeholder="Masukkan Kunci API Gemini Anda">
-                    <div class="grid grid-cols-2 gap-2 mt-1">
-                        <button type="button" id="btnSaveApiKey" data-action="save-api-key" class="py-1.5 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/30 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold transition text-center cursor-pointer">💾 Save Key</button>
-                        <button type="button" id="btnClearApiKey" data-action="clear-api-key" class="py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/10 text-rose-400 text-[10px] font-bold transition text-center cursor-pointer">🗑️ Clear Key</button>
+                    <div class="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3">
+                        <div class="flex items-center gap-2 text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
+                            <span>🔐</span>
+                            <span>API aman di server</span>
+                        </div>
+                        <p class="mt-1 text-[10px] leading-relaxed text-slate-500">Tidak perlu memasukkan API key manual. Gemini diproses lewat Vercel Environment Variables.</p>
                     </div>
                 </div>
 
@@ -342,16 +341,25 @@ export const HTML_CONTENT = `
                         </div>
                     </div>
 
-                    <!-- G. CHARACTER LIBRARY PANEL & RECENT ACTIVITY TIMELINE -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- G. ADVANCED TOOLS: CHARACTER LIBRARY & RECENT ACTIVITY (collapsed by default) -->
+                    <details class="group rounded-2xl border border-slate-855 bg-[#08090e]/70 p-4">
+                        <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest font-mono">Advanced Tools</h3>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Character Library dan Activity Timeline dipindahkan ke sini agar workspace utama lebih bersih.</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-lg group-open:hidden">Buka</span>
+                            <span class="text-[10px] font-bold text-slate-400 bg-slate-800/70 border border-slate-700 px-2 py-1 rounded-lg hidden group-open:inline">Tutup</span>
+                        </summary>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4">
                         <!-- Left Panel: Character Library (8 Cols) -->
                         <div class="md:col-span-8 bg-[#08090e] border border-slate-855 rounded-2xl p-5 space-y-4">
                             <div class="flex items-center justify-between border-b border-slate-855 pb-3">
                                 <div class="flex items-center gap-2">
                                     <span class="text-xl">👥</span>
                                     <div>
-                                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-widest font-mono">Character Library System</h3>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">Sistem visualisasi aktor konsisten terintegrasi database.</p>
+                                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-widest font-mono">Character Library (Optional)</h3>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">Opsional. Dipakai hanya kalau butuh referensi karakter berulang.</p>
                                     </div>
                                 </div>
                                 <div class="relative w-48">
@@ -376,7 +384,8 @@ export const HTML_CONTENT = `
                                 <p class="text-[10px] text-slate-500 italic text-center py-4">Belum ada rekaman aktivitas.</p>
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    </details>
                 </div>
 
                 <div class="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-6">
@@ -558,16 +567,15 @@ export const HTML_CONTENT = `
                     <p class="text-xs text-slate-400 leading-relaxed">Atur parameter psikologi vokal, desah napas, dan acting emosional di sini.</p>
                 </div>
 
-                <!-- Shared API Key Input Field (Synced with Director) -->
+                <!-- API handled server-side: keep hidden field for legacy sync only -->
+                <input type="hidden" id="voiceApiKey" value="">
                 <div class="space-y-2 border-t border-slate-800/40 pt-4">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-xs font-semibold text-slate-400">Gemini API Key</label>
-                        <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-semibold">Shared Key</span>
-                    </div>
-                    <input type="password" id="voiceApiKey" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-emerald-500 outline-none transition" placeholder="Masukkan Kunci API Gemini Anda">
-                    <div class="grid grid-cols-2 gap-2 mt-1">
-                        <button type="button" id="btnSaveApiKeyVoice" data-action="save-api-key" class="py-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/30 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold transition text-center cursor-pointer">💾 Save Key</button>
-                        <button type="button" id="btnClearApiKeyVoice" data-action="clear-api-key" class="py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/10 text-rose-400 text-[10px] font-bold transition text-center cursor-pointer">🗑️ Clear Key</button>
+                    <div class="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3">
+                        <div class="flex items-center gap-2 text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
+                            <span>🔐</span>
+                            <span>Voice API aman di server</span>
+                        </div>
+                        <p class="mt-1 text-[10px] leading-relaxed text-slate-500">Tidak perlu memasukkan API key manual untuk TTS.</p>
                     </div>
                 </div>
 

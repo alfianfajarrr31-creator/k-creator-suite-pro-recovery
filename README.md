@@ -67,3 +67,8 @@ These presets only fill the repair comment box. Existing targeted regenerate but
 - Removed project category selector from the main generator flow to simplify multi-user product UX.
 - Simplified auto-title generation so titles no longer depend on project category.
 - Fixed scene undo safety bug.
+
+## UI Cleanup Patch
+- API key manual input disembunyikan dari Director dan Voice Lab karena aplikasi memakai server-side `GEMINI_API_KEY` dari Vercel Environment Variables.
+- Character Library dan Activity Timeline dipindahkan ke panel `Advanced Tools` yang collapsed by default agar workspace generate lebih bersih.
+- Voice TTS tidak lagi meminta API key manual di UI.

@@ -2785,7 +2785,7 @@ GENERAL RULES:
             }
 
             if (!result.success) {
-                showToast(result.error || "Gagal merumuskan storyboard. Coba periksa Kunci API Anda.", "error");
+                showToast(result.error || "Gagal merumuskan storyboard. Coba lagi atau cek konfigurasi server.", "error");
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = "Rumuskan Storyboard (AI)";
@@ -2873,11 +2873,6 @@ GENERAL RULES:
             const script = (document.getElementById('scriptInput') as HTMLTextAreaElement).value.trim();
             if (!script) {
                 showToast("Ketik naskah vokal terlebih dahulu!", "error");
-                return;
-            }
-
-            if (!AppStore.state.globalApiKey) {
-                showToast("Ketikkan Kunci API Gemini Anda di kolom sidebar terlebih dahulu!", "error");
                 return;
             }
 
