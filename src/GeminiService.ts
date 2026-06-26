@@ -161,7 +161,8 @@ export const GeminiService = {
         sceneCountInput: string,
         sceneDuration: string,
         apiKey: string,
-        outputLanguage: string = "mixed"
+        outputLanguage: string = "mixed",
+        characterConsistencyMode: boolean = true
     ) {
         try {
             const response = await fetchWithBackoff("/api/gemini/storyboard", {
@@ -177,7 +178,8 @@ export const GeminiService = {
                     activeSceneMode,
                     sceneCountInput,
                     sceneDuration,
-                    outputLanguage
+                    outputLanguage,
+                    characterConsistencyMode
                 })
             });
 

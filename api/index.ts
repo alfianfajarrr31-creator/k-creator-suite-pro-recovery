@@ -87,7 +87,7 @@ app.use("/api/gemini", async (req, res, next) => {
 // 1. STORYBOARD PROXY ENDPOINT
 app.post("/api/gemini/storyboard", async (req, res) => {
     try {
-        const { theme, narratorStyle, animStyle, constraints, includeCta, activeRatio, activeSceneMode, sceneCountInput, sceneDuration, outputLanguage = "mixed" } = req.body;
+        const { theme, narratorStyle, animStyle, constraints, includeCta, activeRatio, activeSceneMode, sceneCountInput, sceneDuration, outputLanguage = "mixed", characterConsistencyMode = true } = req.body;
         
         const finalKey = process.env.GEMINI_API_KEY;
         if (!finalKey) {
@@ -102,6 +102,13 @@ app.post("/api/gemini/storyboard", async (req, res) => {
             sceneCountInfo = `Create EXACTLY ${sceneCountInput} scenes. No more, no less.`;
         }
         let durationInfo = `Each scene should be approx ${sceneDuration || 8} seconds long in pacing.`;
+        const durationSeconds = Math.max(3, Math.min(30, parseInt(String(sceneDuration || 8), 10) || 8));
+        const minWords = Math.max(6, Math.round(durationSeconds * 1.7));
+        const maxWords = Math.max(minWords + 4, Math.round(durationSeconds * 2.45));
+        const narrationDurationRule = `Narration duration rule: each narrator_script must be realistic for ${durationSeconds} seconds of Indonesian TTS. Target ${minWords}-${maxWords} spoken words per scene. Avoid long compound sentences. Keep narration tight and punchy.`;
+        const characterConsistencyRule = characterConsistencyMode
+            ? `Character Consistency Mode: ON. When a known character or main character is mentioned, expand them into a master character reference inside scene_description, imagePrompt, and videoPrompt. Include signature outfit, hair, face, iconic accessories, age impression, expression, body language, and recurring visual traits. Do not only write the character name. Keep the character details consistent across all scenes.`
+            : `Character Consistency Mode: OFF. Keep character descriptions concise.`;
 
         const languageMode = String(outputLanguage || "mixed");
         let languageInstruction = "Mixed Recommended: scene_description and narrator_script must be in Bahasa Indonesia; thumbnail_prompt, imagePrompt, and videoPrompt must be in clear English for best Veo/Kling/Image AI compatibility.";
@@ -120,12 +127,15 @@ Narrator Voice & Tone: ${narratorStyle}
 Aspect Ratio Target: ${activeRatio}
 Scene Constraints: ${sceneCountInfo}
 Pacing/Duration: ${durationInfo}
+${narrationDurationRule}
+${characterConsistencyRule}
 Output Language Directive: ${languageInstruction}
 Special User Instructions/Constraints: ${constraints ? constraints : "None"}
 Include Viral Call to Action Scene at the end: ${includeCta}
 
 Your JSON MUST contain the following fields:
-1. "youtube_title": A catchy, clickable, viral-optimized title for YouTube Shorts, following Output Language Directive.
+1. "video_name": A short, clean file name for exported video. Use lowercase words separated by hyphens, no extension, max 70 characters.
+1b. "youtube_title": A catchy, clickable, viral-optimized title for YouTube Shorts, following Output Language Directive.
 2. "youtube_description": Description including video summary, structured outline, call-to-actions, and video chapters, following Output Language Directive.
 3. "tiktok_caption": A high-converting TikTok caption, following Output Language Directive.
 4. "instagram_caption": An engaging Instagram Reel caption, following Output Language Directive.
@@ -138,7 +148,7 @@ Your JSON MUST contain the following fields:
 For EACH scene, generate:
 - "scene_number": Integer starting from 1
 - "scene_description": Detailed landscape/character scene descriptive overview, following Output Language Directive.
-- "narrator_script": Spoken voiceover text, following Output Language Directive.
+- "narrator_script": Spoken voiceover text, following Output Language Directive. Must obey Narration duration rule and fit the selected scene duration realistically.
 - "camera_movement": Precise professional camera motion direction.
 - "imagePrompt": Technical Text-to-Image prompt including subject, pose, clothes, environment, and lighting (matching "${animStyle} style"), following Output Language Directive.
 - "videoPrompt": High-fidelity Image-to-Video motion prompt following Output Language Directive. Must strictly specify each bracketed layer:
@@ -165,6 +175,7 @@ For EACH scene, generate:
                 responseSchema: {
                     type: "OBJECT",
                     properties: {
+                        video_name: { type: "STRING" },
                         youtube_title: { type: "STRING" },
                         youtube_description: { type: "STRING" },
                         tiktok_caption: { type: "STRING" },
@@ -198,7 +209,7 @@ For EACH scene, generate:
                             }
                         }
                     },
-                    required: ["youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "thumbnail_text", "thumbnail_text_alt", "scenes"]
+                    required: ["video_name", "youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "thumbnail_text", "thumbnail_text_alt", "scenes"]
                 }
             }
         };
@@ -352,7 +363,8 @@ app.post("/api/gemini/regenerate-publishing", async (req, res) => {
         const systemPrompt = `You are K-Director, an elite AI Social Media distribution agent. Create a revised, hyper-optimized social media publishing package matching the specified output language.
 Your output MUST be entirely in valid JSON format. DO NOT output markdown codeblocks. Just the raw JSON object.
 JSON fields:
-1. "youtube_title": catchy Shorts title
+1. "video_name": short clean file name, lowercase hyphenated, no extension
+2. "youtube_title": catchy Shorts title
 2. "youtube_description": structured Shorts description
 3. "tiktok_caption": high-converting TikTok caption
 4. "instagram_caption": engaging IG caption
@@ -369,6 +381,7 @@ JSON fields:
                 responseSchema: {
                     type: "OBJECT",
                     properties: {
+                        video_name: { type: "STRING" },
                         youtube_title: { type: "STRING" },
                         youtube_description: { type: "STRING" },
                         tiktok_caption: { type: "STRING" },
@@ -378,7 +391,7 @@ JSON fields:
                         thumbnail_text: { type: "STRING" },
                         thumbnail_text_alt: { type: "STRING" }
                     },
-                    required: ["youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "thumbnail_text", "thumbnail_text_alt"]
+                    required: ["video_name", "youtube_title", "youtube_description", "tiktok_caption", "instagram_caption", "viral_hashtags", "thumbnail_prompt", "thumbnail_text", "thumbnail_text_alt"]
                 }
             }
         };

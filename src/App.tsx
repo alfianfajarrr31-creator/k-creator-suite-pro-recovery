@@ -715,6 +715,8 @@ export default function App() {
             lines.push('==============================');
             lines.push('SOCIAL PACKAGE');
             lines.push('==============================');
+            lines.push(`Video File Name:\n${storyboardData?.video_name || generateSafeVideoFileName(storyboardData, theme)}`);
+            lines.push('');
             lines.push(`YouTube Title:\n${storyboardData?.youtube_title || '-'}`);
             lines.push('');
             lines.push(`YouTube Description:\n${storyboardData?.youtube_description || '-'}`);
@@ -780,6 +782,8 @@ export default function App() {
             if (theme) lines.push(`PROJECT THEME: ${theme}`);
             lines.push(`EXPORTED FROM: K Creator Suite Pro`);
             lines.push(`EXPORTED AT: ${new Date().toLocaleString('id-ID')}`);
+            lines.push('');
+            lines.push(`VIDEO FILE NAME: ${storyboardData?.video_name || generateSafeVideoFileName(storyboardData, theme)}`);
             lines.push('');
             lines.push(`YOUTUBE TITLE: ${storyboardData?.youtube_title || '-'}`);
             lines.push('');
@@ -1204,7 +1208,8 @@ export default function App() {
                     '1',
                     sceneDuration,
                     AppStore.state.globalApiKey,
-                    getStoryboardOutputLanguage()
+                    getStoryboardOutputLanguage(),
+                    getCharacterConsistencyMode()
                 );
 
                 if (!result.success) {
@@ -1273,6 +1278,23 @@ export default function App() {
 
         function getStoryboardOutputLanguage() {
             return (document.getElementById('outputLanguage') as HTMLSelectElement | null)?.value || 'mixed';
+        }
+
+        function getCharacterConsistencyMode() {
+            const toggle = document.getElementById('characterConsistencyToggle') as HTMLInputElement | null;
+            return toggle ? toggle.checked : true;
+        }
+
+        function generateSafeVideoFileName(storyboardData: any, theme = '') {
+            const raw = storyboardData?.video_name || storyboardData?.youtube_title || theme || 'k-creator-video';
+            const cleaned = String(raw)
+                .toLowerCase()
+                .replace(/[^a-z0-9\s_-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^[-_]+|[-_]+$/g, '')
+                .slice(0, 70);
+            return cleaned || 'k-creator-video';
         }
 
         function getStoryboardOutputLanguageLabel(language = getStoryboardOutputLanguage()) {
@@ -1398,7 +1420,8 @@ GENERAL RULES:
                     '1',
                     sceneDuration,
                     AppStore.state.globalApiKey,
-                    getStoryboardOutputLanguage()
+                    getStoryboardOutputLanguage(),
+                    getCharacterConsistencyMode()
                 );
 
                 if (!result.success) {
@@ -2339,6 +2362,8 @@ GENERAL RULES:
                 const exportBar = document.getElementById('exportBar');
                 if (exportBar) exportBar.classList.remove('hidden');
 
+                const videoName = document.getElementById('videoNameText');
+                if (videoName) videoName.innerText = data.video_name || generateSafeVideoFileName(data, (document.getElementById('themeInput') as HTMLTextAreaElement | null)?.value || '');
                 const ytTitle = document.getElementById('ytTitleText');
                 if (ytTitle) ytTitle.innerText = data.youtube_title;
                 const ytDesc = document.getElementById('ytDescText');
@@ -3086,7 +3111,7 @@ GENERAL RULES:
             let result;
             try {
                 result = await GeminiService.generateStoryboard(
-                    theme, narratorStyle, animStyle, constraints, includeCta, AppStore.state.activeRatio, AppStore.state.activeSceneMode, sceneCount, sceneDurVal, AppStore.state.globalApiKey, getStoryboardOutputLanguage()
+                    theme, narratorStyle, animStyle, constraints, includeCta, AppStore.state.activeRatio, AppStore.state.activeSceneMode, sceneCount, sceneDurVal, AppStore.state.globalApiKey, getStoryboardOutputLanguage(), getCharacterConsistencyMode()
                 );
             } finally {
                 clearInterval(progressInterval);
@@ -3107,6 +3132,8 @@ GENERAL RULES:
 
             const parsedData = result.data;
             parsedData.outputLanguage = getStoryboardOutputLanguage();
+            parsedData.characterConsistencyMode = getCharacterConsistencyMode();
+            parsedData.video_name = parsedData.video_name || generateSafeVideoFileName(parsedData, theme);
             AppStore.setState({ activeStoryboardData: parsedData, sceneVersionHistory: {} });
 
             const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLInputElement | HTMLSelectElement | null)?.value || "Storyboard";
@@ -3508,6 +3535,7 @@ GENERAL RULES:
 
                 if (parsed.youtube_title) {
                     // Update active storyboard data in memory
+                    activeData.video_name = parsed.video_name || generateSafeVideoFileName(parsed, theme);
                     activeData.youtube_title = parsed.youtube_title;
                     activeData.youtube_description = parsed.youtube_description;
                     activeData.tiktok_caption = parsed.tiktok_caption;

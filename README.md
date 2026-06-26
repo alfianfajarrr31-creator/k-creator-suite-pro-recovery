@@ -146,3 +146,14 @@ Tidak mengubah:
 - Prompt generator utama
 - Supabase Auth / Save / History
 - Scene editor dan workflow cloud yang sudah stabil
+
+## ARC 4.2 — Prompt Intelligence Patch
+
+Upgrade produksi harian:
+- Menambahkan Character Consistency Mode agar prompt karakter lebih detail dan konsisten.
+- Menambahkan aturan durasi narasi realistis berdasarkan durasi scene.
+- Menambahkan output `video_name` untuk nama file video.
+- Merapikan opsi gaya kustom menjadi Other / Ide di luar pilihan.
+- Menampilkan Video File Name di Publishing Package dan export/copy package.
+
+Build test: PASS.

@@ -146,10 +146,26 @@ export const HTML_CONTENT = `
                         <option value="Cinematic 2D Vector Illustration">Cinematic 2D Vector (Flat Design Modern, Elegan)</option>
                         <option value="Dark Fantasy Gothic Sketch">Dark Fantasy Gothic Sketch (Arsir Pensil Misterius)</option>
                         <option value="Neon Synthwave Retrofuturism">Neon Synthwave Retrofuturism (Retro 80-an Neon)</option>
-                        <option value="Gaya Kustom">Tulis Gaya Kustom Sendiri...</option>
+                        <option value="Gaya Kustom">Other / Ide di luar pilihan ini (Tulis Sendiri)</option>
                     </select>
                     <div id="customStyleContainer" class="hidden mt-2">
-                        <input type="text" id="customStyleInput" placeholder="Ketik gaya kustom..." class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2 text-xs text-slate-300 outline-none focus:border-indigo-500">
+                        <input type="text" id="customStyleInput" placeholder="Contoh: manga noir, cinematic anime horror, 3D soft clay anime..." class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2 text-xs text-slate-300 outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+
+
+                <!-- Character Consistency Mode -->
+                <div class="space-y-2 border-t border-slate-800/40 pt-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400">Detail Karakter Konsisten</label>
+                            <p class="text-[9px] text-slate-500 leading-relaxed mt-0.5">Aktifkan agar prompt menyebut ciri visual karakter lebih lengkap, misalnya master character reference, outfit, rambut, ekspresi, dan atribut khas.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="characterConsistencyToggle" checked class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600 peer-checked:after:bg-white peer-checked:after:border-purple-600"></div>
+                        </label>
                     </div>
                 </div>
 
@@ -517,6 +533,14 @@ export const HTML_CONTENT = `
                                     <div class="space-y-4">
                                         <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
                                             <div class="flex justify-between items-center mb-1.5">
+                                                <span class="text-[10px] font-bold text-cyan-400 uppercase font-sans tracking-wide">Video File Name</span>
+                                                <button id="btnCopyVideoName" data-action="copy-field" data-field-id="videoNameText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
+                                            </div>
+                                            <p id="videoNameText" class="text-xs font-bold text-cyan-200 leading-relaxed font-mono"></p>
+                                            <p class="text-[9px] text-slate-500 mt-1">Nama file siap pakai agar video export kamu tidak ketuker.</p>
+                                        </div>
+                                        <div class="bg-[#0f111a] p-3 rounded-xl border border-slate-800">
+                                            <div class="flex justify-between items-center mb-1.5">
                                                 <span class="text-[10px] font-bold text-rose-455 uppercase font-sans tracking-wide">YouTube Shorts Title</span>
                                                 <button id="btnCopyYtTitle" data-action="copy-field" data-field-id="ytTitleText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin</button>
                                             </div>
@@ -559,7 +583,7 @@ export const HTML_CONTENT = `
                                         <div class="bg-gradient-to-tr from-amber-950/20 to-indigo-950/20 p-3 rounded-xl border border-amber-500/20 space-y-2">
                                             <div class="flex justify-between items-center">
                                                 <span class="text-[10px] font-bold text-amber-400 uppercase font-sans tracking-wide flex items-center gap-1">🎟️ Thumbnail Text</span>
-                                                <button id="btnCopyThumbnailText" data-action="copy-input-field" data-field-id="thumbnailTextValue" class="text-[9px] text-slate-400 hover:text-amber-300 font-mono font-bold cursor-pointer transition">Salin Teks</button>
+                                                <button id="btnCopyThumbnailText" data-action="copy-input-field" data-field-id="thumbnailTextVal" class="text-[9px] text-slate-400 hover:text-amber-300 font-mono font-bold cursor-pointer transition">Salin Teks</button>
                                             </div>
                                             <div class="space-y-1">
                                                 <input type="text" id="thumbnailTextVal" class="w-full text-xs font-bold text-amber-200 bg-black/40 border border-amber-500/15 rounded-lg p-2 focus:border-amber-500/80 focus:outline-none transition" placeholder="Masukkan teks utama thumbnail di sini...">
