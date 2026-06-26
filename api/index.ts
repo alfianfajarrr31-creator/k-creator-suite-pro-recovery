@@ -13,6 +13,77 @@ app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
 });
 
+function getAllowedEmails() {
+    const raw = process.env.ALLOWED_EMAILS || process.env.VITE_ALLOWED_EMAILS || "";
+    return raw
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function getSupabaseServerConfig() {
+    return {
+        url: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
+        anonKey: process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || ""
+    };
+}
+
+async function verifyPrivateBetaAccess(req: any) {
+    const allowedEmails = getAllowedEmails();
+    if (!allowedEmails.length) {
+        return { ok: false, status: 403, message: "Private Beta Gate belum dikonfigurasi. Isi ALLOWED_EMAILS atau VITE_ALLOWED_EMAILS di Vercel." };
+    }
+
+    const authHeader = String(req.headers.authorization || "");
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (!token) {
+        return { ok: false, status: 401, message: "Login Google diperlukan untuk memakai K Creator Suite Pro." };
+    }
+
+    const { url, anonKey } = getSupabaseServerConfig();
+    if (!url || !anonKey) {
+        return { ok: false, status: 500, message: "Supabase server config belum lengkap di Vercel ENV." };
+    }
+
+    try {
+        const response = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                apikey: anonKey
+            }
+        });
+
+        if (!response.ok) {
+            return { ok: false, status: 401, message: "Session login tidak valid atau sudah expired. Silakan login ulang." };
+        }
+
+        const user = await response.json();
+        const email = String(user?.email || "").trim().toLowerCase();
+        if (!email) {
+            return { ok: false, status: 401, message: "Email login tidak terbaca dari session." };
+        }
+
+        if (!allowedEmails.includes("*") && !allowedEmails.includes(email)) {
+            return { ok: false, status: 403, message: `Email ${email} belum mendapat akses Private Beta.` };
+        }
+
+        return { ok: true, status: 200, email };
+    } catch (error: any) {
+        console.error("Private beta auth verification failed:", error?.message || error);
+        return { ok: false, status: 500, message: "Gagal memverifikasi akses Private Beta." };
+    }
+}
+
+app.use("/api/gemini", async (req, res, next) => {
+    const access = await verifyPrivateBetaAccess(req);
+    if (!access.ok) {
+        return res.status(access.status).json({ success: false, error: access.message });
+    }
+    (req as any).privateBetaUserEmail = access.email;
+    next();
+});
+
 // 1. STORYBOARD PROXY ENDPOINT
 app.post("/api/gemini/storyboard", async (req, res) => {
     try {

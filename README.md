@@ -94,3 +94,38 @@ Tidak mengubah:
 - Tombol utama yang tetap terlihat: Edit / Repair, Copy Package, Voice Lab.
 - Aksi tambahan Add Scene, Duplicate, Delete dipindahkan ke menu More Scene Actions.
 - Tidak mengubah GeminiService, API backend, Supabase, prompt generator, TTS, export/copy logic, atau cloud history.
+
+## ARC 3.5 — Private Beta Gate
+
+This patch locks K Creator Suite Pro behind a Google-login email whitelist before public go-live.
+
+### New environment variables
+
+Add these in Vercel Project Settings → Environment Variables:
+
+```env
+VITE_ALLOWED_EMAILS=owner@gmail.com,friend@gmail.com
+ALLOWED_EMAILS=owner@gmail.com,friend@gmail.com
+```
+
+Use comma-separated emails. The frontend uses `VITE_ALLOWED_EMAILS` to show/hide the app UI, while the backend uses `ALLOWED_EMAILS` to reject unauthorized Gemini API calls. For convenience, the backend also falls back to `VITE_ALLOWED_EMAILS` if `ALLOWED_EMAILS` is missing.
+
+Make sure Supabase ENV is also available:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_publishable_or_anon_key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_publishable_or_anon_key
+```
+
+The backend falls back to the `VITE_*` Supabase variables if the server aliases are missing, but setting both is recommended for clarity.
+
+### Behavior
+
+- Visitor opens app → sees Private Beta login screen.
+- Approved email logs in → app workspace opens.
+- Unapproved email logs in → Access not granted screen.
+- Gemini endpoints now require a valid Supabase session and allowed email.
+- Guest mode is effectively disabled for generation while Private Beta Gate is active.
+

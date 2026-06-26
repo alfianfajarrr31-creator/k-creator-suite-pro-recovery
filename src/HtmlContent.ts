@@ -68,6 +68,9 @@ export const HTML_CONTENT = `
         </div>
     </header>
 
+    <!-- Private Beta Gate -->
+    <section id="privateBetaGate" class="hidden flex-1 min-h-[calc(100vh-4rem)] bg-[#050609] flex items-center justify-center p-6"></section>
+
     <!-- Mobile Navigation Tab Switches -->
     <div class="flex md:hidden border-b border-slate-855 bg-[#0a0b10] p-2 justify-around shrink-0 z-20">
         <button id="mobileTabBtn-director" data-action="switch-tab" data-tab="director" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer">🎬 Storyboard</button>

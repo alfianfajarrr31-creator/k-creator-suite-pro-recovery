@@ -202,6 +202,132 @@ export default function App() {
         }
 
 
+        function getAllowedEmails(): string[] {
+            const raw = String(import.meta.env.VITE_ALLOWED_EMAILS || '');
+            return raw
+                .split(',')
+                .map((email) => email.trim().toLowerCase())
+                .filter(Boolean);
+        }
+
+        function isPrivateBetaConfigured(): boolean {
+            return getAllowedEmails().length > 0;
+        }
+
+        function isEmailAllowed(email: any): boolean {
+            const allowed = getAllowedEmails();
+            const normalized = String(email || '').trim().toLowerCase();
+            if (!normalized) return false;
+            if (allowed.includes('*')) return true;
+            return allowed.includes(normalized);
+        }
+
+        function isCurrentUserAllowed(): boolean {
+            const user = AppStore.state.authUser;
+            return Boolean(user?.email && isEmailAllowed(user.email));
+        }
+
+        function ensurePrivateBetaAccess(showMessage = true): boolean {
+            if (!isSupabaseConfigured()) {
+                if (showMessage) showToast('Supabase belum dikonfigurasi di Vercel ENV.', 'error');
+                renderPrivateBetaGate();
+                return false;
+            }
+            if (!isPrivateBetaConfigured()) {
+                if (showMessage) showToast('Private Beta Gate belum dikonfigurasi. Isi VITE_ALLOWED_EMAILS di Vercel.', 'error');
+                renderPrivateBetaGate();
+                return false;
+            }
+            const user = AppStore.state.authUser;
+            if (!user) {
+                if (showMessage) showToast('Login Google dulu untuk menggunakan aplikasi Private Beta.', 'error');
+                renderPrivateBetaGate();
+                return false;
+            }
+            if (!isEmailAllowed(user.email)) {
+                if (showMessage) showToast('Email ini belum terdaftar di Private Beta.', 'error');
+                renderPrivateBetaGate();
+                return false;
+            }
+            return true;
+        }
+
+        function getPrivateGateHTML(mode: 'login' | 'denied' | 'config') {
+            const user = AppStore.state.authUser;
+            const email = escapeHTML(user?.email || '');
+            const allowedPreview = getAllowedEmails().filter((item) => item !== '*').slice(0, 3).map(escapeHTML).join(', ');
+            if (mode === 'config') {
+                return `
+                    <div class="max-w-xl w-full mx-auto p-8 rounded-3xl border border-amber-500/20 bg-[#0d0f16] shadow-2xl text-center">
+                        <div class="text-4xl mb-4">🔐</div>
+                        <h2 class="text-2xl font-black text-white mb-2">Private Beta Gate belum siap</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-5">Tambahkan environment variable <b class="text-amber-300">VITE_ALLOWED_EMAILS</b> di Vercel agar hanya email yang kamu izinkan bisa masuk.</p>
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-left text-xs text-slate-300 font-mono mb-5">VITE_ALLOWED_EMAILS=emailkamu@gmail.com,teman@gmail.com</div>
+                        <p class="text-[11px] text-slate-500">Setelah ENV diisi, redeploy aplikasi.</p>
+                    </div>
+                `;
+            }
+            if (mode === 'denied') {
+                return `
+                    <div class="max-w-xl w-full mx-auto p-8 rounded-3xl border border-rose-500/20 bg-[#0d0f16] shadow-2xl text-center">
+                        <div class="text-4xl mb-4">⛔</div>
+                        <h2 class="text-2xl font-black text-white mb-2">Access belum diberikan</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-4">Email <b class="text-rose-300">${email}</b> belum masuk daftar Private Beta.</p>
+                        <p class="text-xs text-slate-500 mb-5">Hubungi admin agar email ini didaftarkan. ${allowedPreview ? `Email terdaftar contoh: ${allowedPreview}` : ''}</p>
+                        <button data-action="logout-google" class="px-5 py-3 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-300 rounded-2xl text-sm font-black cursor-pointer">Logout & pakai email lain</button>
+                    </div>
+                `;
+            }
+            return `
+                <div class="max-w-xl w-full mx-auto p-8 rounded-3xl border border-indigo-500/20 bg-[#0d0f16] shadow-2xl text-center">
+                    <div class="text-4xl mb-4">🚪</div>
+                    <h2 class="text-2xl font-black text-white mb-2">K Creator Suite Pro — Private Beta</h2>
+                    <p class="text-sm text-slate-400 leading-relaxed mb-6">Aplikasi ini sedang mode private. Login memakai Google dengan email yang sudah didaftarkan untuk masuk.</p>
+                    <button data-action="login-google" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-black shadow-lg shadow-emerald-600/20 cursor-pointer">🔐 Login Google</button>
+                    <p class="text-[11px] text-slate-500 mt-5">Belum punya akses? Minta admin mendaftarkan email kamu dulu.</p>
+                </div>
+            `;
+        }
+
+        function renderPrivateBetaGate() {
+            let gate = document.getElementById('privateBetaGate');
+            if (!gate) return;
+            const main = document.querySelector('main') as HTMLElement | null;
+            const mobileTabs = document.querySelector('.flex.md\\:hidden.border-b') as HTMLElement | null;
+            const inspectorBtn = document.getElementById('btnToggleInspector');
+            const cloudHistoryBtn = document.getElementById('btnCloudHistory');
+            const statusBadge = document.getElementById('globalEngineStatusBadge');
+
+            let allowed = false;
+            let mode: 'login' | 'denied' | 'config' = 'login';
+            if (!isSupabaseConfigured() || !isPrivateBetaConfigured()) {
+                mode = 'config';
+            } else if (!AppStore.state.authUser) {
+                mode = 'login';
+            } else if (!isEmailAllowed(AppStore.state.authUser.email)) {
+                mode = 'denied';
+            } else {
+                allowed = true;
+            }
+
+            if (allowed) {
+                gate.classList.add('hidden');
+                if (main) main.classList.remove('hidden');
+                if (mobileTabs) mobileTabs.classList.remove('hidden');
+                if (inspectorBtn) inspectorBtn.classList.remove('hidden');
+                if (cloudHistoryBtn) cloudHistoryBtn.classList.remove('hidden');
+                if (statusBadge) statusBadge.classList.remove('hidden');
+            } else {
+                gate.innerHTML = getPrivateGateHTML(mode);
+                gate.classList.remove('hidden');
+                if (main) main.classList.add('hidden');
+                if (mobileTabs) mobileTabs.classList.add('hidden');
+                if (inspectorBtn) inspectorBtn.classList.add('hidden');
+                if (cloudHistoryBtn) cloudHistoryBtn.classList.add('hidden');
+                if (statusBadge) statusBadge.classList.add('hidden');
+            }
+        }
+
         function renderAuthUI() {
             const user = AppStore.state.authUser;
             const label = document.getElementById('authUserLabel');
@@ -221,12 +347,15 @@ export default function App() {
 
             if (user) {
                 const displayName = user.user_metadata?.full_name || user.email || 'User aktif';
-                label.innerText = displayName;
-                badge.className = 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-400 max-w-[240px] truncate';
+                const allowed = isEmailAllowed(user.email);
+                label.innerText = allowed ? displayName : `No Access: ${user.email || 'Unknown'}`;
+                badge.className = allowed
+                    ? 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-400 max-w-[240px] truncate'
+                    : 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-semibold text-rose-400 max-w-[240px] truncate';
                 loginBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
             } else {
-                label.innerText = 'Guest Mode';
+                label.innerText = 'Login Required';
                 badge.className = 'hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-500/10 border border-slate-700 text-[10px] font-semibold text-slate-400';
                 loginBtn.classList.remove('hidden');
                 logoutBtn.classList.add('hidden');
@@ -235,6 +364,7 @@ export default function App() {
 
         async function initSupabaseAuth() {
             renderAuthUI();
+            renderPrivateBetaGate();
             if (!isSupabaseConfigured()) {
                 console.warn('Supabase env belum lengkap. Login Google dinonaktifkan sementara.');
                 return;
@@ -250,10 +380,12 @@ export default function App() {
                     authUser: data?.session?.user || null
                 });
                 renderAuthUI();
+                renderPrivateBetaGate();
             } catch (err) {
                 console.warn('Auth init Supabase gagal:', err);
                 AppStore.setState({ authSession: null, authUser: null });
                 renderAuthUI();
+                renderPrivateBetaGate();
             }
 
             supabase.auth.onAuthStateChange((_event, session) => {
@@ -262,6 +394,7 @@ export default function App() {
                     authUser: session?.user || null
                 });
                 renderAuthUI();
+                renderPrivateBetaGate();
             });
         }
 
@@ -288,6 +421,7 @@ export default function App() {
                 if (error) throw error;
                 AppStore.setState({ authSession: null, authUser: null });
                 renderAuthUI();
+                renderPrivateBetaGate();
                 showToast('Berhasil logout dari Google.', 'success');
             } catch (err) {
                 console.error('Logout gagal:', err);
@@ -880,6 +1014,7 @@ export default function App() {
         }
 
         async function regenerateSceneWithFeedback(index: number) {
+            if (!ensurePrivateBetaAccess(true)) return;
             const storyboardData = AppStore.state.activeStoryboardData;
             const scene = storyboardData?.scenes?.[index];
             if (!scene) {
@@ -1067,6 +1202,7 @@ GENERAL RULES:
         }
 
         async function regenerateSceneFieldWithFeedback(index: number, target: string) {
+            if (!ensurePrivateBetaAccess(true)) return;
             const storyboardData = AppStore.state.activeStoryboardData;
             const scene = storyboardData?.scenes?.[index];
             if (!scene) {
@@ -2749,6 +2885,7 @@ GENERAL RULES:
         // 7. STORYBOARDING PROCEDURES
         // ==========================================
         async function generateStoryboard() {
+            if (!ensurePrivateBetaAccess(true)) return;
             const theme = (document.getElementById('themeInput') as HTMLTextAreaElement).value.trim();
             if (!theme) {
                 showToast("Isi tema atau topik bahasan konten pada deck kontrol!", "error");
@@ -2886,6 +3023,7 @@ GENERAL RULES:
         // 8. VOICE LAB SYNTHESIS PROCEDURES
         // ==========================================
         async function generateHumanTTS() {
+            if (!ensurePrivateBetaAccess(true)) return;
             const script = (document.getElementById('scriptInput') as HTMLTextAreaElement).value.trim();
             if (!script) {
                 showToast("Ketik naskah vokal terlebih dahulu!", "error");
@@ -3069,6 +3207,15 @@ GENERAL RULES:
             }
         }
 
+        async function getPrivateBetaAuthHeaders() {
+            if (!isSupabaseConfigured()) return { "Content-Type": "application/json" };
+            const { data } = await supabase.auth.getSession();
+            const token = data?.session?.access_token;
+            return token
+                ? { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+                : { "Content-Type": "application/json" };
+        }
+
         function getActiveStoryboardTextReference() {
             const data = AppStore.state.activeStoryboardData;
             if (!data || !data.scenes) return "No active storyboard.";
@@ -3076,6 +3223,7 @@ GENERAL RULES:
         }
 
         async function regenerateThumbnailTextOnly() {
+            if (!ensurePrivateBetaAccess(true)) return;
             const activeData = AppStore.state.activeStoryboardData;
             if (!activeData) {
                 showToast("Belum ada storyboard aktif untuk di-regenerate.", "warning");
@@ -3096,7 +3244,7 @@ GENERAL RULES:
 
                 const response = await fetch("/api/gemini/regenerate-thumbnail-text", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: await getPrivateBetaAuthHeaders(),
                     body: JSON.stringify({
                         theme,
                         currentStoryboardText: currentText,
@@ -3153,6 +3301,7 @@ GENERAL RULES:
         }
 
         async function regeneratePublishingPackageOnly() {
+            if (!ensurePrivateBetaAccess(true)) return;
             const activeData = AppStore.state.activeStoryboardData;
             if (!activeData) {
                 showToast("Belum ada storyboard aktif untuk di-regenerate.", "warning");
@@ -3175,7 +3324,7 @@ GENERAL RULES:
 
                 const response = await fetch("/api/gemini/regenerate-publishing", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: await getPrivateBetaAuthHeaders(),
                     body: JSON.stringify({
                         theme,
                         narratorStyle,

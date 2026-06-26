@@ -1,3 +1,4 @@
+import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 export function sanitizeAndCleanJSON(rawText: string) {
     if (!rawText) return "{}";
     let cleaned = rawText.trim();
@@ -20,6 +21,17 @@ export function validateStoryboardPayload(data: any) {
     }
     if (!Array.isArray(data.scenes)) return false;
     return true;
+}
+
+async function getPrivateBetaAuthorizationHeader(url: string) {
+    if (!url.startsWith('/api/gemini') || !isSupabaseConfigured()) return {};
+    try {
+        const { data } = await supabase.auth.getSession();
+        const token = data?.session?.access_token;
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch (_) {
+        return {};
+    }
 }
 
 export async function fetchWithBackoff(url: string, options: any) {
@@ -50,8 +62,13 @@ export async function fetchWithBackoff(url: string, options: any) {
         const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
         
         try {
+            const privateBetaAuthHeader = await getPrivateBetaAuthorizationHeader(url);
             const response = await fetch(url, {
                 ...options,
+                headers: {
+                    ...(options?.headers || {}),
+                    ...privateBetaAuthHeader
+                },
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
