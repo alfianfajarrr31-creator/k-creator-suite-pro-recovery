@@ -163,13 +163,84 @@ export default function App() {
         // ==========================================
         // 2. TOAST SYSTEM & DATABASE LOGGING
         // ==========================================
+        function isNotificationSoundEnabled(): boolean {
+            try {
+                return localStorage.getItem('kc_notify_sound') !== 'off';
+            } catch (_) {
+                return true;
+            }
+        }
+
+        function playNotificationSound(type: string = 'success') {
+            if (!isNotificationSoundEnabled()) return;
+            try {
+                const AudioContextRef = (window as any).AudioContext || (window as any).webkitAudioContext;
+                if (!AudioContextRef) return;
+                const ctx = new AudioContextRef();
+                const now = ctx.currentTime;
+                const master = ctx.createGain();
+                master.gain.setValueAtTime(0.0001, now);
+                master.gain.exponentialRampToValueAtTime(type === 'error' ? 0.08 : 0.055, now + 0.015);
+                master.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+                master.connect(ctx.destination);
+
+                const makeTone = (freq: number, start: number, duration: number) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type === 'error' ? 'sawtooth' : 'sine';
+                    osc.frequency.setValueAtTime(freq, now + start);
+                    gain.gain.setValueAtTime(0.0001, now + start);
+                    gain.gain.exponentialRampToValueAtTime(0.8, now + start + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+                    osc.connect(gain);
+                    gain.connect(master);
+                    osc.start(now + start);
+                    osc.stop(now + start + duration + 0.03);
+                };
+
+                if (type === 'error') {
+                    makeTone(220, 0, 0.14);
+                    makeTone(150, 0.15, 0.17);
+                } else if (type === 'warning') {
+                    makeTone(440, 0, 0.11);
+                    makeTone(330, 0.13, 0.13);
+                } else {
+                    makeTone(660, 0, 0.10);
+                    makeTone(880, 0.12, 0.14);
+                }
+
+                setTimeout(() => {
+                    try { ctx.close(); } catch (_) {}
+                }, 500);
+            } catch (_) {
+                // Browser may block audio context; toast still works.
+            }
+        }
+
         function showToast(message: string, type = "success") {
             const toast = document.getElementById('toast');
             if (!toast) return;
-            toast.innerText = message;
-            toast.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-50 font-medium border ${
-                type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
-            }`;
+
+            const tone = type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success';
+            const config: Record<string, any> = {
+                success: { icon: '✅', title: 'Berhasil', cls: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300' },
+                error: { icon: '⚠️', title: 'Gagal', cls: 'bg-rose-500/10 border-rose-500/25 text-rose-300' },
+                warning: { icon: '🟡', title: 'Perhatian', cls: 'bg-amber-500/10 border-amber-500/25 text-amber-300' },
+                info: { icon: 'ℹ️', title: 'Info', cls: 'bg-indigo-500/10 border-indigo-500/25 text-indigo-300' }
+            };
+            const selected = config[type] || config.success;
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <span class="text-base leading-none mt-0.5">${selected.icon}</span>
+                    <div class="min-w-0">
+                        <div class="text-[10px] uppercase tracking-wider font-black opacity-80">${selected.title}</div>
+                        <div class="text-sm font-semibold leading-snug break-words">${escapeHTML(message)}</div>
+                    </div>
+                </div>
+            `;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            toast.className = `fixed bottom-6 right-6 max-w-[360px] px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-50 font-medium border backdrop-blur-xl pointer-events-none ${selected.cls}`;
+            playNotificationSound(tone);
             setTimeout(() => {
                 toast.classList.remove('translate-y-12', 'opacity-0');
                 toast.classList.add('translate-y-0', 'opacity-100');
@@ -177,7 +248,78 @@ export default function App() {
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-12', 'opacity-0');
-            }, 3000);
+            }, type === 'error' ? 5200 : 3200);
+        }
+
+        function getFriendlyFailureAdvice(message: any, context = 'generate'): { title: string; detail: string; tips: string[] } {
+            const raw = String(message || '').trim();
+            const lower = raw.toLowerCase();
+            let title = context === 'tts' ? 'TTS gagal dibuat' : context === 'regenerate' ? 'Regenerate belum berhasil' : 'Generate belum berhasil';
+            let detail = raw || 'Sistem AI belum mengembalikan hasil yang bisa dipakai.';
+            const tips: string[] = [];
+
+            if (lower.includes('timeout') || lower.includes('terlalu lama')) {
+                title = 'Request terlalu lama';
+                detail = 'Mesin AI tidak selesai merespons dalam batas waktu aman.';
+                tips.push('Coba ulang 1 kali.');
+                tips.push('Kurangi jumlah scene atau persingkat instruksi khusus.');
+            } else if (lower.includes('kuota') || lower.includes('429') || lower.includes('too many')) {
+                title = 'Kuota / rate limit API';
+                detail = 'Request terlalu banyak atau kuota Gemini sedang mentok.';
+                tips.push('Tunggu beberapa menit lalu coba lagi.');
+                tips.push('Hindari klik generate berkali-kali saat loading.');
+            } else if (lower.includes('token') || lower.includes('login') || lower.includes('unauthorized') || lower.includes('401')) {
+                title = 'Session login bermasalah';
+                detail = 'Akses Private Beta atau session login perlu diperbarui.';
+                tips.push('Logout lalu login ulang.');
+                tips.push('Pastikan email kamu masuk whitelist.');
+            } else if (lower.includes('json') || lower.includes('payload') || lower.includes('schema')) {
+                title = 'Format hasil AI tidak valid';
+                detail = 'AI menjawab, tapi format datanya belum sesuai struktur app.';
+                tips.push('Klik ulang generate.');
+                tips.push('Coba buat instruksi lebih sederhana dan jelas.');
+            } else if (lower.includes('model') || lower.includes('403') || lower.includes('404')) {
+                title = 'Konfigurasi model/API bermasalah';
+                detail = 'Server belum bisa memakai model AI yang diminta.';
+                tips.push('Cek GEMINI_API_KEY di Vercel.');
+                tips.push('Cek apakah model tersedia untuk akun API tersebut.');
+            } else {
+                tips.push('Coba ulang sekali.');
+                tips.push('Kalau masih gagal, sederhanakan tema atau instruksi khusus.');
+            }
+
+            return { title, detail, tips };
+        }
+
+        function showGenerationFeedback(message: any, context: 'generate' | 'regenerate' | 'tts' = 'generate') {
+            const panel = document.getElementById('generationFeedbackPanel');
+            if (!panel) return;
+            const info = getFriendlyFailureAdvice(message, context);
+            panel.classList.remove('hidden');
+            panel.innerHTML = `
+                <div class="rounded-2xl border border-rose-500/25 bg-rose-500/10 p-4 text-left shadow-lg shadow-rose-950/20">
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl">🚨</span>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-black text-rose-200">${escapeHTML(info.title)}</h3>
+                                <button data-action="dismiss-generation-feedback" class="text-[10px] font-bold text-rose-300 hover:text-white border border-rose-500/20 px-2 py-1 rounded-lg cursor-pointer">Tutup</button>
+                            </div>
+                            <p class="text-xs text-rose-100/80 mt-1 leading-relaxed">${escapeHTML(info.detail)}</p>
+                            <ul class="mt-3 space-y-1 text-[11px] text-slate-300 list-disc pl-4">
+                                ${info.tips.map(tip => `<li>${escapeHTML(tip)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearGenerationFeedback() {
+            const panel = document.getElementById('generationFeedbackPanel');
+            if (!panel) return;
+            panel.classList.add('hidden');
+            panel.innerHTML = '';
         }
 
         function addDBLog(message: string, type = 'info') {
@@ -1066,13 +1208,17 @@ export default function App() {
                 );
 
                 if (!result.success) {
-                    showToast(result.error || 'Regenerate scene gagal.', 'error');
+                    const errorMessage = result.error || 'Regenerate scene gagal.';
+                    showToast(errorMessage, 'error');
+                    showGenerationFeedback(errorMessage, 'regenerate');
                     return;
                 }
 
                 const replacement = result.data?.scenes?.[0];
                 if (!replacement) {
-                    showToast('AI tidak mengembalikan scene pengganti yang valid.', 'error');
+                    const errorMessage = 'AI tidak mengembalikan scene pengganti yang valid.';
+                    showToast(errorMessage, 'error');
+                    showGenerationFeedback(errorMessage, 'regenerate');
                     return;
                 }
 
@@ -1081,7 +1227,9 @@ export default function App() {
                 updateSceneAtIndex(index, replacement, `Scene ${replacement.scene_number} berhasil di-regenerate. Review dulu sebelum Save / Update Cloud.`);
             } catch (err: any) {
                 console.error('Regenerate scene failed:', err);
-                showToast(err?.message || 'Regenerate scene gagal.', 'error');
+                const errorMessage = err?.message || 'Regenerate scene gagal.';
+                showToast(errorMessage, 'error');
+                showGenerationFeedback(errorMessage, 'regenerate');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -1254,13 +1402,17 @@ GENERAL RULES:
                 );
 
                 if (!result.success) {
-                    showToast(result.error || 'Regenerate field gagal.', 'error');
+                    const errorMessage = result.error || 'Regenerate field gagal.';
+                    showToast(errorMessage, 'error');
+                    showGenerationFeedback(errorMessage, 'regenerate');
                     return;
                 }
 
                 const replacement = result.data?.scenes?.[0];
                 if (!replacement) {
-                    showToast('AI tidak mengembalikan field pengganti yang valid.', 'error');
+                    const errorMessage = 'AI tidak mengembalikan field pengganti yang valid.';
+                    showToast(errorMessage, 'error');
+                    showGenerationFeedback(errorMessage, 'regenerate');
                     return;
                 }
 
@@ -1284,7 +1436,9 @@ GENERAL RULES:
                 updateSceneAtIndex(index, updates, `${getTargetedRegenLabel(target)} Scene ${scene.scene_number || index + 1} berhasil diperbaiki. Review dulu sebelum Save / Update Cloud.`);
             } catch (err: any) {
                 console.error('Regenerate scene field failed:', err);
-                showToast(err?.message || 'Regenerate field gagal.', 'error');
+                const errorMessage = err?.message || 'Regenerate field gagal.';
+                showToast(errorMessage, 'error');
+                showGenerationFeedback(errorMessage, 'regenerate');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -2892,6 +3046,7 @@ GENERAL RULES:
                 return;
             }
 
+            clearGenerationFeedback();
             const narratorStyle = (document.getElementById('narratorStyle') as HTMLSelectElement).value;
             let animStyle = (document.getElementById('animationStyle') as HTMLSelectElement).value;
             if (animStyle === "Gaya Kustom") {
@@ -2938,7 +3093,10 @@ GENERAL RULES:
             }
 
             if (!result.success) {
-                showToast(result.error || "Gagal merumuskan storyboard. Coba lagi atau cek konfigurasi server.", "error");
+                const errorMessage = result.error || "Gagal merumuskan storyboard. Coba lagi atau cek konfigurasi server.";
+                showToast(errorMessage, "error");
+                showGenerationFeedback(errorMessage, 'generate');
+                addDBLog(`Generate gagal: ${errorMessage}`, 'error');
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = "Rumuskan Storyboard (AI)";
@@ -2996,6 +3154,7 @@ GENERAL RULES:
                 }
 
                 Views.renderStoryboard(parsedData, AppStore.state.activeRatio);
+                clearGenerationFeedback();
                 setCloudSaveStatus(AppStore.state.authUser?.id ? 'unsaved' : 'guest', AppStore.state.authUser?.id ? 'Unsaved' : 'Guest Draft');
                 showToast("Naskah visual storyboard berhasil dirumuskan!", "success");
 
@@ -3007,9 +3166,11 @@ GENERAL RULES:
                         }
                     });
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Gagal memproses pasca-generasi storyboard:", err);
-                showToast("Gagal mengamankan draf data ke penyimpanan.", "error");
+                const errorMessage = err?.message || "Gagal mengamankan draf data ke penyimpanan.";
+                showToast(errorMessage, "error");
+                showGenerationFeedback(errorMessage, 'generate');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -3051,7 +3212,9 @@ GENERAL RULES:
             );
 
             if (!result.success) {
-                showToast(result.error || "Sintesis audio gagal.", "error");
+                const errorMessage = result.error || "Sintesis audio gagal.";
+                showToast(errorMessage, "error");
+                showGenerationFeedback(errorMessage, 'tts');
                 if (btn) {
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
@@ -3387,6 +3550,11 @@ GENERAL RULES:
         const clickHandler = async (e: MouseEvent) => {
             const target = e.target as HTMLElement;
 
+            if (target.closest('[data-action="dismiss-generation-feedback"]')) {
+                clearGenerationFeedback();
+                return;
+            }
+
             // 1. Toggle Publishing Package Accordion
             if (target.closest('[data-action="toggle-publishing-package"]')) {
                 const content = document.getElementById('publishingPackageContent');
@@ -3417,9 +3585,7 @@ GENERAL RULES:
                 }
                 const inputElem = document.getElementById(elemId) as HTMLInputElement | null;
                 if (inputElem) {
-                    navigator.clipboard.writeText(inputElem.value).then(() => {
-                        showToast(`Teks "${inputElem.value}" berhasil disalin!`, "success");
-                    });
+                    await copyTextToClipboard(inputElem.value, `Teks "${inputElem.value}" berhasil disalin!`);
                 }
                 return;
             }
@@ -3949,9 +4115,7 @@ GENERAL RULES:
                 const fieldId = copyFieldBtn.getAttribute('data-field-id') || '';
                 const textElem = document.getElementById(fieldId);
                 if (textElem) {
-                    navigator.clipboard.writeText(textElem.innerText || textElem.textContent || '').then(() => {
-                        showToast("Teks berhasil disalin ke clipboard!", "success");
-                    });
+                    await copyTextToClipboard(textElem.innerText || textElem.textContent || '', 'Teks berhasil disalin ke clipboard!');
                 }
                 return;
             }
@@ -4058,9 +4222,7 @@ GENERAL RULES:
                 const scene = AppStore.state.activeStoryboardData?.scenes[idx];
                 if (scene) {
                     const textPackage = buildScenePackageText(scene, idx);
-                    navigator.clipboard.writeText(textPackage).then(() => {
-                        showToast("Paket scene lengkap berhasil disalin!", "success");
-                    });
+                    await copyTextToClipboard(textPackage, 'Paket scene lengkap berhasil disalin!');
                 }
                 return;
             }
@@ -4084,9 +4246,7 @@ GENERAL RULES:
                     } else if (!textPrompt) {
                         textPrompt = scene.text_to_image || "";
                     }
-                    navigator.clipboard.writeText(textPrompt).then(() => {
-                        showToast("Prompt Gambar berhasil disalin!", "success");
-                    });
+                    await copyTextToClipboard(textPrompt, 'Prompt Gambar berhasil disalin!');
                 }
                 return;
             }
@@ -4097,9 +4257,7 @@ GENERAL RULES:
                 const scene = AppStore.state.activeStoryboardData?.scenes[idx];
                 if (scene) {
                     const textPrompt = scene.videoPrompt || scene.camera_movement || "";
-                    navigator.clipboard.writeText(textPrompt).then(() => {
-                        showToast("Prompt Video berhasil disalin!", "success");
-                    });
+                    await copyTextToClipboard(textPrompt, 'Prompt Video berhasil disalin!');
                 }
                 return;
             }

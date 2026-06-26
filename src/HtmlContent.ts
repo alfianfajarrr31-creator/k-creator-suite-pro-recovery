@@ -439,6 +439,9 @@ export const HTML_CONTENT = `
                         </div>
                     </div>
 
+                    <!-- Reliability Feedback Panel (ARC 4.1) -->
+                    <div id="generationFeedbackPanel" class="hidden"></div>
+
                     <!-- Empty state -->
                     <div id="emptyState" class="flex-1 border border-dashed border-slate-855 rounded-2xl flex flex-col items-center justify-center p-10 text-center text-slate-500 space-y-4">
                         <span class="text-4xl inline-block animate-bounce">🎬</span>

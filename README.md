@@ -129,3 +129,20 @@ The backend falls back to the `VITE_*` Supabase variables if the server aliases 
 - Gemini endpoints now require a valid Supabase session and allowed email.
 - Guest mode is effectively disabled for generation while Private Beta Gate is active.
 
+
+## ARC 4.1 — Reliability Signal Patch
+
+Patch ini menambah sistem feedback pemakaian harian:
+
+- Toast notification dibuat lebih jelas dengan label sukses/gagal/perhatian.
+- Suara notifikasi berbeda untuk sukses, warning, dan error.
+- Panel error generate ditambahkan di canvas utama agar penyebab gagal lebih mudah dipahami.
+- Copy action memakai helper yang lebih aman dan selalu memberi toast berhasil/gagal.
+- Generate, TTS, dan regenerate menampilkan alasan gagal yang lebih manusiawi.
+
+Tidak mengubah:
+
+- Model Gemini utama
+- Prompt generator utama
+- Supabase Auth / Save / History
+- Scene editor dan workflow cloud yang sudah stabil
