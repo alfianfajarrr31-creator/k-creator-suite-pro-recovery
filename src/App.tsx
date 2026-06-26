@@ -322,6 +322,52 @@ export default function App() {
             panel.innerHTML = '';
         }
 
+        function getNarrationWordBudget(seconds: number): { min: number; max: number } {
+            const safeSeconds = Number(seconds) || 8;
+            if (safeSeconds <= 5) return { min: 8, max: 12 };
+            if (safeSeconds <= 8) return { min: 14, max: 20 };
+            if (safeSeconds <= 10) return { min: 20, max: 28 };
+            if (safeSeconds <= 12) return { min: 28, max: 35 };
+            return { min: 32, max: 42 };
+        }
+
+        function scrollToScene(index: number) {
+            const el = document.getElementById(`sceneCard_${index}`);
+            if (!el) {
+                showToast('Scene tidak ditemukan.', 'warning');
+                return;
+            }
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('[data-scene-card]').forEach((card) => {
+                card.classList.remove('ring-2', 'ring-indigo-500', 'border-indigo-500/60');
+            });
+            el.classList.add('ring-2', 'ring-indigo-500', 'border-indigo-500/60');
+            setTimeout(() => {
+                el.classList.remove('ring-2', 'ring-indigo-500', 'border-indigo-500/60');
+            }, 2200);
+        }
+
+        function renderSceneShortcutNav(data: any) {
+            const nav = document.getElementById('sceneShortcutNav');
+            const inner = document.getElementById('sceneShortcutNavInner');
+            if (!nav || !inner) return;
+            const scenes = Array.isArray(data?.scenes) ? data.scenes : [];
+            if (scenes.length === 0) {
+                nav.classList.add('hidden');
+                inner.innerHTML = '';
+                return;
+            }
+            nav.classList.remove('hidden');
+            inner.innerHTML = `
+                <span class="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Jump to:</span>
+                ${scenes.map((scene: any, index: number) => `
+                    <button data-action="jump-scene" data-index="${index}" class="shrink-0 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-indigo-600/20 border border-slate-800 hover:border-indigo-500/30 text-[10px] font-bold text-slate-300 hover:text-indigo-200 transition cursor-pointer">
+                        Scene ${escapeHTML(scene?.scene_number || index + 1)}
+                    </button>
+                `).join('')}
+            `;
+        }
+
         function addDBLog(message: string, type = 'info') {
             const safeMsg = escapeHTML(message);
             const time = new Date().toLocaleTimeString([], { hour12: false });
@@ -897,6 +943,108 @@ export default function App() {
             }
             if (type === 'video') {
                 copyTextToClipboard(buildAllVideoPromptsText(storyboardData), 'Semua Image-to-Video prompt berhasil disalin!');
+            }
+        }
+
+        function buildNarrationOnlyRewriteTheme(storyboardData: any, mode: 'rewrite' | 'shorten') {
+            const scenes = Array.isArray(storyboardData?.scenes) ? storyboardData.scenes : [];
+            const outputLanguage = getStoryboardOutputLanguage();
+            const languageInstruction = outputLanguage === 'en'
+                ? 'All rewritten narration must be in English.'
+                : 'All rewritten narration must be in Bahasa Indonesia, natural, conversational, and easy for Indonesian TTS.';
+            const sceneBrief = scenes.map((scene: any, index: number) => {
+                const duration = Number(scene?.estimated_duration || (document.getElementById('sceneDuration') as HTMLInputElement | null)?.value || 8);
+                const budget = getNarrationWordBudget(duration);
+                return [
+                    `SCENE ${scene?.scene_number || index + 1}`,
+                    `Duration: ${duration}s`,
+                    `Target narration length: ${budget.min}-${budget.max} words`,
+                    `Scene description: ${scene?.scene_description || '-'}`,
+                    `Current narration: ${scene?.narrator_script || '-'}`
+                ].join('\n');
+            }).join('\n\n---\n\n');
+
+            return `REWRITE ONLY THE NARRATION SCRIPTS for this existing storyboard. Keep every scene meaning, visual logic, character continuity, and pacing. Do not change visual prompts unless required by schema.\n\nMODE: ${mode === 'shorten' ? 'SHORTEN existing narration aggressively to fit duration' : 'REGENERATE all narration to sound better and fit duration'}\n\nLANGUAGE RULE:\n${languageInstruction}\n\nSTRICT DURATION RULE:\n- Narration must realistically fit each selected scene duration for spoken TTS.\n- 5 seconds = 8-12 words.\n- 8 seconds = 14-20 words.\n- 10 seconds = 20-28 words.\n- 12 seconds = 28-35 words.\n- Avoid long clauses, stacked commas, and over-explaining.\n- Keep it punchy, clear, and natural for Shorts/Reels/TikTok narration.\n\nEXISTING STORYBOARD CONTEXT:\nYouTube title: ${storyboardData?.youtube_title || '-'}\nVideo name: ${storyboardData?.video_name || '-'}\nThumbnail text: ${storyboardData?.thumbnail_text || '-'}\n\nSCENES TO REWRITE:\n${sceneBrief}\n\nReturn the full valid storyboard JSON schema required by the app, but the important updated fields are scenes[].narrator_script. Preserve scene count and scene_number. Do not add extra scenes.`;
+        }
+
+        async function regenerateAllNarrationsOnly(mode: 'rewrite' | 'shorten' = 'rewrite') {
+            if (!ensurePrivateBetaAccess(true)) return;
+            const storyboardData = AppStore.state.activeStoryboardData;
+            if (!storyboardData || !Array.isArray(storyboardData.scenes) || storyboardData.scenes.length === 0) {
+                showToast('Belum ada storyboard aktif untuk generate narasi.', 'warning');
+                return;
+            }
+
+            const btnId = mode === 'shorten' ? 'btnShortenAllNarration' : 'btnGenerateAllNarrationOnly';
+            const btn = document.getElementById(btnId) as HTMLButtonElement | null;
+            const originalText = btn?.innerHTML || (mode === 'shorten' ? '⏱️ Shorten All Narration' : '✂️ Generate All Narration Only');
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ Processing narration...';
+                }
+                updateGlobalStatus(mode === 'shorten' ? 'Shortening Narration' : 'Regenerating Narration', 'amber');
+                clearGenerationFeedback();
+
+                const theme = buildNarrationOnlyRewriteTheme(storyboardData, mode);
+                const sceneCount = String(storyboardData.scenes.length || 5);
+                const sceneDuration = String(storyboardData.scenes[0]?.estimated_duration || (document.getElementById('sceneDuration') as HTMLInputElement | null)?.value || 8);
+                const result = await GeminiService.generateStoryboard(
+                    theme,
+                    (document.getElementById('narratorStyle') as HTMLSelectElement | null)?.value || 'narator_dokumenter',
+                    (document.getElementById('animationStyle') as HTMLSelectElement | null)?.value || 'Claymation Animation',
+                    'Rewrite narration only. Preserve visuals and scene count.',
+                    false,
+                    AppStore.state.activeRatio,
+                    'manual',
+                    sceneCount,
+                    sceneDuration,
+                    AppStore.state.globalApiKey,
+                    getStoryboardOutputLanguage(),
+                    getCharacterConsistencyMode()
+                );
+
+                if (!result.success) {
+                    const errorMessage = result.error || 'Generate narasi gagal.';
+                    showToast(errorMessage, 'error');
+                    showGenerationFeedback(errorMessage, 'regenerate');
+                    return;
+                }
+
+                const nextScenes = Array.isArray(result.data?.scenes) ? result.data.scenes : [];
+                if (nextScenes.length === 0) {
+                    showToast('AI belum mengembalikan narasi yang bisa dipakai.', 'warning');
+                    return;
+                }
+
+                const cloned = JSON.parse(JSON.stringify(storyboardData));
+                cloned.scenes = cloned.scenes.map((scene: any, index: number) => {
+                    const next = nextScenes[index] || {};
+                    return {
+                        ...scene,
+                        narrator_script: next.narrator_script || scene.narrator_script || '',
+                        estimated_duration: scene.estimated_duration || next.estimated_duration || sceneDuration
+                    };
+                });
+                cloned.narration_last_updated_at = new Date().toISOString();
+
+                AppStore.setState({ activeStoryboardData: cloned });
+                Views.renderStoryboard(cloned, AppStore.state.activeRatio);
+                markActiveStoryboardDirty(mode === 'shorten' ? 'All narration shortened' : 'All narration regenerated');
+                setCloudSaveStatus('unsaved', 'Narration Updated');
+                showToast(mode === 'shorten' ? 'Semua narasi berhasil dipendekkan.' : 'Semua narasi berhasil di-generate ulang.', 'success');
+            } catch (err: any) {
+                console.error('Regenerate all narration failed:', err);
+                const errorMessage = err?.message || 'Generate semua narasi gagal.';
+                showToast(errorMessage, 'error');
+                showGenerationFeedback(errorMessage, 'regenerate');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+                updateGlobalStatus('Director Studio Active', 'indigo');
             }
         }
 
@@ -2389,10 +2537,13 @@ GENERAL RULES:
                 const deck = document.getElementById('scenesContainer');
                 if (!deck) return;
                 deck.innerHTML = "";
+                renderSceneShortcutNav(data);
 
                 data.scenes.forEach((scene: any, index: number) => {
                     const card = document.createElement('div');
-                    card.className = "bg-[#08090e] border border-slate-855 rounded-2xl overflow-hidden shadow-xl transition hover:border-slate-800";
+                    card.id = `sceneCard_${index}`;
+                    card.setAttribute('data-scene-card', 'true');
+                    card.className = "bg-[#08090e] border border-slate-855 rounded-2xl overflow-hidden shadow-xl transition hover:border-slate-800 scroll-mt-24";
                     
                     let imagePromptToShow = scene.imagePrompt || "";
                     let videoPromptToShow = scene.videoPrompt || "";
@@ -3859,6 +4010,23 @@ GENERAL RULES:
                     switchTab('voice');
                     showToast("Semua narasi berhasil ditransfer!", "success");
                 }
+                return;
+            }
+
+            const jumpSceneBtn = target.closest('[data-action="jump-scene"]');
+            if (jumpSceneBtn) {
+                const index = parseInt(jumpSceneBtn.getAttribute('data-index') || '0', 10);
+                scrollToScene(index);
+                return;
+            }
+
+            if (target.closest('[data-action="generate-all-narration-only"]')) {
+                await regenerateAllNarrationsOnly('rewrite');
+                return;
+            }
+
+            if (target.closest('[data-action="shorten-all-narration"]')) {
+                await regenerateAllNarrationsOnly('shorten');
                 return;
             }
 

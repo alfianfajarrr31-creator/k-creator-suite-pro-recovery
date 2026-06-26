@@ -436,6 +436,12 @@ export const HTML_CONTENT = `
                                     <button id="btnCopyAllNarration" data-action="copy-bulk-storyboard" data-copy-type="narration" class="w-full bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                         🎙️ Copy Narration
                                     </button>
+                                    <button id="btnGenerateAllNarrationOnly" data-action="generate-all-narration-only" class="w-full bg-amber-600/15 hover:bg-amber-600/25 text-amber-300 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                        ✂️ Generate All Narration Only
+                                    </button>
+                                    <button id="btnShortenAllNarration" data-action="shorten-all-narration" class="w-full bg-orange-600/15 hover:bg-orange-600/25 text-orange-300 border border-orange-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                                        ⏱️ Shorten All Narration
+                                    </button>
                                     <button id="btnCopyAllImages" data-action="copy-bulk-storyboard" data-copy-type="image" class="w-full bg-purple-600/15 hover:bg-purple-600/25 text-purple-400 border border-purple-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                         🎨 Copy Image Prompts
                                     </button>
@@ -488,6 +494,9 @@ export const HTML_CONTENT = `
                                     <p class="text-[10px] text-slate-500 mt-0.5">Area utama review, edit, regenerate, copy scene, dan susun ulang alur visual.</p>
                                 </div>
                                 <span class="text-[9px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-lg font-bold uppercase tracking-wider">Daily Focus</span>
+                            </div>
+                            <div id="sceneShortcutNav" class="hidden mb-3 rounded-2xl border border-slate-800 bg-[#08090e]/80 p-2 overflow-x-auto custom-scrollbar">
+                                <div class="flex items-center gap-2 min-w-max" id="sceneShortcutNavInner"></div>
                             </div>
                             <div id="scenesContainer" class="space-y-4"></div>
                         </div>

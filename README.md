@@ -157,3 +157,9 @@ Upgrade produksi harian:
 - Menampilkan Video File Name di Publishing Package dan export/copy package.
 
 Build test: PASS.
+
+## ARC 4.3 — Narration & Scene Navigation
+- Added scene shortcut navigation above Storyboard Scenes to reduce copy mix-ups.
+- Added Generate All Narration Only for rewriting narration without changing visual scene structure.
+- Added Shorten All Narration for fixing narration that is too long for selected scene duration.
+- Keeps Gemini visual prompt, Supabase, Private Beta Gate, Cloud History, and export/copy workflows intact.
