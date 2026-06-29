@@ -3,15 +3,15 @@ export const HTML_CONTENT = `
     <div id="toast" class="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-50 font-medium border border-slate-800 pointer-events-none"></div>
 
     <!-- Header Block -->
-    <header class="h-16 border-b border-slate-855 bg-[#08090e] flex items-center px-4 md:px-6 justify-between shrink-0 z-30">
-        <div class="flex items-center gap-3">
+    <header class="h-14 md:h-16 border-b border-slate-855 bg-[#08090e] flex items-center px-2.5 md:px-6 justify-between shrink-0 z-30">
+        <div class="flex items-center gap-2 md:gap-3">
             <!-- Hamburger menu button on mobile -->
             <button id="btnHamburger" class="md:hidden p-2 rounded-xl hover:bg-slate-800 text-slate-300 focus:outline-none cursor-pointer flex items-center justify-center border border-slate-800/60 bg-[#0c0d12]" aria-label="Menu">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div class="w-10 h-10 overflow-hidden rounded-xl shadow-lg shadow-indigo-600/20">
+            <div class="w-8 h-8 md:w-10 md:h-10 overflow-hidden rounded-xl shadow-lg shadow-indigo-600/20">
                 <svg class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="header-logo-g" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -27,10 +27,10 @@ export const HTML_CONTENT = `
                 </svg>
             </div>
             <div>
-                <h1 class="text-xs md:text-sm font-bold tracking-wide bg-gradient-to-r from-indigo-200 to-emerald-200 bg-clip-text text-transparent flex items-center gap-1">
-                    K Creator Suite <span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono font-semibold ml-1">Daily Pro</span>
+                <h1 class="text-[11px] md:text-sm font-bold tracking-wide bg-gradient-to-r from-indigo-200 to-emerald-200 bg-clip-text text-transparent flex items-center gap-1 leading-tight">
+                    K Creator Suite <span class="hidden xs:inline text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono font-semibold ml-1">Daily Pro</span>
                 </h1>
-                <p class="text-[9px] md:text-[10px] text-slate-400 font-semibold tracking-wider uppercase">AI Storyboard, Prompt, dan TTS Workspace</p>
+                <p class="hidden sm:block text-[9px] md:text-[10px] text-slate-400 font-semibold tracking-wider uppercase">AI Storyboard, Prompt, dan TTS Workspace</p>
             </div>
         </div>
 
@@ -77,19 +77,37 @@ export const HTML_CONTENT = `
     <!-- Private Beta Gate -->
     <section id="privateBetaGate" class="hidden flex-1 min-h-[calc(100vh-4rem)] bg-[#050609] flex items-center justify-center p-6"></section>
 
-    <!-- Mobile Navigation Tab Switches -->
-    <div class="flex md:hidden border-b border-slate-855 bg-[#0a0b10] p-2 justify-around shrink-0 z-20">
+    <!-- Mobile Navigation Tab Switches (moved into floating mobile menu to save vertical workspace) -->
+    <div class="hidden border-b border-slate-855 bg-[#0a0b10] p-2 justify-around shrink-0 z-20">
         <button id="mobileTabBtn-director" data-action="switch-tab" data-tab="director" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer">🎬 Storyboard</button>
         <button id="mobileTabBtn-voice" data-action="switch-tab" data-tab="voice" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer">🎙️ Voice Lab</button>
     </div>
 
-    <!-- Mobile Quick Access Bar -->
-    <div id="mobileQuickAccessBar" class="flex md:hidden gap-2 px-3 py-2 bg-[#07080d] border-b border-slate-855 overflow-x-auto whitespace-nowrap shrink-0 z-20 scrollbar-hide">
+    <!-- Mobile Quick Access Bar (disabled in v2; replaced by floating menu so canvas gets more space) -->
+    <div id="mobileQuickAccessBar" class="hidden gap-2 px-3 py-2 bg-[#07080d] border-b border-slate-855 overflow-x-auto whitespace-nowrap shrink-0 z-20 scrollbar-hide">
         <button data-action="open-cloud-history" class="shrink-0 px-3 py-2 rounded-xl bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-300 text-[11px] font-bold cursor-pointer">☁️ Riwayat</button>
         <button data-action="open-user-guide" class="shrink-0 px-3 py-2 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 text-[11px] font-bold cursor-pointer">📘 Panduan</button>
         <button data-action="open-failure-playbook" class="shrink-0 px-3 py-2 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-300 text-[11px] font-bold cursor-pointer">🚑 Prompt Gagal</button>
         <button data-action="toggle-inspector" class="shrink-0 px-3 py-2 rounded-xl bg-slate-800/70 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-bold cursor-pointer">🗄️ Data</button>
     </div>
+
+
+
+    <!-- Mobile Floating Workspace Menu: compact access without stealing vertical screen space -->
+    <details id="mobileWorkspaceMenu" class="md:hidden fixed right-3 bottom-20 z-50 group">
+        <summary class="list-none select-none cursor-pointer px-4 py-3 rounded-2xl bg-indigo-600 text-white shadow-2xl shadow-indigo-950/60 border border-indigo-400/30 text-xs font-black tracking-wide flex items-center gap-2">
+            ☰ Menu
+        </summary>
+        <div class="absolute right-0 bottom-full mb-3 w-64 rounded-2xl border border-slate-700 bg-[#08090e]/98 backdrop-blur-xl shadow-2xl p-3 grid gap-2">
+            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-1 pb-1">Akses Cepat</div>
+            <button data-action="switch-tab" data-tab="director" class="w-full text-left px-3 py-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-200 text-xs font-bold cursor-pointer">🎬 Storyboard Studio</button>
+            <button data-action="switch-tab" data-tab="voice" class="w-full text-left px-3 py-2.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-200 text-xs font-bold cursor-pointer">🎙️ Voice Lab</button>
+            <button data-action="open-cloud-history" class="w-full text-left px-3 py-2.5 rounded-xl bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-200 text-xs font-bold cursor-pointer">☁️ Riwayat Cloud</button>
+            <button data-action="open-user-guide" class="w-full text-left px-3 py-2.5 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-200 text-xs font-bold cursor-pointer">📘 Panduan</button>
+            <button data-action="open-failure-playbook" class="w-full text-left px-3 py-2.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-200 text-xs font-bold cursor-pointer">🚑 Bantuan Prompt Gagal</button>
+            <button data-action="toggle-inspector" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/70 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold cursor-pointer">🗄️ Data Tools</button>
+        </div>
+    </details>
 
     <!-- Main Workspace Container -->
     <main class="flex-1 flex overflow-hidden relative">
@@ -423,10 +441,10 @@ export const HTML_CONTENT = `
 
                 <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col gap-4">
                     <!-- Heading banner -->
-                    <div class="sticky top-0 z-20 -mx-2 md:-mx-3 px-2 md:px-3 py-3 bg-[#05060a]/92 backdrop-blur-xl flex flex-col md:flex-row md:items-start justify-between border-b border-slate-855 gap-3">
+                    <div class="md:sticky md:top-0 z-20 -mx-2 md:-mx-3 px-2 md:px-3 py-2 md:py-3 bg-[#05060a]/92 backdrop-blur-xl flex flex-col md:flex-row md:items-start justify-between border-b border-slate-855 gap-2 md:gap-3">
                         <div>
-                            <h2 id="storyboardTitle" class="text-lg md:text-xl font-bold text-slate-100 tracking-tight">Project Storyboard Canvas</h2>
-                            <p id="storyboardSub" class="text-xs text-slate-400 mt-1">Gunakan formulir kontrol di kiri untuk menghasilkan rancangan tiga pilar teks produksi video Anda.</p>
+                            <h2 id="storyboardTitle" class="text-base md:text-xl font-bold text-slate-100 tracking-tight">Project Storyboard Canvas</h2>
+                            <p id="storyboardSub" class="hidden sm:block text-xs text-slate-400 mt-1">Gunakan formulir kontrol di kiri untuk menghasilkan rancangan tiga pilar teks produksi video Anda.</p>
                         </div>
                         <div id="exportBar" class="hidden flex flex-wrap items-center justify-start md:justify-end gap-2 md:max-w-xl">
                             <!-- Primary actions stay visible for daily use -->
@@ -443,7 +461,7 @@ export const HTML_CONTENT = `
                                 <summary class="list-none select-none bg-slate-800/70 hover:bg-slate-800 text-slate-300 border border-slate-700/70 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
                                     ⚡ Tools Output <span class="text-[9px] text-slate-500">copy/export</span>
                                 </summary>
-                                <div class="absolute right-0 mt-2 w-72 z-40 rounded-2xl border border-slate-800 bg-[#08090e] shadow-2xl p-3 grid gap-2">
+                                <div class="md:absolute md:right-0 mt-2 w-[calc(100vw-3rem)] md:w-72 z-40 rounded-2xl border border-slate-800 bg-[#08090e] shadow-2xl p-3 grid gap-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
                                     <button id="btnCopyFullStoryboard" data-action="copy-bulk-storyboard" data-copy-type="full" class="w-full bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                         📦 Copy Full Package
                                     </button>

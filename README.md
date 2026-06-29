@@ -245,3 +245,12 @@ Patch ini memperbaiki tombol penting yang hilang/terpotong di tampilan HP portra
 3. Test klik Riwayat Cloud.
 4. Test klik Prompt Gagal.
 5. Generate storyboard tetap jalan.
+
+
+## Hotfix — Mobile Layout v2 Compact Workspace
+
+- Memindahkan akses Riwayat/Panduan/Bantuan Prompt Gagal/Data dari bar atas mobile ke floating menu.
+- Menyembunyikan tab mobile horizontal agar area kerja portrait lebih lega.
+- Membuat canvas header sticky hanya di desktop, supaya HP tidak terasa terkunci.
+- Membuat dropdown Tools Output lebih aman di mobile dan bisa discroll.
+- Tidak mengubah Gemini, Supabase, Private Beta Gate, atau prompt engine.
