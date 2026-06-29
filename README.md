@@ -204,3 +204,23 @@ Yang ditambahkan:
 
 Tujuan:
 User tidak perlu menebak tombol apa yang harus dipakai saat output gagal.
+
+
+## ARC 4.6 — Final UI Naming Cleanup
+
+Patch ini merapikan wording UI agar lebih mudah dipahami user awam sebelum ARC 4 ditutup.
+
+Perubahan utama:
+- User Guide → Panduan
+- Failure Playbook → Bantuan Prompt Gagal
+- Cloud History → Riwayat Cloud
+- Director Studio → Storyboard Studio
+- Output Tools → Tools Output
+- Edit / Repair → Edit / Perbaiki
+- Copy Package → Copy Scene
+- More Scene Actions → Aksi Scene Lainnya
+- Add / Duplicate / Delete scene diterjemahkan agar lebih jelas
+- Fix Desc / Fix TTS / Fix Image Prompt / Fix Video Prompt dibuat lebih mudah dibaca
+- Private Beta Gate wording dibuat lebih manusiawi
+
+Tidak ada perubahan engine besar, Gemini model, Supabase logic, prompt generator utama, atau TTS endpoint.

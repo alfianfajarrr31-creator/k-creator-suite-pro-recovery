@@ -28,48 +28,48 @@ export const HTML_CONTENT = `
             </div>
             <div>
                 <h1 class="text-xs md:text-sm font-bold tracking-wide bg-gradient-to-r from-indigo-200 to-emerald-200 bg-clip-text text-transparent flex items-center gap-1">
-                    K Creator Suite <span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono font-semibold ml-1">Pro Advanced 2.2</span>
+                    K Creator Suite <span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono font-semibold ml-1">Daily Pro</span>
                 </h1>
-                <p class="text-[9px] md:text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Unified AI Storyboard & Human-Expression TTS Workspace</p>
+                <p class="text-[9px] md:text-[10px] text-slate-400 font-semibold tracking-wider uppercase">AI Storyboard, Prompt, dan TTS Workspace</p>
             </div>
         </div>
 
         <!-- Global Navigation Tab Switches -->
         <nav class="hidden md:flex items-center gap-2 bg-[#0e1017] border border-slate-800 p-1 rounded-xl">
             <button id="tabBtn-director" data-action="switch-tab" data-tab="director" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-indigo-600 shadow cursor-pointer">
-                🎬 Director Studio
+                🎬 Storyboard Studio
             </button>
             <button id="tabBtn-voice" data-action="switch-tab" data-tab="voice" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
-                🎙️ Voice Studio Pro
+                🎙️ Voice Lab
             </button>
         </nav>
 
         <div class="flex items-center gap-2 md:gap-4">
             <div id="authStatusBadge" class="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-500/10 border border-slate-700 text-[10px] font-semibold text-slate-400 max-w-[240px] truncate">
-                <span id="authUserLabel">Guest Mode</span>
+                <span id="authUserLabel">Belum Login</span>
             </div>
             <button id="btnLoginGoogle" data-action="login-google" class="px-3 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/30 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-1.5 transition duration-150 cursor-pointer">
                 🔐 Login Google
             </button>
-            <button id="btnLogoutGoogle" data-action="logout-google" class="hidden px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
-                Logout
+            <button id="btnKeluarGoogle" data-action="logout-google" class="hidden px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+                Keluar
             </button>
             <button id="btnUserGuide" data-action="open-user-guide" class="px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
-                📘 User Guide
+                📘 Panduan
             </button>
             <button id="btnFailurePlaybook" data-action="open-failure-playbook" class="px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
-                🚑 Failure Playbook
+                🚑 Bantuan Prompt Gagal
             </button>
             <button id="btnCloudHistory" data-action="open-cloud-history" class="px-3 py-1.5 bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
-                ☁️ Cloud History
+                ☁️ Riwayat Cloud
             </button>
             <!-- Phase 1.6 DB Inspector Trigger Button -->
             <button id="btnToggleInspector" data-action="toggle-inspector" class="px-3 py-1.5 bg-[#0f111a] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-1.5 transition duration-150 cursor-pointer">
-                🗄️ Inspector
+                🗄️ Data Tools
             </button>
             <div class="flex items-center gap-2 px-2.5 md:px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20" id="globalEngineStatusBadge">
                 <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" id="globalStatusDot"></span>
-                <span class="text-[10px] md:text-xs font-semibold text-indigo-400" id="globalStatusText">Ready for Action</span>
+                <span class="text-[10px] md:text-xs font-semibold text-indigo-400" id="globalStatusText">Siap Digunakan</span>
             </div>
         </div>
     </header>
@@ -93,8 +93,8 @@ export const HTML_CONTENT = `
             <!-- Left Controls Panel (Director Sidebar) -->
             <aside id="directorAside" class="mobile-sidebar w-80 border-r border-slate-855 bg-[#08090e] p-5 overflow-y-auto space-y-4 flex flex-col shrink-0">
                 <div class="space-y-1">
-                    <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Sutradara Kontrol Deck</h2>
-                    <p class="text-xs text-slate-400 leading-relaxed">Atur naskah visual, pergerakan kamera, dan durasi video Anda.</p>
+                    <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Panel Generate</h2>
+                    <p class="text-xs text-slate-400 leading-relaxed">Isi ide konten, pilih style, durasi, lalu generate storyboard siap produksi.</p>
                 </div>
 
                 <!-- API handled server-side: keep hidden field for legacy sync only -->
@@ -371,7 +371,7 @@ export const HTML_CONTENT = `
                         <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
                             <div>
                                 <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest font-mono">Advanced Tools</h3>
-                                <p class="text-[10px] text-slate-500 mt-0.5">Character Library dan Activity Timeline dipindahkan ke sini agar workspace utama lebih bersih.</p>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Fitur lanjutan disimpan di sini agar workspace utama tetap bersih.</p>
                             </div>
                             <span class="text-[10px] font-bold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-lg group-open:hidden">Buka</span>
                             <span class="text-[10px] font-bold text-slate-400 bg-slate-800/70 border border-slate-700 px-2 py-1 rounded-lg hidden group-open:inline">Tutup</span>
@@ -383,7 +383,7 @@ export const HTML_CONTENT = `
                                 <div class="flex items-center gap-2">
                                     <span class="text-xl">👥</span>
                                     <div>
-                                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-widest font-mono">Character Library (Optional)</h3>
+                                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-widest font-mono">Character Library (Opsional)</h3>
                                         <p class="text-[10px] text-slate-400 mt-0.5">Opsional. Dipakai hanya kalau butuh referensi karakter berulang.</p>
                                     </div>
                                 </div>
@@ -433,7 +433,7 @@ export const HTML_CONTENT = `
                             <!-- Secondary output tools are grouped to reduce header clutter -->
                             <details class="relative group">
                                 <summary class="list-none select-none bg-slate-800/70 hover:bg-slate-800 text-slate-300 border border-slate-700/70 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                                    ⚡ Output Tools <span class="text-[9px] text-slate-500">copy/export</span>
+                                    ⚡ Tools Output <span class="text-[9px] text-slate-500">copy/export</span>
                                 </summary>
                                 <div class="absolute right-0 mt-2 w-72 z-40 rounded-2xl border border-slate-800 bg-[#08090e] shadow-2xl p-3 grid gap-2">
                                     <button id="btnCopyFullStoryboard" data-action="copy-bulk-storyboard" data-copy-type="full" class="w-full bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
@@ -507,7 +507,7 @@ export const HTML_CONTENT = `
                             <div id="scenesContainer" class="space-y-4"></div>
                         </div>
 
-                        <!-- Collapsible Publishing Package Section at the bottom -->
+                        <!-- Collapsible Paket Publishing Section at the bottom -->
                         <div class="bg-[#08090e] border border-slate-800 rounded-2xl shadow-2xl relative overflow-hidden">
                             <!-- Collapsible Trigger Header -->
                             <button id="btnTogglePublishingPackage" data-action="toggle-publishing-package" class="w-full text-left p-5 flex items-center justify-between hover:bg-slate-900/40 transition cursor-pointer select-none">
@@ -515,7 +515,7 @@ export const HTML_CONTENT = `
                                     <span class="text-xl">📦</span>
                                     <div>
                                         <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                                            Publishing Package 
+                                            Paket Publishing 
                                             <span class="text-[8px] lowercase bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/20 font-mono">caption, hashtags, hooks & thumbnail</span>
                                         </h3>
                                         <p class="text-[10px] text-slate-400 mt-0.5">Materi asisten publikasi otomatis buatan AI untuk menembus FYP TikTok, Reels, & Shorts.</p>
@@ -531,7 +531,7 @@ export const HTML_CONTENT = `
                             <div id="publishingPackageContent" class="hidden border-t border-slate-855/60 p-5 space-y-5 bg-[#0a0b11]">
                                 <!-- Action Row for Regeneration -->
                                 <div class="flex flex-wrap items-center justify-between gap-3 bg-[#0f111a] p-3 rounded-xl border border-slate-800">
-                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">⚡ Asisten Optimasi Publishing</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">⚡ Asisten Publishing</span>
                                     <div class="flex items-center gap-2">
                                         <button id="btnRegenThumbnailText" data-action="regen-thumbnail-text" class="bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/25 px-2.5 py-1.5 rounded-lg text-[9px] font-bold transition flex items-center gap-1 cursor-pointer">
                                             🔄 Regen Thumbnail Text
@@ -598,19 +598,19 @@ export const HTML_CONTENT = `
                                         <div class="bg-gradient-to-tr from-amber-950/20 to-indigo-950/20 p-3 rounded-xl border border-amber-500/20 space-y-2">
                                             <div class="flex justify-between items-center">
                                                 <span class="text-[10px] font-bold text-amber-400 uppercase font-sans tracking-wide flex items-center gap-1">🎟️ Thumbnail Text</span>
-                                                <button id="btnCopyThumbnailText" data-action="copy-input-field" data-field-id="thumbnailTextVal" class="text-[9px] text-slate-400 hover:text-amber-300 font-mono font-bold cursor-pointer transition">Salin Teks</button>
+                                                <button id="btnCopyThumbnailText" data-action="copy-input-field" data-field-id="thumbnailTextVal" class="text-[9px] text-slate-400 hover:text-amber-300 font-mono font-bold cursor-pointer transition">Copy Teks</button>
                                             </div>
                                             <div class="space-y-1">
                                                 <input type="text" id="thumbnailTextVal" class="w-full text-xs font-bold text-amber-200 bg-black/40 border border-amber-500/15 rounded-lg p-2 focus:border-amber-500/80 focus:outline-none transition" placeholder="Masukkan teks utama thumbnail di sini...">
-                                                <input type="text" id="thumbnailTextAltVal" class="w-full text-[11px] text-slate-450 bg-black/20 border border-slate-800/80 rounded-lg p-1.5 focus:border-indigo-500/50 focus:outline-none transition" placeholder="Alternatif Teks Hook...">
+                                                <input type="text" id="thumbnailTextAltVal" class="w-full text-[11px] text-slate-450 bg-black/20 border border-slate-800/80 rounded-lg p-1.5 focus:border-indigo-500/50 focus:outline-none transition" placeholder="Alternatif teks thumbnail...">
                                             </div>
                                             <p class="text-[9px] text-slate-400 mt-1 italic">Kalau tidak suka, ganti teks thumbnail di sini.</p>
                                         </div>
 
                                         <div class="bg-gradient-to-tr from-indigo-950/20 to-purple-950/20 p-3 rounded-xl border border-indigo-500/20 font-sans">
                                             <div class="flex justify-between items-center mb-1.5">
-                                                <span class="text-[10px] font-bold text-indigo-300 uppercase font-sans tracking-wider flex items-center gap-1">✨ Cover / Thumbnail Prompt</span>
-                                                <button id="btnCopyThumbnailPrompt" data-action="copy-field" data-field-id="thumbnailPromptText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Salin Prompt</button>
+                                                <span class="text-[10px] font-bold text-indigo-300 uppercase font-sans tracking-wider flex items-center gap-1">✨ Prompt Thumbnail / Cover</span>
+                                                <button id="btnCopyThumbnailPrompt" data-action="copy-field" data-field-id="thumbnailPromptText" class="text-[9px] text-slate-500 hover:text-indigo-400 font-mono font-bold cursor-pointer">Copy Prompt</button>
                                             </div>
                                             <p id="thumbnailPromptText" class="text-[11px] text-slate-300 leading-relaxed font-mono bg-black/40 p-2.5 rounded-lg border border-slate-800/80 max-h-24 overflow-y-auto custom-scrollbar"></p>
                                         </div>

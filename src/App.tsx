@@ -271,7 +271,7 @@ export default function App() {
             } else if (lower.includes('token') || lower.includes('login') || lower.includes('unauthorized') || lower.includes('401')) {
                 title = 'Session login bermasalah';
                 detail = 'Akses Private Beta atau session login perlu diperbarui.';
-                tips.push('Logout lalu login ulang.');
+                tips.push('Keluar lalu login ulang.');
                 tips.push('Pastikan email kamu masuk whitelist.');
             } else if (lower.includes('json') || lower.includes('payload') || lower.includes('schema')) {
                 title = 'Format hasil AI tidak valid';
@@ -422,18 +422,18 @@ export default function App() {
                 return false;
             }
             if (!isPrivateBetaConfigured()) {
-                if (showMessage) showToast('Private Beta Gate belum dikonfigurasi. Isi VITE_ALLOWED_EMAILS di Vercel.', 'error');
+                if (showMessage) showToast('Akses Private Beta belum dikonfigurasi. Isi VITE_ALLOWED_EMAILS di Vercel.', 'error');
                 renderPrivateBetaGate();
                 return false;
             }
             const user = AppStore.state.authUser;
             if (!user) {
-                if (showMessage) showToast('Login Google dulu untuk menggunakan aplikasi Private Beta.', 'error');
+                if (showMessage) showToast('Login Google dulu untuk memakai aplikasi Private Beta.', 'error');
                 renderPrivateBetaGate();
                 return false;
             }
             if (!isEmailAllowed(user.email)) {
-                if (showMessage) showToast('Email ini belum terdaftar di Private Beta.', 'error');
+                if (showMessage) showToast('Email ini belum masuk daftar akses Private Beta.', 'error');
                 renderPrivateBetaGate();
                 return false;
             }
@@ -448,7 +448,7 @@ export default function App() {
                 return `
                     <div class="max-w-xl w-full mx-auto p-8 rounded-3xl border border-amber-500/20 bg-[#0d0f16] shadow-2xl text-center">
                         <div class="text-4xl mb-4">🔐</div>
-                        <h2 class="text-2xl font-black text-white mb-2">Private Beta Gate belum siap</h2>
+                        <h2 class="text-2xl font-black text-white mb-2">Akses Private Beta belum siap</h2>
                         <p class="text-sm text-slate-400 leading-relaxed mb-5">Tambahkan environment variable <b class="text-amber-300">VITE_ALLOWED_EMAILS</b> di Vercel agar hanya email yang kamu izinkan bisa masuk.</p>
                         <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-left text-xs text-slate-300 font-mono mb-5">VITE_ALLOWED_EMAILS=emailkamu@gmail.com,teman@gmail.com</div>
                         <p class="text-[11px] text-slate-500">Setelah ENV diisi, redeploy aplikasi.</p>
@@ -460,16 +460,16 @@ export default function App() {
                     <div class="max-w-xl w-full mx-auto p-8 rounded-3xl border border-rose-500/20 bg-[#0d0f16] shadow-2xl text-center">
                         <div class="text-4xl mb-4">⛔</div>
                         <h2 class="text-2xl font-black text-white mb-2">Access belum diberikan</h2>
-                        <p class="text-sm text-slate-400 leading-relaxed mb-4">Email <b class="text-rose-300">${email}</b> belum masuk daftar Private Beta.</p>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-4">Email <b class="text-rose-300">${email}</b> belum masuk daftar akses Private Beta.</p>
                         <p class="text-xs text-slate-500 mb-5">Hubungi admin agar email ini didaftarkan. ${allowedPreview ? `Email terdaftar contoh: ${allowedPreview}` : ''}</p>
-                        <button data-action="logout-google" class="px-5 py-3 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-300 rounded-2xl text-sm font-black cursor-pointer">Logout & pakai email lain</button>
+                        <button data-action="logout-google" class="px-5 py-3 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-300 rounded-2xl text-sm font-black cursor-pointer">Keluar & pakai email lain</button>
                     </div>
                 `;
             }
             return `
                 <div class="max-w-xl w-full mx-auto p-8 rounded-3xl border border-indigo-500/20 bg-[#0d0f16] shadow-2xl text-center">
                     <div class="text-4xl mb-4">🚪</div>
-                    <h2 class="text-2xl font-black text-white mb-2">K Creator Suite Pro — Private Beta</h2>
+                    <h2 class="text-2xl font-black text-white mb-2">K Creator Suite Pro — Akses Private Beta</h2>
                     <p class="text-sm text-slate-400 leading-relaxed mb-6">Aplikasi ini sedang mode private. Login memakai Google dengan email yang sudah didaftarkan untuk masuk.</p>
                     <button data-action="login-google" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-black shadow-lg shadow-emerald-600/20 cursor-pointer">🔐 Login Google</button>
                     <p class="text-[11px] text-slate-500 mt-5">Belum punya akses? Minta admin mendaftarkan email kamu dulu.</p>
@@ -520,7 +520,7 @@ export default function App() {
             const user = AppStore.state.authUser;
             const label = document.getElementById('authUserLabel');
             const loginBtn = document.getElementById('btnLoginGoogle');
-            const logoutBtn = document.getElementById('btnLogoutGoogle');
+            const logoutBtn = document.getElementById('btnKeluarGoogle');
             const badge = document.getElementById('authStatusBadge');
 
             if (!label || !loginBtn || !logoutBtn || !badge) return;
@@ -612,8 +612,8 @@ export default function App() {
                 renderPrivateBetaGate();
                 showToast('Berhasil logout dari Google.', 'success');
             } catch (err) {
-                console.error('Logout gagal:', err);
-                showToast('Logout gagal.', 'error');
+                console.error('Keluar gagal:', err);
+                showToast('Keluar gagal.', 'error');
             }
         }
 
@@ -1749,7 +1749,7 @@ GENERAL RULES:
                             <div class="flex items-start gap-3">
                                 <div class="w-11 h-11 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-xl shrink-0">🚑</div>
                                 <div>
-                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">Prompt Failure Playbook</h3>
+                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">Bantuan Prompt Gagal</h3>
                                     <p class="text-xs text-slate-400 mt-1 leading-relaxed max-w-3xl">Panduan cepat saat hasil image/video/TTS gagal. Pilih gejala masalahnya, lalu ikuti tombol repair yang disarankan. Tujuannya supaya user awam tidak bingung harus klik apa.</p>
                                 </div>
                             </div>
@@ -1760,7 +1760,7 @@ GENERAL RULES:
                         <div class="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
                             <h4 class="text-sm font-black text-amber-100 mb-2">Cara Pakai Cepat</h4>
                             <ol class="grid md:grid-cols-4 gap-3 text-xs text-slate-300 leading-relaxed list-decimal pl-4 md:pl-0 md:list-none">
-                                <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">1. Buka scene</b><br/>Klik <b>Edit / Repair</b> di scene yang bermasalah.</li>
+                                <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">1. Buka scene</b><br/>Klik <b>Edit / Perbaiki</b> di scene yang bermasalah.</li>
                                 <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">2. Pilih preset</b><br/>Klik preset seperti <b>Veo Failed</b>, <b>Too Complex</b>, atau <b>Image Mismatch</b>.</li>
                                 <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">3. Fix field</b><br/>Klik <b>Fix Video Prompt</b>, <b>Fix Image Prompt</b>, atau <b>Fix TTS</b>.</li>
                                 <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">4. Simpan</b><br/>Kalau sudah cocok, klik <b>Save / Update Cloud</b>.</li>
@@ -1780,8 +1780,8 @@ GENERAL RULES:
                             <div class="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-4">
                                 <h4 class="text-sm font-black text-indigo-100 mb-3">🖼️ Image Prompt / Karakter / Thumbnail</h4>
                                 <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
-                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-indigo-300">Karakter tidak mirip / berubah</b><p class="mt-1 text-slate-400">Aktifkan <b>Character Consistency Mode</b>. Lalu pakai preset <b>Image Mismatch</b> → klik <b>Fix Image Prompt</b>. Prompt akan dibuat lebih seperti master character reference.</p></div>
-                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-fuchsia-300">Thumbnail kurang nendang</b><p class="mt-1 text-slate-400">Buka <b>Publishing Package</b>, edit <b>Thumbnail Text</b>, atau klik <b>Regen Thumbnail Text</b> untuk hook alternatif.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-indigo-300">Karakter tidak mirip / berubah</b><p class="mt-1 text-slate-400">Aktifkan <b>Detail Karakter Konsisten</b>. Lalu pakai preset <b>Image Mismatch</b> → klik <b>Fix Image Prompt</b>. Prompt akan dibuat lebih seperti master character reference.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-fuchsia-300">Thumbnail kurang nendang</b><p class="mt-1 text-slate-400">Buka <b>Paket Publishing</b>, edit <b>Thumbnail Text</b>, atau klik <b>Regen Thumbnail Text</b> untuk hook alternatif.</p></div>
                                     <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-sky-300">Visual tidak sesuai narasi</b><p class="mt-1 text-slate-400">Isi komentar spesifik, misalnya “background harus Marineford, bukan kota biasa” → klik <b>Fix Image Prompt</b>.</p></div>
                                 </div>
                             </div>
@@ -1791,7 +1791,7 @@ GENERAL RULES:
                             <div class="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                                 <h4 class="text-sm font-black text-emerald-100 mb-3">🎙️ Narasi / TTS</h4>
                                 <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
-                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-emerald-300">Narasi terlalu panjang</b><p class="mt-1 text-slate-400">Klik <b>Output Tools</b> → <b>Shorten All Narration</b>. Untuk satu scene saja, buka editor lalu klik <b>Fix TTS</b>.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-emerald-300">Narasi terlalu panjang</b><p class="mt-1 text-slate-400">Klik <b>Tools Output</b> → <b>Shorten All Narration</b>. Untuk satu scene saja, buka editor lalu klik <b>Fix TTS</b>.</p></div>
                                     <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-lime-300">Narasi datar / kurang emosional</b><p class="mt-1 text-slate-400">Pakai preset <b>TTS Flat</b> atau <b>More Emotional</b> → klik <b>Fix TTS</b>.</p></div>
                                 </div>
                             </div>
@@ -1835,7 +1835,7 @@ GENERAL RULES:
                             <div class="flex items-start gap-3">
                                 <div class="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl shrink-0">📘</div>
                                 <div>
-                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">User Guide — K Creator Suite Pro</h3>
+                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">Panduan — K Creator Suite Pro</h3>
                                     <p class="text-xs text-slate-400 mt-1 leading-relaxed max-w-2xl">Panduan cepat untuk generate storyboard, koreksi scene, simpan cloud, dan ambil output siap produksi. Dibuat untuk pemula, jadi ikuti dari atas ke bawah saja.</p>
                                 </div>
                             </div>
@@ -1861,7 +1861,7 @@ GENERAL RULES:
                                 <div class="text-2xl mb-2">🛠️</div>
                                 <h4 class="text-sm font-black text-indigo-200">Kalau Scene Kurang Cocok</h4>
                                 <ul class="mt-3 space-y-2 text-xs text-slate-300 leading-relaxed list-disc pl-4">
-                                    <li>Klik <b>Edit / Repair</b> pada scene.</li>
+                                    <li>Klik <b>Edit / Perbaiki</b> pada scene.</li>
                                     <li>Tulis komentar, misalnya: “Veo gagal, kamera terlalu rumit.”</li>
                                     <li>Pilih <b>Fix Video Prompt</b> kalau hanya prompt video yang bermasalah.</li>
                                     <li>Pilih <b>Regenerate Full Scene</b> kalau mau scene diganti total.</li>
@@ -1889,8 +1889,8 @@ GENERAL RULES:
                             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
                                 <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-amber-300">Edit / Repair</b><p class="text-slate-400 mt-1">Buka editor scene untuk edit manual atau perbaiki prompt tertentu.</p></div>
                                 <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-indigo-300">Copy Package</b><p class="text-slate-400 mt-1">Copy scene lengkap: deskripsi, narasi, image prompt, video prompt.</p></div>
-                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-emerald-300">Voice Lab</b><p class="text-slate-400 mt-1">Kirim narasi scene ke area TTS/Voice Studio.</p></div>
-                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-sky-300">Output Tools</b><p class="text-slate-400 mt-1">Tempat copy full package, export TXT/JSON, dan regenerate narasi massal.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-emerald-300">Voice Lab</b><p class="text-slate-400 mt-1">Kirim narasi scene ke area TTS / Voice Lab.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-sky-300">Output Tools</b><p class="text-slate-400 mt-1">Tempat copy paket lengkap, export TXT/JSON, dan regenerate narasi massal.</p></div>
                                 <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-orange-300">Shorten Narration</b><p class="text-slate-400 mt-1">Pendekkan semua narasi kalau durasi scene terasa tidak realistis.</p></div>
                                 <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-rose-300">More Actions</b><p class="text-slate-400 mt-1">Tambah, duplicate, atau hapus scene tanpa memenuhi tampilan utama.</p></div>
                             </div>
@@ -1904,7 +1904,7 @@ GENERAL RULES:
                             <div class="grid lg:grid-cols-2 gap-3 text-xs text-slate-300 leading-relaxed">
                                 <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-rose-300">Veo failed generate</b><p class="mt-1 text-slate-400">Klik preset <b>Veo Failed</b>, lalu klik <b>Fix Video Prompt</b>. Biasanya prompt perlu dibuat lebih sederhana.</p></div>
                                 <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">Kling gagal / hasil diam</b><p class="mt-1 text-slate-400">Klik <b>Too Static</b> atau <b>Kling Failed</b>, lalu perbaiki prompt video.</p></div>
-                                <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-indigo-300">Karakter berubah-ubah</b><p class="mt-1 text-slate-400">Aktifkan <b>Character Consistency Mode</b>, lalu gunakan <b>Fix Image Prompt</b>.</p></div>
+                                <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-indigo-300">Karakter berubah-ubah</b><p class="mt-1 text-slate-400">Aktifkan <b>Detail Karakter Konsisten</b>, lalu gunakan <b>Fix Image Prompt</b>.</p></div>
                                 <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-emerald-300">Narasi terlalu panjang</b><p class="mt-1 text-slate-400">Klik <b>Shorten All Narration</b> di Output Tools agar lebih sesuai durasi.</p></div>
                             </div>
                         </div>
@@ -2081,7 +2081,7 @@ GENERAL RULES:
             }
 
             const btn = document.getElementById('btnCloudHistory') as HTMLButtonElement | null;
-            const originalText = btn?.innerHTML || '☁️ Cloud History';
+            const originalText = btn?.innerHTML || '☁️ Riwayat Cloud';
 
             try {
                 if (btn) {
@@ -2795,7 +2795,7 @@ GENERAL RULES:
                                 <div class="flex items-center justify-between">
                                     <h4 class="text-[10px] font-bold text-purple-400 uppercase tracking-widest font-mono font-bold">🎨 Text-to-Image Prompt</h4>
                                     <button class="px-2.5 py-1 bg-purple-550/10 hover:bg-purple-550/20 border border-purple-550/20 text-purple-400 rounded-lg text-[9px] font-bold transition flex items-center gap-1 cursor-pointer" data-action="copy-image-prompt" data-index="${index}">
-                                        📋 Salin Prompt Gambar
+                                        📋 Copy Prompt Gambar
                                     </button>
                                 </div>
                                 <p class="text-xs text-slate-300 leading-relaxed bg-[#0c0e14] border border-slate-850 p-3.5 rounded-xl font-mono whitespace-pre-line">
@@ -2808,7 +2808,7 @@ GENERAL RULES:
                                 <div class="flex items-center justify-between">
                                     <h4 class="text-[10px] font-bold text-teal-400 uppercase tracking-widest font-mono font-bold">🎥 Image-to-Video Prompt</h4>
                                     <button class="px-2.5 py-1 bg-teal-550/10 hover:bg-teal-550/20 border border-teal-550/20 text-teal-400 rounded-lg text-[9px] font-bold transition flex items-center gap-1 cursor-pointer" data-action="copy-video-prompt" data-index="${index}">
-                                        📋 Salin Prompt Video
+                                        📋 Copy Prompt Video
                                     </button>
                                 </div>
                                 <p class="text-xs text-slate-355 leading-relaxed bg-[#0c0e14] border border-slate-850 p-3.5 rounded-xl font-mono whitespace-pre-line">
@@ -2882,25 +2882,25 @@ GENERAL RULES:
 
                                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                         <button class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="description" data-index="${index}">
-                                            ✍️ Fix Desc
+                                            ✍️ Perbaiki Deskripsi
                                         </button>
                                         <button class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="narration" data-index="${index}">
-                                            🎙️ Fix TTS
+                                            🎙️ Perbaiki Narasi
                                         </button>
                                         <button class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="image" data-index="${index}">
-                                            🖼️ Fix Image Prompt
+                                            🖼️ Perbaiki Image Prompt
                                         </button>
                                         <button class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/20 font-bold py-2 px-3 rounded-xl text-[9px] transition cursor-pointer" data-action="regenerate-scene-field" data-target="video" data-index="${index}">
-                                            🎥 Fix Video Prompt
+                                            🎥 Perbaiki Video Prompt
                                         </button>
                                     </div>
 
                                     <div class="flex flex-wrap justify-end gap-2 pt-1">
                                         <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold py-2 px-4 rounded-xl text-[10px] transition cursor-pointer" data-action="save-scene-edits" data-index="${index}">
-                                            💾 Save Manual Edit
+                                            💾 Simpan Edit
                                         </button>
                                         <button class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/25 font-bold py-2 px-4 rounded-xl text-[10px] transition cursor-pointer" data-action="regenerate-scene" data-index="${index}">
-                                            ♻️ Regenerate Full Scene
+                                            ♻️ Regenerate Scene Full
                                         </button>
                                     </div>
                                 </div>
@@ -2911,10 +2911,10 @@ GENERAL RULES:
                                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
                                     <div class="flex flex-wrap gap-2">
                                         <button class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/25 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="toggle-scene-editor" data-index="${index}">
-                                            ✍️ Edit / Repair
+                                            ✍️ Edit / Perbaiki
                                         </button>
                                         <button class="bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="copy-scene-package" data-index="${index}">
-                                            📦 Copy Package
+                                            📦 Copy Scene
                                         </button>
                                         <button class="btn-send-scene bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/10" data-action="send-scene-script" data-index="${index}">
                                             🎙️ Voice Lab ↗
@@ -2923,22 +2923,22 @@ GENERAL RULES:
 
                                     <details class="group relative">
                                         <summary class="list-none select-none cursor-pointer bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-bold py-2 px-4 rounded-xl text-[11px] transition flex items-center gap-1.5">
-                                            ⋯ More Scene Actions
+                                            ⋯ Aksi Scene Lainnya
                                         </summary>
                                         <div class="mt-2 lg:absolute lg:right-0 lg:top-full lg:z-30 bg-[#090b11] border border-slate-800 rounded-2xl p-2 shadow-2xl shadow-black/40 min-w-[220px] grid gap-1.5">
                                             <button class="w-full bg-sky-600/15 hover:bg-sky-600/25 text-sky-300 border border-sky-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="add-scene-after" data-index="${index}">
-                                                ➕ Add Scene After
+                                                ➕ Tambah Scene Setelah Ini
                                             </button>
                                             <button class="w-full bg-purple-600/15 hover:bg-purple-600/25 text-purple-300 border border-purple-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="duplicate-scene" data-index="${index}">
-                                                📋 Duplicate Scene
+                                                📋 Duplikat Scene
                                             </button>
                                             <button class="w-full bg-rose-600/10 hover:bg-rose-600/20 text-rose-300 border border-rose-500/20 font-bold py-2 px-3 rounded-xl text-[11px] transition flex items-center gap-1.5 cursor-pointer" data-action="delete-scene" data-index="${index}">
-                                                🗑️ Delete Scene
+                                                🗑️ Hapus Scene
                                             </button>
                                         </div>
                                     </details>
                                 </div>
-                                <p class="text-[9px] text-slate-600 text-right">Daily v1: tombol utama tetap terlihat, aksi tambahan disimpan agar scene tidak terlalu penuh.</p>
+                                <p class="text-[9px] text-slate-600 text-right">Tombol utama tetap terlihat. Aksi tambahan disimpan agar scene tidak terlalu penuh.</p>
                             </div>
                         </div>
                     `;
@@ -3594,7 +3594,7 @@ GENERAL RULES:
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
                 }
-                updateGlobalStatus("Voice Lab Active", "emerald");
+                updateGlobalStatus("Voice Lab Aktif", "emerald");
                 return;
             }
 
@@ -3686,7 +3686,7 @@ GENERAL RULES:
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
                 }
-                updateGlobalStatus("Voice Lab Active", "emerald");
+                updateGlobalStatus("Voice Lab Aktif", "emerald");
             }
         }
 
@@ -3851,7 +3851,7 @@ GENERAL RULES:
                 btn.disabled = true;
                 btn.innerText = "⏳ Generating...";
             }
-            updateGlobalStatus("Memperbarui Publishing Kit...", "amber");
+            updateGlobalStatus("Memperbarui Paket Publishing...", "amber");
 
             try {
                 const currentText = getActiveStoryboardTextReference();
@@ -3907,7 +3907,7 @@ GENERAL RULES:
                         }
                     }
 
-                    showToast("Publishing Package berhasil di-regenerate secara penuh!", "success");
+                    showToast("Paket Publishing berhasil di-regenerate secara penuh!", "success");
                     await logWorkflowActivity("Memperbarui asisten optimistis materi publishing", "success");
                 }
             } catch (err: any) {
@@ -3951,7 +3951,7 @@ GENERAL RULES:
                 return;
             }
 
-            // 1. Toggle Publishing Package Accordion
+            // 1. Toggle Paket Publishing Accordion
             if (target.closest('[data-action="toggle-publishing-package"]')) {
                 const content = document.getElementById('publishingPackageContent');
                 const icon = document.getElementById('publishingPackageToggleIcon');
@@ -3992,7 +3992,7 @@ GENERAL RULES:
                 return;
             }
 
-            // 4. Regen Full Publishing Package action
+            // 4. Regen Full Paket Publishing action
             if (target.closest('[data-action="regen-publishing-package"]')) {
                 await regeneratePublishingPackageOnly();
                 return;
@@ -4545,7 +4545,7 @@ GENERAL RULES:
                         const charCount = document.getElementById('charCounter');
                         if (charCount) charCount.innerText = `${voiceInput.value.length} / 2000 karakter`;
                         switchTab('voice');
-                        showToast("Narasi adegan berhasil dikirim ke Voice Lab!", "success");
+                        showToast("Narasi scene berhasil dikirim ke Voice Lab!", "success");
                     }
                 }
                 return;
@@ -4789,7 +4789,7 @@ GENERAL RULES:
                         };
                     }
                     showToast("Audio berhasil dimuat dari arsip!", "success");
-                    updateGlobalStatus("Voice Lab Active", "emerald");
+                    updateGlobalStatus("Voice Lab Aktif", "emerald");
                 }
                 return;
             }
@@ -5103,7 +5103,7 @@ GENERAL RULES:
                 if (mobileBtnDirector) mobileBtnDirector.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer";
                 if (mobileBtnVoice) mobileBtnVoice.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-emerald-600 cursor-pointer";
 
-                updateGlobalStatus("Voice Lab Active", "emerald");
+                updateGlobalStatus("Voice Lab Aktif", "emerald");
                 const canvasEl = document.getElementById('canvasVisualizer') as HTMLCanvasElement;
                 if (canvasEl) {
                     const container = canvasEl.parentElement;
