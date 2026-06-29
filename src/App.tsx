@@ -1727,6 +1727,112 @@ GENERAL RULES:
             }
         }
 
+        function closeUserGuideModal() {
+            const modal = document.getElementById('userGuideModal');
+            if (modal) modal.remove();
+        }
+
+        function openUserGuideModal() {
+            closeUserGuideModal();
+            const modal = document.createElement('div');
+            modal.id = 'userGuideModal';
+            modal.className = 'fixed inset-0 z-[80] bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5';
+            modal.innerHTML = `
+                <div class="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-[2rem] bg-[#070910] border border-slate-800 shadow-2xl flex flex-col">
+                    <div class="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-amber-950/40 via-[#0b1020] to-slate-950">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl shrink-0">📘</div>
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">User Guide — K Creator Suite Pro</h3>
+                                    <p class="text-xs text-slate-400 mt-1 leading-relaxed max-w-2xl">Panduan cepat untuk generate storyboard, koreksi scene, simpan cloud, dan ambil output siap produksi. Dibuat untuk pemula, jadi ikuti dari atas ke bawah saja.</p>
+                                </div>
+                            </div>
+                            <button data-action="close-user-guide" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 text-xs font-bold transition cursor-pointer">Close</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-5">
+                        <div class="grid lg:grid-cols-3 gap-4">
+                            <div class="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                                <div class="text-2xl mb-2">🚀</div>
+                                <h4 class="text-sm font-black text-emerald-200">Workflow Cepat</h4>
+                                <ol class="mt-3 space-y-2 text-xs text-slate-300 leading-relaxed list-decimal pl-4">
+                                    <li>Login dengan email yang sudah diizinkan.</li>
+                                    <li>Isi tema konten di panel kiri.</li>
+                                    <li>Pilih style, bahasa output, jumlah scene, dan durasi.</li>
+                                    <li>Klik <b>Generate Storyboard</b>.</li>
+                                    <li>Review scene dari atas ke bawah.</li>
+                                    <li>Kalau sudah cocok, klik <b>Save / Update Cloud</b>.</li>
+                                </ol>
+                            </div>
+                            <div class="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-4">
+                                <div class="text-2xl mb-2">🛠️</div>
+                                <h4 class="text-sm font-black text-indigo-200">Kalau Scene Kurang Cocok</h4>
+                                <ul class="mt-3 space-y-2 text-xs text-slate-300 leading-relaxed list-disc pl-4">
+                                    <li>Klik <b>Edit / Repair</b> pada scene.</li>
+                                    <li>Tulis komentar, misalnya: “Veo gagal, kamera terlalu rumit.”</li>
+                                    <li>Pilih <b>Fix Video Prompt</b> kalau hanya prompt video yang bermasalah.</li>
+                                    <li>Pilih <b>Regenerate Full Scene</b> kalau mau scene diganti total.</li>
+                                    <li>Gunakan <b>Undo Last</b> kalau hasil baru lebih jelek.</li>
+                                </ul>
+                            </div>
+                            <div class="rounded-3xl border border-sky-500/20 bg-sky-500/5 p-4">
+                                <div class="text-2xl mb-2">☁️</div>
+                                <h4 class="text-sm font-black text-sky-200">Cloud & History</h4>
+                                <ul class="mt-3 space-y-2 text-xs text-slate-300 leading-relaxed list-disc pl-4">
+                                    <li><b>Save / Update Cloud</b> menyimpan project ke akun kamu.</li>
+                                    <li><b>Cloud History</b> membuka project lama.</li>
+                                    <li><b>Rename</b> untuk merapikan nama project.</li>
+                                    <li><b>Delete</b> untuk menghapus project test.</li>
+                                    <li>Auto-save aktif setelah generate jika kamu login.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl border border-slate-800 bg-slate-950/50 p-4 sm:p-5">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="w-8 h-8 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">🎬</span>
+                                <h4 class="text-sm font-black text-slate-100">Tombol Penting</h4>
+                            </div>
+                            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-amber-300">Edit / Repair</b><p class="text-slate-400 mt-1">Buka editor scene untuk edit manual atau perbaiki prompt tertentu.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-indigo-300">Copy Package</b><p class="text-slate-400 mt-1">Copy scene lengkap: deskripsi, narasi, image prompt, video prompt.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-emerald-300">Voice Lab</b><p class="text-slate-400 mt-1">Kirim narasi scene ke area TTS/Voice Studio.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-sky-300">Output Tools</b><p class="text-slate-400 mt-1">Tempat copy full package, export TXT/JSON, dan regenerate narasi massal.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-orange-300">Shorten Narration</b><p class="text-slate-400 mt-1">Pendekkan semua narasi kalau durasi scene terasa tidak realistis.</p></div>
+                                <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-3"><b class="text-rose-300">More Actions</b><p class="text-slate-400 mt-1">Tambah, duplicate, atau hapus scene tanpa memenuhi tampilan utama.</p></div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-4 sm:p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-8 h-8 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">🚨</span>
+                                <h4 class="text-sm font-black text-rose-100">Kalau Generate / Veo / Kling Gagal</h4>
+                            </div>
+                            <div class="grid lg:grid-cols-2 gap-3 text-xs text-slate-300 leading-relaxed">
+                                <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-rose-300">Veo failed generate</b><p class="mt-1 text-slate-400">Klik preset <b>Veo Failed</b>, lalu klik <b>Fix Video Prompt</b>. Biasanya prompt perlu dibuat lebih sederhana.</p></div>
+                                <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">Kling gagal / hasil diam</b><p class="mt-1 text-slate-400">Klik <b>Too Static</b> atau <b>Kling Failed</b>, lalu perbaiki prompt video.</p></div>
+                                <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-indigo-300">Karakter berubah-ubah</b><p class="mt-1 text-slate-400">Aktifkan <b>Character Consistency Mode</b>, lalu gunakan <b>Fix Image Prompt</b>.</p></div>
+                                <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-emerald-300">Narasi terlalu panjang</b><p class="mt-1 text-slate-400">Klik <b>Shorten All Narration</b> di Output Tools agar lebih sesuai durasi.</p></div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-950 to-[#0b1020] p-4 sm:p-5">
+                            <h4 class="text-sm font-black text-slate-100 mb-3">Checklist Produksi Harian</h4>
+                            <div class="grid sm:grid-cols-2 gap-2 text-xs text-slate-300">
+                                <label class="flex items-start gap-2 rounded-2xl bg-slate-900/60 border border-slate-800 p-3"><span>☑️</span><span>Generate storyboard dan cek semua scene.</span></label>
+                                <label class="flex items-start gap-2 rounded-2xl bg-slate-900/60 border border-slate-800 p-3"><span>☑️</span><span>Perbaiki scene yang gagal sebelum copy/export.</span></label>
+                                <label class="flex items-start gap-2 rounded-2xl bg-slate-900/60 border border-slate-800 p-3"><span>☑️</span><span>Save / Update Cloud setelah hasil final.</span></label>
+                                <label class="flex items-start gap-2 rounded-2xl bg-slate-900/60 border border-slate-800 p-3"><span>☑️</span><span>Export TXT atau Copy Full Package untuk workflow produksi.</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
         function closeCloudHistoryModal() {
             const modal = document.getElementById('cloudHistoryModal');
             if (modal) modal.remove();
@@ -3731,6 +3837,16 @@ GENERAL RULES:
 
             if (target.closest('[data-action="dismiss-generation-feedback"]')) {
                 clearGenerationFeedback();
+                return;
+            }
+
+                        if (target.closest('[data-action="close-user-guide"]')) {
+                closeUserGuideModal();
+                return;
+            }
+
+            if (target.closest('[data-action="open-user-guide"]')) {
+                openUserGuideModal();
                 return;
             }
 

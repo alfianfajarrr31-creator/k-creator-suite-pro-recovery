@@ -163,3 +163,30 @@ Build test: PASS.
 - Added Generate All Narration Only for rewriting narration without changing visual scene structure.
 - Added Shorten All Narration for fixing narration that is too long for selected scene duration.
 - Keeps Gemini visual prompt, Supabase, Private Beta Gate, Cloud History, and export/copy workflows intact.
+
+## ARC 4.4 — User Guide & Quick Help Patch
+
+Patch ini menambahkan panduan pemakaian di dalam aplikasi agar user baru lebih mudah memahami workflow K Creator Suite Pro.
+
+### Perubahan
+- Menambahkan tombol `📘 User Guide` di header.
+- Menambahkan modal panduan pemakaian sederhana.
+- Menambahkan bagian Workflow Cepat.
+- Menambahkan penjelasan tombol penting seperti Edit / Repair, Copy Package, Voice Lab, Output Tools, dan More Actions.
+- Menambahkan mini playbook kalau Veo/Kling gagal generate.
+- Menambahkan checklist produksi harian.
+
+### Yang tidak diubah
+- Tidak mengubah model Gemini.
+- Tidak mengubah prompt generator utama.
+- Tidak mengubah Supabase Auth, Save, Cloud History, atau Private Beta Gate.
+- Tidak mengubah scene editor, regenerate tools, export/copy logic, atau TTS endpoint.
+
+### Test checklist
+1. Login dengan email whitelist.
+2. Klik `📘 User Guide`.
+3. Modal guide terbuka.
+4. Klik Close.
+5. Generate storyboard tetap jalan.
+6. Save / Update Cloud tetap jalan.
+7. Cloud History tetap jalan.
