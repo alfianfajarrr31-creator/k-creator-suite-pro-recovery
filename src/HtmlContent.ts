@@ -54,20 +54,20 @@ export const HTML_CONTENT = `
             <button id="btnKeluarGoogle" data-action="logout-google" class="hidden px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 Keluar
             </button>
-            <button id="btnUserGuide" data-action="open-user-guide" class="px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+            <button id="btnUserGuide" data-action="open-user-guide" class="hidden md:flex px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 📘 Panduan
             </button>
-            <button id="btnFailurePlaybook" data-action="open-failure-playbook" class="px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+            <button id="btnFailurePlaybook" data-action="open-failure-playbook" class="hidden md:flex px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 🚑 Bantuan Prompt Gagal
             </button>
-            <button id="btnCloudHistory" data-action="open-cloud-history" class="px-3 py-1.5 bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+            <button id="btnCloudHistory" data-action="open-cloud-history" class="hidden md:flex px-3 py-1.5 bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 ☁️ Riwayat Cloud
             </button>
             <!-- Phase 1.6 DB Inspector Trigger Button -->
-            <button id="btnToggleInspector" data-action="toggle-inspector" class="px-3 py-1.5 bg-[#0f111a] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-1.5 transition duration-150 cursor-pointer">
+            <button id="btnToggleInspector" data-action="toggle-inspector" class="hidden md:flex px-3 py-1.5 bg-[#0f111a] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs flex items-center gap-1.5 transition duration-150 cursor-pointer">
                 🗄️ Data Tools
             </button>
-            <div class="flex items-center gap-2 px-2.5 md:px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20" id="globalEngineStatusBadge">
+            <div class="hidden sm:flex items-center gap-2 px-2.5 md:px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20" id="globalEngineStatusBadge">
                 <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" id="globalStatusDot"></span>
                 <span class="text-[10px] md:text-xs font-semibold text-indigo-400" id="globalStatusText">Siap Digunakan</span>
             </div>
@@ -81,6 +81,14 @@ export const HTML_CONTENT = `
     <div class="flex md:hidden border-b border-slate-855 bg-[#0a0b10] p-2 justify-around shrink-0 z-20">
         <button id="mobileTabBtn-director" data-action="switch-tab" data-tab="director" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer">🎬 Storyboard</button>
         <button id="mobileTabBtn-voice" data-action="switch-tab" data-tab="voice" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer">🎙️ Voice Lab</button>
+    </div>
+
+    <!-- Mobile Quick Access Bar -->
+    <div id="mobileQuickAccessBar" class="flex md:hidden gap-2 px-3 py-2 bg-[#07080d] border-b border-slate-855 overflow-x-auto whitespace-nowrap shrink-0 z-20 scrollbar-hide">
+        <button data-action="open-cloud-history" class="shrink-0 px-3 py-2 rounded-xl bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-300 text-[11px] font-bold cursor-pointer">☁️ Riwayat</button>
+        <button data-action="open-user-guide" class="shrink-0 px-3 py-2 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 text-[11px] font-bold cursor-pointer">📘 Panduan</button>
+        <button data-action="open-failure-playbook" class="shrink-0 px-3 py-2 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-300 text-[11px] font-bold cursor-pointer">🚑 Prompt Gagal</button>
+        <button data-action="toggle-inspector" class="shrink-0 px-3 py-2 rounded-xl bg-slate-800/70 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-bold cursor-pointer">🗄️ Data</button>
     </div>
 
     <!-- Main Workspace Container -->

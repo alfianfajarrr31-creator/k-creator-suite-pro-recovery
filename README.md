@@ -224,3 +224,24 @@ Perubahan utama:
 - Private Beta Gate wording dibuat lebih manusiawi
 
 Tidak ada perubahan engine besar, Gemini model, Supabase logic, prompt generator utama, atau TTS endpoint.
+
+## Hotfix — Mobile Quick Access Bar
+
+Patch ini memperbaiki tombol penting yang hilang/terpotong di tampilan HP portrait.
+
+### Perubahan
+- Menambahkan mobile quick access bar khusus HP.
+- Menampilkan tombol cepat:
+  - Riwayat Cloud
+  - Panduan
+  - Prompt Gagal
+  - Data Tools
+- Tombol desktop untuk Panduan/Riwayat/Prompt Gagal/Data Tools disembunyikan di mobile agar header tidak penuh.
+- Tidak mengubah logic generate, Gemini, Supabase, Private Beta Gate, atau Cloud History.
+
+### Test
+1. Buka dari HP mode portrait.
+2. Pastikan tombol Riwayat, Panduan, dan Prompt Gagal muncul tanpa perlu rotate landscape.
+3. Test klik Riwayat Cloud.
+4. Test klik Prompt Gagal.
+5. Generate storyboard tetap jalan.
