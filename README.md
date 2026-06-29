@@ -190,3 +190,17 @@ Patch ini menambahkan panduan pemakaian di dalam aplikasi agar user baru lebih m
 5. Generate storyboard tetap jalan.
 6. Save / Update Cloud tetap jalan.
 7. Cloud History tetap jalan.
+
+
+## ARC 4.5 — Prompt Failure Playbook
+
+Patch ini menambahkan tombol **🚑 Failure Playbook** di header untuk membantu user awam memahami langkah perbaikan saat output gagal.
+
+Yang ditambahkan:
+- Modal Prompt Failure Playbook.
+- Panduan cepat untuk kasus Veo failed, Kling hasil diam, prompt terlalu rumit, karakter berubah, thumbnail kurang kuat, dan narasi terlalu panjang.
+- Cheat sheet tombol repair: Fix Video Prompt, Fix Image Prompt, Fix TTS, dan Regenerate Full Scene.
+- Tidak mengubah Gemini model, Supabase Auth, Save/History, scene editor, export/copy, atau API utama.
+
+Tujuan:
+User tidak perlu menebak tombol apa yang harus dipakai saat output gagal.

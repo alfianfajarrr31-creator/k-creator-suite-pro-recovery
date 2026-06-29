@@ -1732,6 +1732,97 @@ GENERAL RULES:
             if (modal) modal.remove();
         }
 
+        function closeFailurePlaybookModal() {
+            const modal = document.getElementById('failurePlaybookModal');
+            if (modal) modal.remove();
+        }
+
+        function openFailurePlaybookModal() {
+            closeFailurePlaybookModal();
+            const modal = document.createElement('div');
+            modal.id = 'failurePlaybookModal';
+            modal.className = 'fixed inset-0 z-[85] bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5';
+            modal.innerHTML = `
+                <div class="w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-[2rem] bg-[#070910] border border-slate-800 shadow-2xl flex flex-col">
+                    <div class="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-rose-950/45 via-[#0b1020] to-amber-950/30">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-xl shrink-0">🚑</div>
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-black text-slate-100 tracking-tight">Prompt Failure Playbook</h3>
+                                    <p class="text-xs text-slate-400 mt-1 leading-relaxed max-w-3xl">Panduan cepat saat hasil image/video/TTS gagal. Pilih gejala masalahnya, lalu ikuti tombol repair yang disarankan. Tujuannya supaya user awam tidak bingung harus klik apa.</p>
+                                </div>
+                            </div>
+                            <button data-action="close-failure-playbook" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 text-xs font-bold transition cursor-pointer">Close</button>
+                        </div>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-5">
+                        <div class="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
+                            <h4 class="text-sm font-black text-amber-100 mb-2">Cara Pakai Cepat</h4>
+                            <ol class="grid md:grid-cols-4 gap-3 text-xs text-slate-300 leading-relaxed list-decimal pl-4 md:pl-0 md:list-none">
+                                <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">1. Buka scene</b><br/>Klik <b>Edit / Repair</b> di scene yang bermasalah.</li>
+                                <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">2. Pilih preset</b><br/>Klik preset seperti <b>Veo Failed</b>, <b>Too Complex</b>, atau <b>Image Mismatch</b>.</li>
+                                <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">3. Fix field</b><br/>Klik <b>Fix Video Prompt</b>, <b>Fix Image Prompt</b>, atau <b>Fix TTS</b>.</li>
+                                <li class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-amber-300">4. Simpan</b><br/>Kalau sudah cocok, klik <b>Save / Update Cloud</b>.</li>
+                            </ol>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-4">
+                            <div class="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-4">
+                                <h4 class="text-sm font-black text-rose-100 mb-3">🎥 Video Prompt / Veo / Kling</h4>
+                                <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-rose-300">Veo failed generate</b><p class="mt-1 text-slate-400">Pakai preset <b>Veo Failed</b> → klik <b>Fix Video Prompt</b>. Ini akan menyederhanakan gerakan kamera, memperjelas motion, dan mengurangi instruksi yang bertabrakan.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-orange-300">Kling hasilnya diam / terlalu statis</b><p class="mt-1 text-slate-400">Pakai preset <b>Too Static</b> atau <b>Kling Failed</b> → klik <b>Fix Video Prompt</b>. Tambahkan motion kecil yang realistis: rambut, kain, debu, crowd, cahaya, dan ambience.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-yellow-300">Gerakan terlalu rumit</b><p class="mt-1 text-slate-400">Pakai preset <b>Too Complex</b> → klik <b>Fix Video Prompt</b>. Kamera akan dibuat lebih sederhana: slow push-in, static hold, atau gentle tilt.</p></div>
+                                </div>
+                            </div>
+
+                            <div class="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-4">
+                                <h4 class="text-sm font-black text-indigo-100 mb-3">🖼️ Image Prompt / Karakter / Thumbnail</h4>
+                                <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-indigo-300">Karakter tidak mirip / berubah</b><p class="mt-1 text-slate-400">Aktifkan <b>Character Consistency Mode</b>. Lalu pakai preset <b>Image Mismatch</b> → klik <b>Fix Image Prompt</b>. Prompt akan dibuat lebih seperti master character reference.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-fuchsia-300">Thumbnail kurang nendang</b><p class="mt-1 text-slate-400">Buka <b>Publishing Package</b>, edit <b>Thumbnail Text</b>, atau klik <b>Regen Thumbnail Text</b> untuk hook alternatif.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-sky-300">Visual tidak sesuai narasi</b><p class="mt-1 text-slate-400">Isi komentar spesifik, misalnya “background harus Marineford, bukan kota biasa” → klik <b>Fix Image Prompt</b>.</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-4">
+                            <div class="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                                <h4 class="text-sm font-black text-emerald-100 mb-3">🎙️ Narasi / TTS</h4>
+                                <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-emerald-300">Narasi terlalu panjang</b><p class="mt-1 text-slate-400">Klik <b>Output Tools</b> → <b>Shorten All Narration</b>. Untuk satu scene saja, buka editor lalu klik <b>Fix TTS</b>.</p></div>
+                                    <div class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3"><b class="text-lime-300">Narasi datar / kurang emosional</b><p class="mt-1 text-slate-400">Pakai preset <b>TTS Flat</b> atau <b>More Emotional</b> → klik <b>Fix TTS</b>.</p></div>
+                                </div>
+                            </div>
+
+                            <div class="rounded-3xl border border-slate-700 bg-slate-950/50 p-4">
+                                <h4 class="text-sm font-black text-slate-100 mb-3">🧯 Kalau AI Generate Gagal Total</h4>
+                                <ul class="space-y-2 text-xs text-slate-300 leading-relaxed list-disc pl-4">
+                                    <li>Jangan klik Generate berkali-kali saat loading.</li>
+                                    <li>Kalau error timeout, coba ulang 1 kali.</li>
+                                    <li>Kalau tetap gagal, kurangi jumlah scene atau persingkat instruksi khusus.</li>
+                                    <li>Kalau kena rate limit / kuota, tunggu beberapa menit.</li>
+                                    <li>Kalau hanya satu scene bermasalah, gunakan <b>Regenerate Scene</b>, bukan generate ulang semua.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-950 to-[#0b1020] p-4 sm:p-5">
+                            <h4 class="text-sm font-black text-slate-100 mb-3">Cheat Sheet Tombol Repair</h4>
+                            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-300">
+                                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3"><b class="text-rose-300">Fix Video Prompt</b><p class="text-slate-400 mt-1">Untuk Veo/Kling gagal, gerakan aneh, kamera rumit.</p></div>
+                                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3"><b class="text-indigo-300">Fix Image Prompt</b><p class="text-slate-400 mt-1">Untuk karakter, outfit, lokasi, thumbnail visual.</p></div>
+                                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3"><b class="text-emerald-300">Fix TTS</b><p class="text-slate-400 mt-1">Untuk narasi kepanjangan, datar, atau kurang hook.</p></div>
+                                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3"><b class="text-amber-300">Regenerate Full Scene</b><p class="text-slate-400 mt-1">Untuk scene yang konsepnya memang kurang cocok total.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
         function openUserGuideModal() {
             closeUserGuideModal();
             const modal = document.createElement('div');
@@ -3847,6 +3938,16 @@ GENERAL RULES:
 
             if (target.closest('[data-action="open-user-guide"]')) {
                 openUserGuideModal();
+                return;
+            }
+
+            if (target.closest('[data-action="close-failure-playbook"]')) {
+                closeFailurePlaybookModal();
+                return;
+            }
+
+            if (target.closest('[data-action="open-failure-playbook"]')) {
+                openFailurePlaybookModal();
                 return;
             }
 

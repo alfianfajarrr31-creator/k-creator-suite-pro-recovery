@@ -57,6 +57,9 @@ export const HTML_CONTENT = `
             <button id="btnUserGuide" data-action="open-user-guide" class="px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 📘 User Guide
             </button>
+            <button id="btnFailurePlaybook" data-action="open-failure-playbook" class="px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-300 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
+                🚑 Failure Playbook
+            </button>
             <button id="btnCloudHistory" data-action="open-cloud-history" class="px-3 py-1.5 bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-400 rounded-xl text-xs font-bold items-center gap-1.5 transition duration-150 cursor-pointer">
                 ☁️ Cloud History
             </button>
