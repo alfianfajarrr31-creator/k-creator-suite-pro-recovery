@@ -10,5 +10,5 @@
       "destination": "/index.html"
     }
   ],
-  "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps --cache=/tmp/npm-cache"
+  "installCommand": "npm ci --no-audit --no-fund --legacy-peer-deps"
 }
