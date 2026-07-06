@@ -962,7 +962,7 @@ export const HTML_CONTENT = `
                     </div>
                 </div>
 
-                <button id="btnGenerateAffiliate" data-action="generate-affiliate" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-950/30 transition cursor-pointer">Generate Affiliate Package</button>
+                <button id="btnGenerateAffiliate" data-action="generate-affiliate" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-950/30 transition cursor-pointer">Generate Scene Package</button>
                 <button data-action="clear-affiliate" class="w-full py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer">Reset Form</button>
             </aside>
 
@@ -971,9 +971,9 @@ export const HTML_CONTENT = `
                     <div class="rounded-3xl border border-orange-500/15 bg-gradient-to-br from-orange-500/10 via-slate-950/50 to-[#08090e] p-5 md:p-6 shadow-2xl">
                         <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                             <div>
-                                <p class="text-[10px] font-mono font-bold text-orange-300 uppercase tracking-[0.2em]">Universal Affiliate Builder v1</p>
+                                <p class="text-[10px] font-mono font-bold text-orange-300 uppercase tracking-[0.2em]">Affiliate Content Package v1.2</p>
                                 <h2 class="mt-2 text-xl md:text-2xl font-black text-white tracking-tight">Affiliate Content Studio</h2>
-                                <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-2xl leading-relaxed">Output fokus ke konten affiliate natural: honest review, problem-solution, POV, UGC, before-after, listicle, dan promo. Claymation tetap bisa dipakai lewat Niche Creator Mode, tapi bukan default.</p>
+                                <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-2xl leading-relaxed">Output dibuat jadi 4 section ideal: Strategy, Scene Package, Upload Copy, dan Safe Version. Tiap scene tetap punya narasi/VO, overlay, text-to-image, image-to-video, dan SFX.</p>
                             </div>
                             <div class="flex gap-2">
                                 <button data-action="copy-affiliate-output" class="px-4 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">Copy Output</button>
@@ -984,11 +984,22 @@ export const HTML_CONTENT = `
 
                     <div id="affiliateOutputEmpty" class="rounded-3xl border border-dashed border-slate-800 bg-[#08090e] p-10 text-center">
                         <div class="text-4xl mb-3">🛒</div>
-                        <h3 class="text-sm font-bold text-slate-300">Belum ada output affiliate.</h3>
-                        <p class="text-xs text-slate-500 mt-1">Isi form di kiri, lalu klik Generate Affiliate Package.</p>
+                        <h3 class="text-sm font-bold text-slate-300">Belum ada affiliate content package.</h3>
+                        <p class="text-xs text-slate-500 mt-1">Isi form di kiri, lalu klik Generate Scene Package untuk membuat paket affiliate per scene.</p>
                     </div>
 
                     <div id="affiliateOutputPanel" class="hidden space-y-4">
+                        <div class="rounded-2xl border border-orange-500/20 bg-[#08090e] p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">1. Product Selling Strategy</h3>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Arah jualan dulu: angle, target, alasan angle cocok, dan batas klaim.</p>
+                                </div>
+                                <button data-action="copy-field" data-field-id="affiliateStrategyText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button>
+                            </div>
+                            <pre id="affiliateStrategyText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
                                 <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Angle Konten</h3><button data-action="copy-field" data-field-id="affiliateAnglesText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
@@ -1000,29 +1011,41 @@ export const HTML_CONTENT = `
                             </div>
                         </div>
 
-                        <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                            <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Script Video 20–35 Detik</h3><button data-action="copy-field" data-field-id="affiliateScriptText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                            <pre id="affiliateScriptText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                        <div class="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 shadow-lg shadow-orange-950/10">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">2. Storyboard Package Per Scene</h3>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Format mirip K Storyboard Studio: tiap scene punya tujuan, narasi, overlay, Text-to-Image, Image-to-Video, dan SFX.</p>
+                                </div>
+                                <button data-action="copy-field" data-field-id="affiliateStoryboardText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button>
+                            </div>
+                            <pre id="affiliateStoryboardText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-200 font-sans"></pre>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Caption & Hashtag</h3><button data-action="copy-field" data-field-id="affiliateCaptionText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateCaptionText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Text-to-Image Prompts</h3><button data-action="copy-field" data-field-id="affiliateImagePromptsText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
+                                <pre id="affiliateImagePromptsText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
                             </div>
                             <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Shot List</h3><button data-action="copy-field" data-field-id="affiliateShotListText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateShotListText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Image-to-Video Prompts</h3><button data-action="copy-field" data-field-id="affiliateVideoPromptsText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
+                                <pre id="affiliateVideoPromptsText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
                             </div>
                         </div>
 
-                        <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                            <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Prompt Visual / Video AI</h3><button data-action="copy-field" data-field-id="affiliateVisualPromptText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                            <pre id="affiliateVisualPromptText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
+                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Narration / VO</h3><button data-action="copy-field" data-field-id="affiliateNarrationText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
+                                <pre id="affiliateNarrationText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                            </div>
+                            <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
+                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">3. Upload Copy Package</h3><button data-action="copy-field" data-field-id="affiliateCaptionText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
+                                <pre id="affiliateCaptionText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                            </div>
                         </div>
 
                         <div class="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
-                            <h3 class="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">Versi Aman Anti Klaim Berlebihan</h3>
+                            <h3 class="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">4. Safe Claim Version</h3>
                             <pre id="affiliateSafeText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
                         </div>
                     </div>

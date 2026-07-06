@@ -965,6 +965,21 @@ export default function App() {
             return labels[style] || 'UGC Natural';
         }
 
+        function getAffiliateCategoryLabel(category: string) {
+            const labels: Record<string, string> = {
+                auto: 'Auto / belum pasti',
+                fashion: 'Fashion',
+                beauty: 'Beauty / Skincare',
+                home: 'Home Living / Cleaning',
+                gadget: 'Gadget / Aksesoris HP',
+                food: 'Food / Snack',
+                hobby: 'Hobi / Anime / Koleksi',
+                baby: 'Mom & Baby',
+                office: 'Office / Produktivitas'
+            };
+            return labels[category] || 'Auto / belum pasti';
+        }
+
         function buildAffiliatePackage() {
             const product = getInputValue('affiliateProductName', 'produk pilihan ini');
             const marketplace = getInputValue('affiliateMarketplace', 'Marketplace');
@@ -979,37 +994,39 @@ export default function App() {
             const cta = getInputValue('affiliateCTA', 'Cek keranjang / link produk');
             const style = chooseAffiliatePattern(category, rawStyle);
             const styleLabel = getAffiliateStyleLabel(style);
+            const categoryLabel = getAffiliateCategoryLabel(category);
             const proofLine = socialProof ? `Social proof: ${socialProof}` : 'Social proof: cek rating dan ulasan toko.';
             const priceLine = price ? `Harga: ${price}` : 'Harga: cek harga terbaru di marketplace.';
+            const normalizedCTA = cta.toLowerCase();
 
             const angleMap: Record<string, string[]> = {
                 honest: [
-                    `Review jujur ${product}: yang menarik, yang perlu dicek, dan cocok untuk siapa.`,
+                    `Review jujur ${product}: tampilkan produk, manfaat, bukti sosial, dan catatan sebelum checkout.`,
                     `${product} worth it atau tidak di harga ${price}?`,
-                    `Coba jelaskan manfaat tanpa klaim berlebihan: fokus ke pengalaman pemakaian.`
+                    `Fokus ke pengalaman pemakaian tanpa klaim berlebihan.`
                 ],
                 problem: [
-                    `Masalah sehari-hari yang bisa dibantu oleh ${product}.`,
-                    `Sebelum punya ini vs setelah pakai ini, tapi tetap natural.`,
-                    `Barang kecil yang kelihatan sepele, tapi bisa bikin aktivitas lebih rapi/praktis.`
+                    `Problem-solution: mulai dari masalah harian, lalu ${product} masuk sebagai solusi praktis.`,
+                    `Sebelum pakai vs setelah pakai, tapi tetap natural dan tidak lebay.`,
+                    `Barang kecil yang bisa bantu aktivitas ${audience}.`
                 ],
                 pov: [
                     `POV kamu nemu ${product} yang kelihatan simpel tapi kepake.`,
-                    `Daily use: cara pakai ${product} dalam rutinitas singkat.`,
+                    `Daily use: tunjukkan produk di rutinitas singkat.`,
                     `Affordable find untuk ${audience}.`
                 ],
                 ugc: [
-                    `Konten natural seolah rekomendasi teman, bukan iklan keras.`,
-                    `Unboxing cepat + first impression + alasan kenapa produk ini menarik.`,
-                    `Demo singkat manfaat utama ${product}.`
+                    `UGC natural: rekomendasi seperti dari teman, bukan iklan keras.`,
+                    `Unboxing cepat + first impression + demo fungsi utama.`,
+                    `Tunjukkan detail produk dan alasan kenapa menarik.`
                 ],
                 beforeafter: [
-                    `Before-after aman: tampilkan kondisi awal dan hasil pemakaian tanpa klaim berlebihan.`,
+                    `Before-after aman: tampilkan kondisi awal dan hasil pemakaian tanpa klaim pasti.`,
                     `Routine singkat menggunakan ${product}.`,
                     `Perubahan visual kecil yang terlihat jelas di kamera.`
                 ],
                 listicle: [
-                    `${product} sebagai salah satu rekomendasi barang murah yang kepake.`,
+                    `${product} sebagai rekomendasi barang murah yang kepake.`,
                     `Top reason kenapa ${audience} mungkin suka produk ini.`,
                     `List manfaat cepat: fungsi, harga, dan momen pemakaian.`
                 ],
@@ -1019,7 +1036,7 @@ export default function App() {
                     `Highlight manfaat tanpa nada maksa checkout.`
                 ],
                 hard: [
-                    `Promo angle: harga, komisi XTRA, flash sale, gratis ongkir, dan CTA lebih tegas.`,
+                    `Promo angle: harga, social proof, promo, dan CTA lebih tegas.`,
                     `Urgency ringan: cek sekarang karena harga/promo bisa berubah.`,
                     `Tekankan value for money, bukan klaim paling murah.`
                 ],
@@ -1035,15 +1052,173 @@ export default function App() {
                 ]
             };
 
+            const strategyText = `1. PRODUCT SELLING STRATEGY
+
+Produk:
+${product}
+
+Marketplace:
+${marketplace}
+
+Kategori:
+${categoryLabel}
+
+Angle Terbaik:
+${styleLabel} untuk ${audience}.
+
+Kenapa angle ini cocok:
+- Produk affiliate perlu terlihat natural, jelas, dan mudah dipercaya.
+- Scene awal harus menjawab masalah atau rasa penasaran audiens sebelum produk dijual.
+- Manfaat utama yang perlu diangkat: ${benefits}.
+- Info objektif yang perlu muncul: ${priceLine} dan ${proofLine}.
+- Catatan jujur wajib disisipkan supaya konten tidak terasa hard selling: ${caveat}.
+
+Arah Konten:
+Buat video vertikal pendek untuk ${platform}. Gunakan gaya ${styleLabel}, dengan opening cepat, demo visual, social proof, catatan jujur, lalu CTA natural.
+
+Risiko klaim yang perlu dihindari:
+Jangan menulis “paling murah”, “pasti viral”, “dijamin bagus”, “100% original”, atau hasil pasti kalau tidak ada bukti.`;
+
+            const sceneBlueprints: Record<string, Array<{title: string; purpose: string; visual: string; action: string; narration: string; overlay: string;}>> = {
+                problem: [
+                    { title: 'Hook Masalah', purpose: 'Tarik perhatian dengan masalah yang relate.', visual: 'Situasi berantakan / kurang praktis sebelum produk dipakai.', action: 'Tampilkan masalah secara cepat, close-up area yang bikin audiens merasa relate.', narration: `Pernah ngerasa aktivitas kecil jadi ribet gara-gara hal sepele?`, overlay: 'MASALAHNYA INI...' },
+                    { title: 'Produk Masuk', purpose: 'Kenalkan produk sebagai opsi solusi.', visual: `Close-up ${product} di tangan atau meja bersih.`, action: 'Tunjukkan produk dari depan, samping, dan detail penting.', narration: `Aku nemu ${product} di ${marketplace}, dan ini bisa jadi opsi buat ${audience}.`, overlay: product.toUpperCase() },
+                    { title: 'Demo Fungsi', purpose: 'Buktikan manfaat utama secara visual.', visual: 'Produk digunakan langsung dalam situasi harian.', action: `Demo manfaat: ${benefits}.`, narration: `Yang menarik, ${benefits}. Jadi bukan cuma kelihatan bagus, tapi juga ada fungsi yang jelas.`, overlay: 'DEMO PEMAKAIAN' },
+                    { title: 'Bukti & Catatan', purpose: 'Bangun trust dengan harga, rating, dan catatan jujur.', visual: 'Insert detail produk, harga, rating, dan close-up bahan/ukuran.', action: `Tampilkan ${priceLine} dan ${proofLine}. Sisipkan kekurangan secara singkat.`, narration: `${priceLine}. ${proofLine}. Catatan jujurnya, ${caveat}.`, overlay: 'CEK DETAIL DULU' },
+                    { title: 'CTA Soft', purpose: 'Arahkan audiens tanpa terlalu maksa.', visual: 'Produk berada di frame rapi dengan ruang untuk teks CTA.', action: 'Akhiri dengan frame bersih dan gesture menunjuk keranjang/link.', narration: `Kalau kamu lagi cari yang seperti ini, ${normalizedCTA}. Detailnya aku taruh di sana.`, overlay: cta.toUpperCase() }
+                ],
+                beforeafter: [
+                    { title: 'Before', purpose: 'Tampilkan kondisi awal.', visual: 'Kondisi awal sebelum produk dipakai, dibuat jelas dan realistis.', action: 'Ambil close-up area/masalah sebelum penggunaan.', narration: `Ini kondisi sebelum pakai ${product}. Kelihatannya sepele, tapi cukup ganggu.`, overlay: 'BEFORE' },
+                    { title: 'Kenalan Produk', purpose: 'Kenalkan produk dan alasan dicoba.', visual: `Close-up ${product}, packaging, warna, ukuran, dan tekstur.`, action: 'Tampilkan produk natural seperti konten UGC.', narration: `Aku coba ${product} dari ${marketplace}, karena cocok buat ${audience}.`, overlay: 'COBA PRODUK INI' },
+                    { title: 'Proses Pakai', purpose: 'Perlihatkan cara pakai.', visual: 'Tangan memakai produk step-by-step tanpa efek berlebihan.', action: `Peragakan penggunaan utama: ${benefits}.`, narration: `Cara pakainya simpel. Bagian yang aku suka: ${benefits}.`, overlay: 'CARA PAKAI' },
+                    { title: 'After & Honest Note', purpose: 'Tunjukkan hasil dan catatan aman.', visual: 'Hasil akhir setelah produk digunakan, tetap realistis.', action: 'Bandingkan perubahan secara visual, lalu munculkan catatan jujur.', narration: `Hasilnya cukup terlihat untuk kebutuhan ini. Tapi catat, ${caveat}.`, overlay: 'AFTER + CATATAN' },
+                    { title: 'CTA', purpose: 'Ajak cek produk.', visual: 'Produk dan hasil akhir dalam satu frame.', action: 'Closing dengan teks singkat dan jelas.', narration: `${priceLine}. Kalau penasaran, ${normalizedCTA}.`, overlay: cta.toUpperCase() }
+                ],
+                pov: [
+                    { title: 'POV Hook', purpose: 'Masuk lewat situasi sehari-hari.', visual: 'POV kamera tangan menemukan produk saat scrolling / membuka paket.', action: 'Gerakan natural dari sudut pandang pengguna.', narration: `POV: kamu nemu ${product} yang awalnya kelihatan biasa aja.`, overlay: 'POV NEMU INI' },
+                    { title: 'First Look', purpose: 'Tampilkan bentuk produk.', visual: `Produk ${product} dipegang dekat kamera dengan background lifestyle.`, action: 'Putar produk pelan, perlihatkan detail penting.', narration: `Tapi pas dilihat, detailnya lumayan menarik buat ${audience}.`, overlay: 'FIRST LOOK' },
+                    { title: 'Daily Use', purpose: 'Tunjukkan momen pakai.', visual: 'Produk dipakai dalam rutinitas harian.', action: `Tampilkan fungsi utama: ${benefits}.`, narration: `Yang bikin kepake itu: ${benefits}.`, overlay: 'DAILY USE' },
+                    { title: 'Worth Check', purpose: 'Berikan info objektif.', visual: 'Insert harga/rating dan detail toko tanpa klaim berlebihan.', action: `Munculkan ${price} dan ${socialProof} sebagai teks kecil.`, narration: `${priceLine}. ${proofLine}. Tetap cek varian dan review toko sebelum checkout.`, overlay: 'WORTH CHECK?' },
+                    { title: 'Save / CTA', purpose: 'Ajak simpan atau cek link.', visual: 'Produk masuk tas/meja/area pakai dengan komposisi rapi.', action: 'Akhiri dengan CTA yang natural.', narration: `${cta}. Siapa tahu nanti kamu butuh rekomendasi seperti ini.`, overlay: cta.toUpperCase() }
+                ],
+                ugc: [
+                    { title: 'Unboxing Hook', purpose: 'Bikin opening natural.', visual: 'Paket dibuka di meja dengan pencahayaan natural.', action: 'Buka paket cepat, tahan produk ke kamera.', narration: `Aku baru buka ${product} dari ${marketplace}, dan ini first impression jujurku.`, overlay: 'FIRST IMPRESSION' },
+                    { title: 'Detail Produk', purpose: 'Tunjukkan bentuk dan kualitas visual.', visual: `Close-up detail ${product}: ukuran, material, warna, dan finishing.`, action: 'Ambil 3 angle detail produk.', narration: `Secara tampilan, yang paling kelihatan adalah ${benefits}.`, overlay: 'DETAIL PRODUK' },
+                    { title: 'Demo Real', purpose: 'Tampilkan penggunaan nyata.', visual: 'Produk digunakan langsung, bukan hanya dipajang.', action: `Demo fungsi utama untuk ${audience}.`, narration: `Dipakainya cukup simpel, terutama buat ${audience}.`, overlay: 'REAL DEMO' },
+                    { title: 'Honest Check', purpose: 'Jaga kepercayaan audiens.', visual: 'Close-up bagian yang perlu dicek sebelum beli.', action: 'Tunjukkan potensi kekurangan/hal yang perlu diperhatikan.', narration: `Tapi catatan jujurnya, ${caveat}. Jadi jangan lupa cek ulasan toko juga.`, overlay: 'CATATAN JUJUR' },
+                    { title: 'Closing CTA', purpose: 'Arahkan ke link/keranjang.', visual: 'Produk diletakkan rapi, teks CTA muncul jelas.', action: 'Closing singkat, tidak terlalu hard selling.', narration: `Menurutku ini bisa jadi opsi. ${cta}.`, overlay: cta.toUpperCase() }
+                ],
+                hard: [
+                    { title: 'Promo Hook', purpose: 'Buka dengan value dan promo.', visual: 'Produk dengan teks harga/promo besar namun tetap rapi.', action: 'Tampilkan produk cepat, highlight harga dan social proof.', narration: `Lagi cari ${product}? Ini bisa jadi opsi yang menarik buat dicek.`, overlay: 'CEK PROMONYA' },
+                    { title: 'Benefit Cepat', purpose: 'Kasih alasan beli cepat.', visual: '3 manfaat muncul satu per satu di sekitar produk.', action: `Visual highlight: ${benefits}.`, narration: `Poin menariknya: ${benefits}.`, overlay: '3 ALASAN CEK' },
+                    { title: 'Harga & Bukti', purpose: 'Dorong decision dengan info objektif.', visual: 'Insert harga, rating, terjual, dan marketplace.', action: `Tampilkan ${priceLine} dan ${proofLine}.`, narration: `${priceLine}. ${proofLine}. Harga dan promo bisa berubah, jadi cek lagi sebelum checkout.`, overlay: `${price}` },
+                    { title: 'Demo Kilat', purpose: 'Biar tidak cuma jualan.', visual: 'Produk dipakai secara cepat dan jelas.', action: 'Demo penggunaan 2-3 detik.', narration: `Biar lebih kebayang, ini contoh pemakaiannya secara langsung.`, overlay: 'DEMO KILAT' },
+                    { title: 'CTA Tegas', purpose: 'Akhiri dengan ajakan jelas.', visual: 'Frame produk + teks CTA besar.', action: 'Closing tegas tapi tidak menipu.', narration: `${cta}. Jangan lupa tetap cek varian dan ulasan tokonya.`, overlay: cta.toUpperCase() }
+                ]
+            };
+
+            const fallbackBlueprint = sceneBlueprints[style] || sceneBlueprints.ugc;
+            const scenes = fallbackBlueprint.map((scene, index) => {
+                const sceneNumber = index + 1;
+                const textToImage = `Vertical 9:16 social commerce ${styleLabel} scene, ${scene.visual} Product: "${product}". Marketplace context: ${marketplace}. Audience: ${audience}. Natural Indonesian affiliate content, realistic lighting, clean composition, readable space for overlay text "${scene.overlay}", trustworthy product review mood, no exaggerated claims.`;
+                const imageToVideo = `[SCENE ${sceneNumber} MOTION] ${scene.action}
+[PRODUCT FOCUS] Keep ${product} clear as the main subject.
+[TEXT OVERLAY] Show short Indonesian overlay: "${scene.overlay}".
+[CAMERA] Vertical 9:16, stable handheld or static tripod, simple cuts, no excessive transition.
+[ATMOSPHERE] Natural affiliate content, honest review, not too salesy.
+[SAFETY] Avoid claims like paling murah, pasti viral, dijamin bagus, or guaranteed results.`;
+                const sfx = `Natural room tone, soft package/hand movement sounds, light tap/click when showing product detail, subtle upbeat social-commerce bed music.`;
+                return {
+                    number: sceneNumber,
+                    title: scene.title,
+                    purpose: scene.purpose,
+                    narration: scene.narration,
+                    textOverlay: scene.overlay,
+                    textToImage,
+                    imageToVideo,
+                    sfx
+                };
+            });
+
             const angles = (angleMap[style] || angleMap.ugc).map((x, i) => `${i + 1}. ${x}`).join('\n');
-            const hookText = `HOOK 3 DETIK:\n“Ini ${product} kelihatannya biasa, tapi buat ${audience}, ini bisa kepake banget.”\n\nALTERNATIF HOOK:\n1. “Barang kecil yang surprisingly kepake.”\n2. “Aku kira biasa aja, ternyata lumayan membantu.”\n3. “Sebelum checkout, cek bagian ini dulu.”\n\nTHUMBNAIL TEXT:\n- “KEPAKE BANGET?”\n- “WORTH IT?”\n- “BARANG KECIL, FUNGSI GEDE”`;
-            const script = `FORMAT: ${styleLabel} untuk ${platform}\n\nOpening:\n“Aku nemu ${product} di ${marketplace}, dan ini cocok buat ${audience} yang lagi cari barang simple tapi fungsional.”\n\nValue:\n“Yang paling menarik, produk ini punya beberapa poin: ${benefits}. ${priceLine}. ${proofLine}.”\n\nHonest note:\n“Catatan jujurnya, ${caveat}. Jadi tetap cek varian, ukuran, dan ulasan toko sebelum beli.”\n\nClosing CTA:\n“Kalau kamu lagi cari produk seperti ini, ${cta.toLowerCase()}. Aku taruh detail produknya di sana.”`;
-            const caption = `Caption:\n${product} ini bisa jadi opsi buat ${audience}. Yang aku suka: ${benefits}. Catatan jujur: ${caveat}.\n\n${cta}.\n\nHashtag:\n#AffiliateIndonesia #ShopeeAffiliate #TikTokShopAffiliate #RacunBelanja #RekomendasiProduk #ReviewJujur #BelanjaOnline #${platform.replace(/\s+/g, '')}`;
-            const shotList = `1. Close-up produk / packaging 1 detik.\n2. Tunjukkan masalah atau kebutuhan sebelum produk dipakai.\n3. Demo fungsi utama: ${benefits}.\n4. Insert detail harga/rating seperlunya: ${price} • ${socialProof}.\n5. Honest note singkat: ${caveat}.\n6. Akhiri dengan CTA: ${cta}.`;
-            const visualPrompt = `TEXT TO IMAGE / COVER PROMPT:\nNatural UGC product content setup, vertical 9:16 composition, clean tabletop or lifestyle background, the product "${product}" as the main focus, realistic lighting, clear space for short headline text, social commerce style, not over-polished, trustworthy review mood.\n\nIMAGE TO VIDEO PROMPT:\n[PRODUCT MOTION] The camera shows the product clearly with a slow handheld-style push-in.\n[USER DEMO] A hand demonstrates the main use case naturally and simply.\n[TEXT OVERLAY] Short readable Indonesian overlay highlights: "${price}", "${socialProof}", and one key benefit.\n[ATMOSPHERE] Honest review, casual, not too salesy.\n[CAMERA] Vertical 9:16, stable handheld, simple cuts, no excessive transitions.\n[CTA] End with a clean frame showing: "${cta}".`;
-            const safe = `Aman dipakai:\n- Hindari klaim “paling murah”, “pasti viral”, “100% original”, atau “dijamin bagus” kalau belum ada bukti.\n- Pakai frasa aman: “bisa jadi opsi”, “menurutku cukup worth it”, “cocok untuk yang butuh...”, “cek lagi ulasan tokonya”.\n- Jangan menjanjikan hasil pasti. Fokus ke fungsi, pengalaman, harga, rating, dan catatan jujur.\n- Untuk produk beauty/health, hindari klaim menyembuhkan atau hasil permanen.`;
-            const full = `AFFILIATE CONTENT PACKAGE\n\nProduk: ${product}\nMarketplace: ${marketplace}\nKategori: ${category}\nStyle: ${styleLabel}\nPlatform: ${platform}\nTarget: ${audience}\n\nANGLE KONTEN\n${angles}\n\n${hookText}\n\nSCRIPT VIDEO\n${script}\n\nCAPTION & HASHTAG\n${caption}\n\nSHOT LIST\n${shotList}\n\nPROMPT VISUAL / VIDEO AI\n${visualPrompt}\n\nVERSI AMAN\n${safe}`;
-            return { angles, hookText, script, caption, shotList, visualPrompt, safe, full };
+            const hookText = `HOOK UTAMA:
+“Ini ${product} kelihatannya biasa, tapi buat ${audience}, ini bisa kepake banget.”
+
+HOOK ALTERNATIF:
+1. “Sebelum checkout ${product}, cek ini dulu.”
+2. “Barang kecil yang ternyata lumayan kepake.”
+3. “Worth it nggak sih di harga ${price}?”
+
+THUMBNAIL TEXT:
+- “WORTH IT?”
+- “KEPAKE BANGET?”
+- “CEK SEBELUM BELI”`;
+            const caption = `3. UPLOAD COPY PACKAGE
+
+JUDUL KONTEN:
+${product} Ini Worth It Buat Dicek?
+
+CAPTION:
+${product} ini bisa jadi opsi buat ${audience}. Yang menarik: ${benefits}. Catatan jujur: ${caveat}.
+
+CTA:
+${cta}. Jangan lupa bandingin harga, varian, dan review toko sebelum checkout.
+
+HASHTAG:
+#AffiliateIndonesia #ShopeeAffiliate #TikTokShopAffiliate #RacunBelanja #RekomendasiProduk #ReviewJujur #BelanjaOnline #${platform.replace(/\s+/g, '')}
+
+THUMBNAIL TEXT REKOMENDASI:
+WORTH IT? / CEK SEBELUM BELI / KEPAKE BANGET?`;
+            const safe = `4. SAFE CLAIM VERSION
+
+Kalimat yang harus dihindari:
+- “Paling murah”
+- “Pasti viral”
+- “100% original” kalau belum ada bukti resmi
+- “Dijamin bagus”
+- “Pasti cocok untuk semua orang”
+- Klaim hasil permanen / menyembuhkan untuk beauty, health, atau body care
+
+Kalimat pengganti yang lebih aman:
+- “Bisa jadi opsi”
+- “Menurutku cukup worth it untuk dicek”
+- “Cocok buat yang butuh...”
+- “Jangan lupa cek varian dan ulasan tokonya”
+- “Harga dan promo bisa berubah, jadi cek lagi sebelum checkout”
+
+Catatan produksi:
+Fokus ke fungsi, pengalaman pakai, harga, rating, social proof, dan catatan jujur. Jangan membuat klaim yang tidak terlihat di video.`;
+
+            const storyboardText = `2. STORYBOARD PACKAGE PER SCENE\n\n` + scenes.map(scene => `SCENE ${scene.number} — ${scene.title}\n\nTujuan Scene:\n${scene.purpose}\n\nNarasi / VO:\n${scene.narration}\n\nText Overlay:\n${scene.textOverlay}\n\nText-to-Image Prompt:\n${scene.textToImage}\n\nImage-to-Video Prompt:\n${scene.imageToVideo}\n\nRealistic SFX:\n${scene.sfx}`).join('\n\n---\n\n');
+            const allImagePrompts = scenes.map(scene => `SCENE ${scene.number}\n${scene.textToImage}`).join('\n\n---\n\n');
+            const allVideoPrompts = scenes.map(scene => `SCENE ${scene.number}\n${scene.imageToVideo}`).join('\n\n---\n\n');
+            const allNarrations = scenes.map(scene => `SCENE ${scene.number}\n${scene.narration}`).join('\n\n---\n\n');
+            const full = `AFFILIATE CONTENT PACKAGE V1.2
+
+${strategyText}
+
+---
+
+ANGLE KONTEN
+${angles}
+
+---
+
+HOOK & THUMBNAIL
+${hookText}
+
+---
+
+${storyboardText}
+
+---
+
+${caption}
+
+---
+
+${safe}`;
+            return { strategyText, angles, hookText, caption, safe, storyboardText, allImagePrompts, allVideoPrompts, allNarrations, full };
         }
 
         function generateAffiliateContent() {
@@ -1053,19 +1228,21 @@ export default function App() {
                 return;
             }
             const pack = buildAffiliatePackage();
+            setText('affiliateStrategyText', pack.strategyText);
             setText('affiliateAnglesText', pack.angles);
             setText('affiliateHookText', pack.hookText);
-            setText('affiliateScriptText', pack.script);
+            setText('affiliateStoryboardText', pack.storyboardText);
             setText('affiliateCaptionText', pack.caption);
-            setText('affiliateShotListText', pack.shotList);
-            setText('affiliateVisualPromptText', pack.visualPrompt);
+            setText('affiliateImagePromptsText', pack.allImagePrompts);
+            setText('affiliateVideoPromptsText', pack.allVideoPrompts);
+            setText('affiliateNarrationText', pack.allNarrations);
             setText('affiliateSafeText', pack.safe);
             const empty = document.getElementById('affiliateOutputEmpty');
             const panel = document.getElementById('affiliateOutputPanel');
             empty?.classList.add('hidden');
             panel?.classList.remove('hidden');
             try { localStorage.setItem('kc_affiliate_last_output', pack.full); } catch (_) {}
-            showToast('Affiliate package berhasil dibuat.', 'success');
+            showToast('Affiliate storyboard package berhasil dibuat.', 'success');
         }
 
         function resetAffiliateForm() {
@@ -1082,13 +1259,15 @@ export default function App() {
 
         function getAffiliateFullOutputFromScreen() {
             const parts = [
+                ['PRODUCT SELLING STRATEGY', 'affiliateStrategyText'],
                 ['ANGLE KONTEN', 'affiliateAnglesText'],
                 ['HOOK & THUMBNAIL', 'affiliateHookText'],
-                ['SCRIPT VIDEO', 'affiliateScriptText'],
-                ['CAPTION & HASHTAG', 'affiliateCaptionText'],
-                ['SHOT LIST', 'affiliateShotListText'],
-                ['PROMPT VISUAL / VIDEO AI', 'affiliateVisualPromptText'],
-                ['VERSI AMAN', 'affiliateSafeText']
+                ['STORYBOARD PACKAGE PER SCENE', 'affiliateStoryboardText'],
+                ['UPLOAD COPY PACKAGE', 'affiliateCaptionText'],
+                ['ALL TEXT-TO-IMAGE PROMPTS', 'affiliateImagePromptsText'],
+                ['ALL IMAGE-TO-VIDEO PROMPTS', 'affiliateVideoPromptsText'],
+                ['ALL NARRATION / VO', 'affiliateNarrationText'],
+                ['SAFE CLAIM VERSION', 'affiliateSafeText']
             ];
             return parts.map(([title, id]) => `${title}\n${document.getElementById(id)?.textContent || '-'}`).join('\n\n---\n\n');
         }
@@ -4868,8 +5047,8 @@ GENERAL RULES:
             }
 
             if (target.closest('[data-action="copy-affiliate-prompt"]')) {
-                const text = document.getElementById('affiliateVisualPromptText')?.textContent || '';
-                await copyTextToClipboard(text, 'Prompt visual affiliate berhasil disalin!');
+                const text = document.getElementById('affiliateImagePromptsText')?.textContent || document.getElementById('affiliateStoryboardText')?.textContent || '';
+                await copyTextToClipboard(text, 'Prompt gambar affiliate berhasil disalin!');
                 return;
             }
 
