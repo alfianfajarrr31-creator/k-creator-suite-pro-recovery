@@ -922,6 +922,177 @@ export default function App() {
             }
         }
 
+
+
+        function getInputValue(id: string, fallback = ''): string {
+            const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+            return (el?.value || fallback).trim();
+        }
+
+        function setText(id: string, value: string) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        function chooseAffiliatePattern(category: string, style: string) {
+            if (style && style !== 'auto') return style;
+            const map: Record<string, string> = {
+                beauty: 'beforeafter',
+                home: 'problem',
+                gadget: 'problem',
+                fashion: 'pov',
+                food: 'honest',
+                hobby: 'ugc',
+                baby: 'honest',
+                office: 'problem'
+            };
+            return map[category] || 'ugc';
+        }
+
+        function getAffiliateStyleLabel(style: string) {
+            const labels: Record<string, string> = {
+                honest: 'Honest Review',
+                problem: 'Problem–Solution',
+                pov: 'POV Daily Use',
+                ugc: 'UGC Natural',
+                beforeafter: 'Before–After',
+                listicle: 'Top Recommendation',
+                soft: 'Soft Selling',
+                hard: 'Hard Selling Promo',
+                story: 'Storytelling Pendek',
+                niche: 'Niche Creator Mode'
+            };
+            return labels[style] || 'UGC Natural';
+        }
+
+        function buildAffiliatePackage() {
+            const product = getInputValue('affiliateProductName', 'produk pilihan ini');
+            const marketplace = getInputValue('affiliateMarketplace', 'Marketplace');
+            const category = getInputValue('affiliateCategory', 'auto');
+            const price = getInputValue('affiliatePrice', 'harga terjangkau');
+            const socialProof = getInputValue('affiliateSocialProof', 'rating dan penjualan bisa dicek di toko');
+            const benefits = getInputValue('affiliateBenefits', 'praktis, mudah dipakai, dan cocok untuk kebutuhan harian');
+            const caveat = getInputValue('affiliateCaveat', 'tetap cek variasi, ukuran, dan ulasan toko sebelum checkout');
+            const platform = getInputValue('affiliatePlatform', 'TikTok');
+            const rawStyle = getInputValue('affiliateContentStyle', 'auto');
+            const audience = getInputValue('affiliateAudience', 'orang yang butuh rekomendasi produk praktis');
+            const cta = getInputValue('affiliateCTA', 'Cek keranjang / link produk');
+            const style = chooseAffiliatePattern(category, rawStyle);
+            const styleLabel = getAffiliateStyleLabel(style);
+            const proofLine = socialProof ? `Social proof: ${socialProof}` : 'Social proof: cek rating dan ulasan toko.';
+            const priceLine = price ? `Harga: ${price}` : 'Harga: cek harga terbaru di marketplace.';
+
+            const angleMap: Record<string, string[]> = {
+                honest: [
+                    `Review jujur ${product}: yang menarik, yang perlu dicek, dan cocok untuk siapa.`,
+                    `${product} worth it atau tidak di harga ${price}?`,
+                    `Coba jelaskan manfaat tanpa klaim berlebihan: fokus ke pengalaman pemakaian.`
+                ],
+                problem: [
+                    `Masalah sehari-hari yang bisa dibantu oleh ${product}.`,
+                    `Sebelum punya ini vs setelah pakai ini, tapi tetap natural.`,
+                    `Barang kecil yang kelihatan sepele, tapi bisa bikin aktivitas lebih rapi/praktis.`
+                ],
+                pov: [
+                    `POV kamu nemu ${product} yang kelihatan simpel tapi kepake.`,
+                    `Daily use: cara pakai ${product} dalam rutinitas singkat.`,
+                    `Affordable find untuk ${audience}.`
+                ],
+                ugc: [
+                    `Konten natural seolah rekomendasi teman, bukan iklan keras.`,
+                    `Unboxing cepat + first impression + alasan kenapa produk ini menarik.`,
+                    `Demo singkat manfaat utama ${product}.`
+                ],
+                beforeafter: [
+                    `Before-after aman: tampilkan kondisi awal dan hasil pemakaian tanpa klaim berlebihan.`,
+                    `Routine singkat menggunakan ${product}.`,
+                    `Perubahan visual kecil yang terlihat jelas di kamera.`
+                ],
+                listicle: [
+                    `${product} sebagai salah satu rekomendasi barang murah yang kepake.`,
+                    `Top reason kenapa ${audience} mungkin suka produk ini.`,
+                    `List manfaat cepat: fungsi, harga, dan momen pemakaian.`
+                ],
+                soft: [
+                    `Soft selling: cerita kebutuhan dulu, baru masuk produk.`,
+                    `Buat yang lagi cari solusi simpel, ${product} bisa jadi opsi.`,
+                    `Highlight manfaat tanpa nada maksa checkout.`
+                ],
+                hard: [
+                    `Promo angle: harga, komisi XTRA, flash sale, gratis ongkir, dan CTA lebih tegas.`,
+                    `Urgency ringan: cek sekarang karena harga/promo bisa berubah.`,
+                    `Tekankan value for money, bukan klaim paling murah.`
+                ],
+                story: [
+                    `Cerita pendek: awalnya ragu, lalu sadar ${product} ternyata kepake.`,
+                    `Mini problem harian → nemu solusi → ajakan cek produk.`,
+                    `Hook emosional ringan untuk ${audience}.`
+                ],
+                niche: [
+                    `Niche creator mode: sesuaikan dengan komunitas, fandom, atau gaya kreator.`,
+                    `Bisa dibuat cinematic, skit, claymation, anime-style, gaming desk setup, atau unboxing tematik.`,
+                    `Tetap jaga info produk jelas: fungsi, harga, dan catatan jujur.`
+                ]
+            };
+
+            const angles = (angleMap[style] || angleMap.ugc).map((x, i) => `${i + 1}. ${x}`).join('\n');
+            const hookText = `HOOK 3 DETIK:\n“Ini ${product} kelihatannya biasa, tapi buat ${audience}, ini bisa kepake banget.”\n\nALTERNATIF HOOK:\n1. “Barang kecil yang surprisingly kepake.”\n2. “Aku kira biasa aja, ternyata lumayan membantu.”\n3. “Sebelum checkout, cek bagian ini dulu.”\n\nTHUMBNAIL TEXT:\n- “KEPAKE BANGET?”\n- “WORTH IT?”\n- “BARANG KECIL, FUNGSI GEDE”`;
+            const script = `FORMAT: ${styleLabel} untuk ${platform}\n\nOpening:\n“Aku nemu ${product} di ${marketplace}, dan ini cocok buat ${audience} yang lagi cari barang simple tapi fungsional.”\n\nValue:\n“Yang paling menarik, produk ini punya beberapa poin: ${benefits}. ${priceLine}. ${proofLine}.”\n\nHonest note:\n“Catatan jujurnya, ${caveat}. Jadi tetap cek varian, ukuran, dan ulasan toko sebelum beli.”\n\nClosing CTA:\n“Kalau kamu lagi cari produk seperti ini, ${cta.toLowerCase()}. Aku taruh detail produknya di sana.”`;
+            const caption = `Caption:\n${product} ini bisa jadi opsi buat ${audience}. Yang aku suka: ${benefits}. Catatan jujur: ${caveat}.\n\n${cta}.\n\nHashtag:\n#AffiliateIndonesia #ShopeeAffiliate #TikTokShopAffiliate #RacunBelanja #RekomendasiProduk #ReviewJujur #BelanjaOnline #${platform.replace(/\s+/g, '')}`;
+            const shotList = `1. Close-up produk / packaging 1 detik.\n2. Tunjukkan masalah atau kebutuhan sebelum produk dipakai.\n3. Demo fungsi utama: ${benefits}.\n4. Insert detail harga/rating seperlunya: ${price} • ${socialProof}.\n5. Honest note singkat: ${caveat}.\n6. Akhiri dengan CTA: ${cta}.`;
+            const visualPrompt = `TEXT TO IMAGE / COVER PROMPT:\nNatural UGC product content setup, vertical 9:16 composition, clean tabletop or lifestyle background, the product "${product}" as the main focus, realistic lighting, clear space for short headline text, social commerce style, not over-polished, trustworthy review mood.\n\nIMAGE TO VIDEO PROMPT:\n[PRODUCT MOTION] The camera shows the product clearly with a slow handheld-style push-in.\n[USER DEMO] A hand demonstrates the main use case naturally and simply.\n[TEXT OVERLAY] Short readable Indonesian overlay highlights: "${price}", "${socialProof}", and one key benefit.\n[ATMOSPHERE] Honest review, casual, not too salesy.\n[CAMERA] Vertical 9:16, stable handheld, simple cuts, no excessive transitions.\n[CTA] End with a clean frame showing: "${cta}".`;
+            const safe = `Aman dipakai:\n- Hindari klaim “paling murah”, “pasti viral”, “100% original”, atau “dijamin bagus” kalau belum ada bukti.\n- Pakai frasa aman: “bisa jadi opsi”, “menurutku cukup worth it”, “cocok untuk yang butuh...”, “cek lagi ulasan tokonya”.\n- Jangan menjanjikan hasil pasti. Fokus ke fungsi, pengalaman, harga, rating, dan catatan jujur.\n- Untuk produk beauty/health, hindari klaim menyembuhkan atau hasil permanen.`;
+            const full = `AFFILIATE CONTENT PACKAGE\n\nProduk: ${product}\nMarketplace: ${marketplace}\nKategori: ${category}\nStyle: ${styleLabel}\nPlatform: ${platform}\nTarget: ${audience}\n\nANGLE KONTEN\n${angles}\n\n${hookText}\n\nSCRIPT VIDEO\n${script}\n\nCAPTION & HASHTAG\n${caption}\n\nSHOT LIST\n${shotList}\n\nPROMPT VISUAL / VIDEO AI\n${visualPrompt}\n\nVERSI AMAN\n${safe}`;
+            return { angles, hookText, script, caption, shotList, visualPrompt, safe, full };
+        }
+
+        function generateAffiliateContent() {
+            const product = getInputValue('affiliateProductName');
+            if (!product) {
+                showToast('Isi nama produk dulu.', 'warning');
+                return;
+            }
+            const pack = buildAffiliatePackage();
+            setText('affiliateAnglesText', pack.angles);
+            setText('affiliateHookText', pack.hookText);
+            setText('affiliateScriptText', pack.script);
+            setText('affiliateCaptionText', pack.caption);
+            setText('affiliateShotListText', pack.shotList);
+            setText('affiliateVisualPromptText', pack.visualPrompt);
+            setText('affiliateSafeText', pack.safe);
+            const empty = document.getElementById('affiliateOutputEmpty');
+            const panel = document.getElementById('affiliateOutputPanel');
+            empty?.classList.add('hidden');
+            panel?.classList.remove('hidden');
+            try { localStorage.setItem('kc_affiliate_last_output', pack.full); } catch (_) {}
+            showToast('Affiliate package berhasil dibuat.', 'success');
+        }
+
+        function resetAffiliateForm() {
+            ['affiliateProductName','affiliatePrice','affiliateSocialProof','affiliateBenefits','affiliateCaveat','affiliateAudience'].forEach(id => {
+                const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+                if (el) el.value = '';
+            });
+            const empty = document.getElementById('affiliateOutputEmpty');
+            const panel = document.getElementById('affiliateOutputPanel');
+            panel?.classList.add('hidden');
+            empty?.classList.remove('hidden');
+            showToast('Form affiliate direset.', 'success');
+        }
+
+        function getAffiliateFullOutputFromScreen() {
+            const parts = [
+                ['ANGLE KONTEN', 'affiliateAnglesText'],
+                ['HOOK & THUMBNAIL', 'affiliateHookText'],
+                ['SCRIPT VIDEO', 'affiliateScriptText'],
+                ['CAPTION & HASHTAG', 'affiliateCaptionText'],
+                ['SHOT LIST', 'affiliateShotListText'],
+                ['PROMPT VISUAL / VIDEO AI', 'affiliateVisualPromptText'],
+                ['VERSI AMAN', 'affiliateSafeText']
+            ];
+            return parts.map(([title, id]) => `${title}\n${document.getElementById(id)?.textContent || '-'}`).join('\n\n---\n\n');
+        }
+
         function copyActiveStoryboardBulk(type: 'full' | 'narration' | 'image' | 'video') {
             const storyboardData = AppStore.state.activeStoryboardData;
             if (!storyboardData || !Array.isArray(storyboardData.scenes) || storyboardData.scenes.length === 0) {
@@ -3723,9 +3894,11 @@ GENERAL RULES:
         function closeMobileSidebars() {
             const directorAside = document.getElementById('directorAside');
             const voiceAside = document.getElementById('voiceAside');
+            const affiliateAside = document.getElementById('affiliateAside');
             const backdrop = document.getElementById('sidebarBackdrop');
             if (directorAside) directorAside.classList.remove('sidebar-open');
             if (voiceAside) voiceAside.classList.remove('sidebar-open');
+            if (affiliateAside) affiliateAside.classList.remove('sidebar-open');
             if (backdrop) {
                 backdrop.classList.add('hidden', 'pointer-events-none');
                 backdrop.classList.remove('opacity-100');
@@ -3735,7 +3908,7 @@ GENERAL RULES:
 
         function openMobileSidebar() {
             const tabId = AppStore.state.activeTab || 'director';
-            const activeAside = tabId === 'director' ? document.getElementById('directorAside') : document.getElementById('voiceAside');
+            const activeAside = tabId === 'director' ? document.getElementById('directorAside') : tabId === 'voice' ? document.getElementById('voiceAside') : document.getElementById('affiliateAside');
             const backdrop = document.getElementById('sidebarBackdrop');
             if (activeAside) activeAside.classList.add('sidebar-open');
             if (backdrop) {
@@ -4065,7 +4238,8 @@ GENERAL RULES:
             if (toggleSidebarBtn) {
                 const isDirOpen = document.getElementById('directorAside')?.classList.contains('sidebar-open');
                 const isVoiceOpen = document.getElementById('voiceAside')?.classList.contains('sidebar-open');
-                if (isDirOpen || isVoiceOpen) {
+                const isAffiliateOpen = document.getElementById('affiliateAside')?.classList.contains('sidebar-open');
+                if (isDirOpen || isVoiceOpen || isAffiliateOpen) {
                     closeMobileSidebars();
                 } else {
                     openMobileSidebar();
@@ -4675,6 +4849,30 @@ GENERAL RULES:
                 return;
             }
 
+
+
+            if (target.closest('[data-action="generate-affiliate"]')) {
+                generateAffiliateContent();
+                return;
+            }
+
+            if (target.closest('[data-action="clear-affiliate"]')) {
+                resetAffiliateForm();
+                return;
+            }
+
+            if (target.closest('[data-action="copy-affiliate-output"]')) {
+                const text = getAffiliateFullOutputFromScreen();
+                await copyTextToClipboard(text, 'Output affiliate berhasil disalin!');
+                return;
+            }
+
+            if (target.closest('[data-action="copy-affiliate-prompt"]')) {
+                const text = document.getElementById('affiliateVisualPromptText')?.textContent || '';
+                await copyTextToClipboard(text, 'Prompt visual affiliate berhasil disalin!');
+                return;
+            }
+
             // Upload Gesicht aktor triggers and details
             if (target.closest('[data-action="upload-trigger"]') && !target.closest('#btnRemoveCharFile')) {
                 document.getElementById('charFile')?.click();
@@ -5077,44 +5275,54 @@ GENERAL RULES:
 
         function switchTab(tabId: string) {
             AppStore.setState({ activeTab: tabId });
-            const tabDirector = document.getElementById('tab-director');
-            const tabVoice = document.getElementById('tab-voice');
+            const tabs = ['director', 'voice', 'affiliate'];
+            tabs.forEach((tab) => {
+                const section = document.getElementById(`tab-${tab}`);
+                if (section) section.classList.toggle('hidden', tab !== tabId);
+            });
 
-            const btnDirector = document.getElementById('tabBtn-director');
-            const btnVoice = document.getElementById('tabBtn-voice');
-            const mobileBtnDirector = document.getElementById('mobileTabBtn-director');
-            const mobileBtnVoice = document.getElementById('mobileTabBtn-voice');
+            const inactive = "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer";
+            const activeClass: Record<string, string> = {
+                director: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-indigo-600 shadow cursor-pointer",
+                voice: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-emerald-600 shadow cursor-pointer",
+                affiliate: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-orange-600 shadow cursor-pointer"
+            };
+            tabs.forEach((tab) => {
+                const btn = document.getElementById(`tabBtn-${tab}`);
+                if (btn) btn.className = tab === tabId ? activeClass[tab] : inactive;
+                const mobileBtn = document.getElementById(`mobileTabBtn-${tab}`);
+                if (mobileBtn) {
+                    const activeMobile: Record<string, string> = {
+                        director: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer",
+                        voice: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-emerald-600 cursor-pointer",
+                        affiliate: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-orange-600 cursor-pointer"
+                    };
+                    mobileBtn.className = tab === tabId ? activeMobile[tab] : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer";
+                }
+            });
 
             if (tabId === 'director') {
-                tabDirector?.classList.remove('hidden');
-                tabVoice?.classList.add('hidden');
-                if (btnDirector) btnDirector.className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-indigo-600 shadow cursor-pointer";
-                if (btnVoice) btnVoice.className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer";
-                if (mobileBtnDirector) mobileBtnDirector.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer";
-                if (mobileBtnVoice) mobileBtnVoice.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer";
-
                 updateGlobalStatus("Director Studio Active", "indigo");
                 AudioEngine.stop();
-            } else {
-                tabDirector?.classList.add('hidden');
-                tabVoice?.classList.remove('hidden');
-                if (btnDirector) btnDirector.className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer";
-                if (btnVoice) btnVoice.className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-emerald-600 shadow cursor-pointer";
-                if (mobileBtnDirector) mobileBtnDirector.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer";
-                if (mobileBtnVoice) mobileBtnVoice.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-emerald-600 cursor-pointer";
+                return;
+            }
+            if (tabId === 'affiliate') {
+                updateGlobalStatus("Affiliate Studio Aktif", "orange");
+                AudioEngine.stop();
+                return;
+            }
 
-                updateGlobalStatus("Voice Lab Aktif", "emerald");
-                const canvasEl = document.getElementById('canvasVisualizer') as HTMLCanvasElement;
-                if (canvasEl) {
-                    const container = canvasEl.parentElement;
-                    if (container) {
-                        canvasEl.width = container.clientWidth;
-                        canvasEl.height = container.clientHeight || 112; 
-                        const ctx = canvasEl.getContext('2d');
-                        if (ctx) {
-                            ctx.fillStyle = '#040507';
-                            ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
-                        }
+            updateGlobalStatus("Voice Lab Aktif", "emerald");
+            const canvasEl = document.getElementById('canvasVisualizer') as HTMLCanvasElement;
+            if (canvasEl) {
+                const container = canvasEl.parentElement;
+                if (container) {
+                    canvasEl.width = container.clientWidth;
+                    canvasEl.height = container.clientHeight || 112;
+                    const ctx = canvasEl.getContext('2d');
+                    if (ctx) {
+                        ctx.fillStyle = '#040507';
+                        ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
                     }
                 }
             }
@@ -5139,6 +5347,10 @@ GENERAL RULES:
                 badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20";
                 dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
                 label.className = "text-[10px] md:text-xs font-semibold text-amber-400";
+            } else if (color === 'orange' && badge && dot) {
+                badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20";
+                dot.className = "w-2 h-2 rounded-full bg-orange-400 animate-pulse";
+                label.className = "text-[10px] md:text-xs font-semibold text-orange-400";
             }
         }
 
