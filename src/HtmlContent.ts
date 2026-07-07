@@ -739,6 +739,24 @@ export const HTML_CONTENT = `
                     </select>
                 </div>
 
+                <!-- Voice Age Profile -->
+                <div class="space-y-3 border-t border-slate-800/40 pt-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-semibold text-slate-455">Usia Karakter Suara</label>
+                        <p class="text-[10px] leading-relaxed text-slate-500">Arahkan akting suara agar terdengar seperti anak-anak, remaja, dewasa, atau orang tua. Ini adalah arahan performa, bukan meniru suara orang asli.</p>
+                    </div>
+                    <select id="voiceAgeProfile" class="w-full rounded-xl bg-[#0f111a] border border-slate-855 p-2.5 text-xs text-slate-200 focus:border-emerald-500 outline-none transition">
+                        <option value="auto" selected data-instruction="Use a natural age-neutral creator voice that matches the script context.">Auto / Netral</option>
+                        <option value="child" data-instruction="Perform as a generic childlike voice, innocent, light, curious, and playful, with simple emotional delivery. Do not imitate a real child or specific person.">Anak Kecil (Ceria & Polos)</option>
+                        <option value="teen" data-instruction="Perform as a teenage voice, youthful, energetic, expressive, and casual, but still clear for narration.">Remaja (Muda & Ekspresif)</option>
+                        <option value="young_adult" data-instruction="Perform as a young adult creator voice, fresh, confident, natural, and friendly for social media narration.">Dewasa Muda (Fresh & Creator)</option>
+                        <option value="adult" data-instruction="Perform as an adult narrator, balanced, clear, mature, and reliable.">Dewasa (Jelas & Stabil)</option>
+                        <option value="mature" data-instruction="Perform as a mature older adult voice, slower, wiser, calm, and authoritative, with controlled emotion.">Paruh Baya (Bijak & Berwibawa)</option>
+                        <option value="elderly" data-instruction="Perform as a generic elderly voice, slower, warmer, slightly fragile, wise, and reflective. Keep it respectful and natural, not a caricature.">Orang Tua / Lansia (Hangat & Bijak)</option>
+                    </select>
+                    <p class="text-[9px] text-slate-600">Tips: gabungkan dengan Human Acting Layer, misalnya Lansia + Sad Soft atau Anak Kecil + Smiling Voice.</p>
+                </div>
+
                 <!-- Human Voice Acting Layer -->
                 <div class="space-y-3 border-t border-slate-800/40 pt-4">
                     <div class="space-y-1">

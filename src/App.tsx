@@ -4168,6 +4168,9 @@ GENERAL RULES:
             const voiceName = (document.getElementById('voiceSelector') as HTMLSelectElement).value;
             const emotionSelect = document.getElementById('voiceEmotion') as HTMLSelectElement;
             const actingPrefix = emotionSelect.options[emotionSelect.selectedIndex].getAttribute('data-prefix') || "";
+            const voiceAgeSelect = document.getElementById('voiceAgeProfile') as HTMLSelectElement | null;
+            const voiceAgeInstruction = voiceAgeSelect ? (voiceAgeSelect.options[voiceAgeSelect.selectedIndex].getAttribute('data-instruction') || "") : "";
+            const voiceAgeLabel = voiceAgeSelect ? voiceAgeSelect.options[voiceAgeSelect.selectedIndex].text : "Auto / Netral";
             const humanCueSelect = document.getElementById('voiceHumanCue') as HTMLSelectElement | null;
             const humanCueInstruction = humanCueSelect ? (humanCueSelect.options[humanCueSelect.selectedIndex].getAttribute('data-instruction') || "") : "";
             const humanCueLabel = humanCueSelect ? humanCueSelect.options[humanCueSelect.selectedIndex].text : "Natural Human";
@@ -4178,7 +4181,17 @@ GENERAL RULES:
 
             updateOperationProgress('Mengirim naskah ke Voice Lab...', 22, 'Server sedang memproses naskah, voice style, dan human acting layer.');
             const result = await GeminiService.generateTTS(
-                script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, AppStore.state.globalApiKey, humanCueInstruction, humanCueIntensity
+                script,
+                voiceName,
+                actingPrefix,
+                pace,
+                injectBreaths,
+                injectSighs,
+                AppStore.state.globalApiKey,
+                humanCueInstruction,
+                humanCueIntensity,
+                voiceAgeInstruction,
+                voiceAgeLabel
             );
             updateOperationProgress('Mengolah audio...', 84, 'Audio diterima, sedang disiapkan untuk preview dan download.');
 
@@ -4222,7 +4235,7 @@ GENERAL RULES:
                 document.getElementById('visualizerEmpty')?.classList.add('hidden');
 
                 const playerTitle = document.getElementById('playerTitle');
-                if (playerTitle) playerTitle.innerText = `${voiceName} (${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel})`;
+                if (playerTitle) playerTitle.innerText = `${voiceName} (${voiceAgeLabel} • ${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel})`;
                 const playerSubtitle = document.getElementById('playerSubtitle');
                 if (playerSubtitle) playerSubtitle.innerText = "Klip suara berhasil disintesis.";
                 const engineVoiceTag = document.getElementById('engineVoiceTag');

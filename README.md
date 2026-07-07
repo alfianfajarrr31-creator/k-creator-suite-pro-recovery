@@ -316,3 +316,23 @@ Patch ini menambahkan layer ekspresi manusiawi di Voice Lab:
 - Tetap menjaga API key lewat backend/server.
 
 Catatan: hasil ekspresi tetap tergantung kemampuan model TTS. Gunakan cue secukupnya agar voice over tidak terdengar berlebihan.
+
+## ARC 5.3.2 — Voice Age Profile
+
+Patch ini menambahkan pengaturan **Usia Karakter Suara** di Voice Lab.
+
+Pilihan baru:
+- Auto / Netral
+- Anak Kecil (Ceria & Polos)
+- Remaja (Muda & Ekspresif)
+- Dewasa Muda (Fresh & Creator)
+- Dewasa (Jelas & Stabil)
+- Paruh Baya (Bijak & Berwibawa)
+- Orang Tua / Lansia (Hangat & Bijak)
+
+Catatan:
+- Ini adalah arahan performa/acting untuk TTS, bukan clone suara orang asli.
+- Hasil tetap tergantung kemampuan model TTS.
+- Paling aman digabung dengan Human Acting Layer dan voice character yang sesuai.
+
+Build test: sukses.

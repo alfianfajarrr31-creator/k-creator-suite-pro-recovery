@@ -418,7 +418,7 @@ JSON fields:
 // 2. TTS PROXY ENDPOINT
 app.post("/api/gemini/tts", async (req, res) => {
     try {
-        const { script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, humanCueInstruction, humanCueIntensity } = req.body;
+        const { script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, humanCueInstruction, humanCueIntensity, voiceAgeInstruction, voiceAgeLabel } = req.body;
 
         const finalKey = process.env.GEMINI_API_KEY;
         if (!finalKey) {
@@ -452,11 +452,16 @@ app.post("/api/gemini/tts", async (req, res) => {
 
         const intensityLabel = Number(humanCueIntensity) <= 1 ? "very subtle" : Number(humanCueIntensity) >= 3 ? "expressive but still controlled" : "natural medium";
         const humanLayer = humanCueInstruction ? String(humanCueInstruction) : "Keep the delivery natural and human, with subtle emotional color but no exaggerated acting.";
+        const ageLayer = voiceAgeInstruction ? String(voiceAgeInstruction) : "Use a natural age-neutral creator voice that matches the script context.";
+        const ageLabel = voiceAgeLabel ? String(voiceAgeLabel) : "Auto / Netral";
         const finalProcessedPrompt = `${actingPrefix}
+Voice age profile: ${ageLabel}.
+Age performance direction: ${ageLayer}
 Voice acting direction: ${humanLayer}
 Acting intensity: ${intensityLabel}.
 Speak at a pace of ${pace}x.
 Important: do not read bracket labels literally. Convert cue tags and parenthetical acting notes into natural vocal performance such as smile in the voice, tiny laugh, hmm, breath, sad pause, or emotional softness. Keep it realistic for Indonesian creator voice-over, not theatrical overacting.
+If a childlike or elderly voice is requested, perform it as a respectful generic character voice. Do not imitate any real person, celebrity, or specific child. Keep articulation clear for creator narration.
 Read naturally: ${cleanScript}`;
         const modelName = "gemini-3.1-flash-tts-preview";
         const validatedUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`;
