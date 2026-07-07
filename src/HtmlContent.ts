@@ -886,6 +886,23 @@ export const HTML_CONTENT = `
                         <textarea id="scriptInput" class="w-full h-40 rounded-2xl bg-[#08090d] border border-slate-855 focus:border-emerald-500 p-4 text-sm text-slate-200 outline-none resize-none transition duration-150 leading-relaxed" placeholder="Tulis atau tempel naskah Anda di sini..."></textarea>
                     </div>
 
+                    <!-- Scene Voice Production Queue -->
+                    <div id="voiceSceneQueue" class="rounded-2xl border border-emerald-500/10 bg-[#07090e] p-4 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <h3 class="text-xs font-black text-emerald-300 uppercase tracking-wider font-mono">🎙️ Scene Voice Queue</h3>
+                                <p class="text-[10px] text-slate-500 leading-relaxed mt-1">Generate voice per scene atau semua narasi dari storyboard aktif.</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button data-action="generate-all-scene-voices" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider font-mono transition cursor-pointer">Generate All Voice</button>
+                                <button data-action="refresh-voice-queue" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[10px] font-bold uppercase tracking-wider transition cursor-pointer">Refresh</button>
+                            </div>
+                        </div>
+                        <div id="voiceSceneQueueList" class="space-y-2">
+                            <div class="rounded-xl border border-slate-855 bg-black/20 p-3 text-[11px] text-slate-500">Belum ada storyboard aktif. Generate storyboard dulu, lalu buka Voice Lab.</div>
+                        </div>
+                    </div>
+
                     <!-- Visualizer & Primary Audio Player Card -->
                     <div class="bg-gradient-to-br from-[#07090e] to-[#0a0d14] border border-emerald-500/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden glow-emerald">
                         <div class="flex items-center justify-between border-b border-slate-855 pb-4 mb-4">

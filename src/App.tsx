@@ -148,7 +148,8 @@ export default function App() {
                 authUser: null as any,
                 cloudProjects: [] as any[],
                 activeCloudProjectId: null as string | null,
-                sceneVersionHistory: {} as Record<string, any[]>
+                sceneVersionHistory: {} as Record<string, any[]>,
+                voiceSceneStatus: {} as Record<string, any>
             },
             listeners: [] as Array<(state: any, oldState: any) => void>,
             subscribe(fn: (state: any, oldState: any) => void) {
@@ -2694,7 +2695,8 @@ GENERAL RULES:
                 activeRatio: ratio,
                 currentActiveHistoryId: item.id,
                 activeCloudProjectId: item.id,
-                sceneVersionHistory: {}
+                sceneVersionHistory: {},
+                voiceSceneStatus: {}
             });
 
             const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement | null;
@@ -3295,6 +3297,7 @@ GENERAL RULES:
                 if (!deck) return;
                 deck.innerHTML = "";
                 renderSceneShortcutNav(data);
+                renderVoiceSceneQueue();
 
                 data.scenes.forEach((scene: any, index: number) => {
                     const card = document.createElement('div');
@@ -4053,7 +4056,7 @@ GENERAL RULES:
             parsedData.outputLanguage = getStoryboardOutputLanguage();
             parsedData.characterConsistencyMode = getCharacterConsistencyMode();
             parsedData.video_name = parsedData.video_name || generateSafeVideoFileName(parsedData, theme);
-            AppStore.setState({ activeStoryboardData: parsedData, sceneVersionHistory: {} });
+            AppStore.setState({ activeStoryboardData: parsedData, sceneVersionHistory: {}, voiceSceneStatus: {} });
 
             const selectedCategory = (document.getElementById('projectCategorySelect') as HTMLInputElement | HTMLSelectElement | null)?.value || "Storyboard";
             const projectId = generateSecureId();
@@ -4128,6 +4131,143 @@ GENERAL RULES:
             }
         }
 
+        function makeSafeFileSlug(value: any): string {
+            const cleaned = String(value || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s_-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .slice(0, 60);
+            return cleaned || 'voice-over';
+        }
+
+        function buildSceneVoiceFileName(sceneIndex: number, voiceName = 'voice'): string {
+            const activeData = AppStore.state.activeStoryboardData || {};
+            const videoBase = activeData.video_name || activeData.youtube_title || 'scene-narration';
+            const sceneNo = String(sceneIndex + 1).padStart(2, '0');
+            const base = makeSafeFileSlug(videoBase).replace(/\.(mp4|mov|wav|mp3)$/i, '');
+            const voice = makeSafeFileSlug(voiceName).slice(0, 24);
+            return base && base !== 'scene-narration'
+                ? `${base}-scene-${sceneNo}-${voice}.wav`
+                : `scene-${sceneNo}-narration.wav`;
+        }
+
+        function getSceneVoiceEntry(sceneIndex: number): any {
+            return AppStore.state.voiceSceneStatus?.[String(sceneIndex)] || { status: 'idle', message: 'Belum dibuat' };
+        }
+
+        function setSceneVoiceStatus(sceneIndex: number, entry: any) {
+            const current = { ...(AppStore.state.voiceSceneStatus || {}) };
+            current[String(sceneIndex)] = { ...(current[String(sceneIndex)] || {}), ...entry, updated_at: new Date().toISOString() };
+            AppStore.state.voiceSceneStatus = current;
+            renderVoiceSceneQueue();
+        }
+
+        function getVoiceStatusBadge(entry: any): string {
+            const status = entry?.status || 'idle';
+            const map: any = {
+                idle: ['Belum dibuat', 'bg-slate-800 text-slate-400 border-slate-700'],
+                processing: ['Proses', 'bg-amber-500/10 text-amber-300 border-amber-500/30'],
+                done: ['Selesai', 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'],
+                failed: ['Gagal', 'bg-rose-500/10 text-rose-300 border-rose-500/30']
+            };
+            const [label, cls] = map[status] || map.idle;
+            return `<span class="px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider font-mono ${cls}">${label}</span>`;
+        }
+
+        function renderVoiceSceneQueue() {
+            const listEl = document.getElementById('voiceSceneQueueList');
+            if (!listEl) return;
+            const data = AppStore.state.activeStoryboardData;
+            const scenes = Array.isArray(data?.scenes) ? data.scenes : [];
+            if (!scenes.length) {
+                listEl.innerHTML = '<div class="rounded-xl border border-slate-855 bg-black/20 p-3 text-[11px] text-slate-500">Belum ada storyboard aktif. Generate storyboard dulu, lalu buka Voice Lab.</div>';
+                return;
+            }
+            listEl.innerHTML = scenes.map((scene: any, index: number) => {
+                const entry = getSceneVoiceEntry(index);
+                const isProcessing = entry.status === 'processing';
+                const isDone = entry.status === 'done' && entry.url;
+                const filename = entry.fileName || buildSceneVoiceFileName(index, (document.getElementById('voiceSelector') as HTMLSelectElement | null)?.value || 'voice');
+                const script = String(scene?.narrator_script || '').trim();
+                const shortScript = escapeHTML(script.length > 140 ? script.slice(0, 140) + '...' : script || 'Tidak ada narasi.');
+                return `
+                    <div class="rounded-2xl border border-slate-855 bg-black/25 p-3 space-y-2" data-voice-scene-row="${index}">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <div class="min-w-0 space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black text-emerald-300 font-mono">${String(index + 1).padStart(2, '0')}</span>
+                                    <span class="text-[11px] font-black text-slate-200">Scene ${escapeHTML(scene?.scene_number || index + 1)}</span>
+                                    ${getVoiceStatusBadge(entry)}
+                                </div>
+                                <p class="text-[10px] text-slate-400 leading-relaxed">${shortScript}</p>
+                                <p class="text-[9px] text-slate-600 font-mono break-all">${escapeHTML(filename)}</p>
+                                ${entry?.message ? `<p class="text-[9px] ${entry.status === 'failed' ? 'text-rose-300' : entry.status === 'done' ? 'text-emerald-300' : 'text-slate-500'} leading-relaxed">${escapeHTML(entry.message)}</p>` : ''}
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 sm:justify-end shrink-0">
+                                <button data-action="load-scene-script-voice" data-index="${index}" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[9px] font-bold transition cursor-pointer">Load</button>
+                                <button data-action="generate-scene-voice" data-index="${index}" ${isProcessing || !script ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg ${isProcessing || !script ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'} text-[9px] font-black transition">${isProcessing ? 'Proses...' : 'Generate'}</button>
+                                ${isDone ? `<button data-action="download-scene-voice" data-index="${index}" class="px-2.5 py-1.5 rounded-lg bg-sky-600/15 hover:bg-sky-600/25 border border-sky-500/20 text-sky-300 text-[9px] font-bold transition cursor-pointer">Download</button>` : ''}
+                            </div>
+                        </div>
+                        ${isDone ? `<audio controls src="${entry.url}" class="w-full h-8"></audio>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function generateSceneVoice(index: number, batch = false) {
+            const data = AppStore.state.activeStoryboardData;
+            const scene = data?.scenes?.[index];
+            const script = String(scene?.narrator_script || '').trim();
+            if (!scene || !script) {
+                showToast('Scene ini belum punya naskah narasi.', 'warning');
+                setSceneVoiceStatus(index, { status: 'failed', message: 'Naskah narasi kosong.' });
+                return false;
+            }
+            const voiceName = (document.getElementById('voiceSelector') as HTMLSelectElement | null)?.value || 'voice';
+            const fileName = buildSceneVoiceFileName(index, voiceName);
+            setSceneVoiceStatus(index, { status: 'processing', message: 'AI sedang membuat audio scene ini...', fileName });
+            const result = await generateHumanTTS({ script, sceneIndex: index, fileName, batch });
+            if (!result?.success) {
+                setSceneVoiceStatus(index, { status: 'failed', message: result?.error || 'Generate voice gagal.', fileName });
+                return false;
+            }
+            return true;
+        }
+
+        async function generateAllSceneVoices() {
+            if (!ensurePrivateBetaAccess(true)) return;
+            const data = AppStore.state.activeStoryboardData;
+            const scenes = Array.isArray(data?.scenes) ? data.scenes : [];
+            if (!scenes.length) {
+                showToast('Belum ada storyboard aktif untuk Generate All Voice.', 'warning');
+                return;
+            }
+            const btns = Array.from(document.querySelectorAll('[data-action="generate-all-scene-voices"]')) as HTMLButtonElement[];
+            btns.forEach(btn => { btn.disabled = true; btn.innerText = 'Generating...'; });
+            startOperationProgress('Generate All Voice', `Membuat ${scenes.length} audio narasi scene satu per satu.`, 45);
+            let successCount = 0;
+            let failCount = 0;
+            try {
+                for (let i = 0; i < scenes.length; i++) {
+                    updateOperationProgress(`Generate voice scene ${i + 1}/${scenes.length}...`, Math.min(90, 10 + Math.round(((i + 1) / scenes.length) * 78)), 'Jika salah satu scene gagal, status scene akan ditandai agar mudah diulang.');
+                    const ok = await generateSceneVoice(i, true);
+                    if (ok) successCount += 1; else failCount += 1;
+                }
+                if (failCount) {
+                    showToast(`${successCount} voice selesai, ${failCount} gagal. Ulangi scene yang gagal.`, 'warning');
+                    finishOperationProgress('warning', 'Sebagian voice gagal');
+                } else {
+                    showToast(`Semua voice selesai: ${successCount} scene.`, 'success');
+                    finishOperationProgress('success', 'Semua voice selesai');
+                }
+            } finally {
+                btns.forEach(btn => { btn.disabled = false; btn.innerText = 'Generate All Voice'; });
+            }
+        }
+
         // ==========================================
         // 8. VOICE LAB SYNTHESIS PROCEDURES
         // ==========================================
@@ -4147,20 +4287,24 @@ GENERAL RULES:
             showToast(`Tag ${tag} ditambahkan ke naskah.`, 'success');
         }
 
-        async function generateHumanTTS() {
-            if (!ensurePrivateBetaAccess(true)) return;
-            const script = (document.getElementById('scriptInput') as HTMLTextAreaElement).value.trim();
+        async function generateHumanTTS(options: any = {}) {
+            if (!ensurePrivateBetaAccess(true)) return { success: false, error: 'Akses private beta belum valid.' };
+            const scriptInput = document.getElementById('scriptInput') as HTMLTextAreaElement | null;
+            const script = String(options.script || scriptInput?.value || '').trim();
+            const sceneIndex = typeof options.sceneIndex === 'number' ? options.sceneIndex : null;
+            const isBatchMode = options.batch === true;
             if (!script) {
                 showToast("Ketik naskah vokal terlebih dahulu!", "error");
-                return;
+                return { success: false, error: 'Naskah vokal kosong.' };
             }
 
             AudioEngine.stop();
             updateGlobalStatus("Synthesizing Audio Engine", "amber");
-            startOperationProgress('Sintesis Suara', 'AI sedang membuat audio TTS. Tunggu sampai proses selesai atau muncul error.', 35);
+            if (!isBatchMode) startOperationProgress(sceneIndex === null ? 'Sintesis Suara' : `Sintesis Suara Scene ${sceneIndex + 1}`, 'AI sedang membuat audio TTS. Tunggu sampai proses selesai atau muncul error.', 35);
 
             const btn = document.getElementById('generateVoiceBtn') as HTMLButtonElement;
-            if (btn) {
+            const shouldLockMainButton = !isBatchMode && sceneIndex === null;
+            if (btn && shouldLockMainButton) {
                 btn.disabled = true;
                 btn.innerText = "Sintesis Suara...";
             }
@@ -4179,7 +4323,7 @@ GENERAL RULES:
             const injectBreaths = (document.getElementById('injectBreaths') as HTMLInputElement).checked;
             const injectSighs = (document.getElementById('injectSighs') as HTMLInputElement).checked;
 
-            updateOperationProgress('Mengirim naskah ke Voice Lab...', 22, 'Server sedang memproses naskah, voice style, dan human acting layer.');
+            if (!isBatchMode) updateOperationProgress('Mengirim naskah ke Voice Lab...', 22, 'Server sedang memproses naskah, voice style, dan human acting layer.');
             const result = await GeminiService.generateTTS(
                 script,
                 voiceName,
@@ -4193,21 +4337,21 @@ GENERAL RULES:
                 voiceAgeInstruction,
                 voiceAgeLabel
             );
-            updateOperationProgress('Mengolah audio...', 84, 'Audio diterima, sedang disiapkan untuk preview dan download.');
+            if (!isBatchMode) updateOperationProgress('Mengolah audio...', 84, 'Audio diterima, sedang disiapkan untuk preview dan download.');
 
             if (!result.success) {
                 const errorMessage = result.error || "Sintesis audio gagal.";
                 showToast(errorMessage, "error");
                 showGenerationFeedback(errorMessage, 'tts');
-                finishOperationProgress('error', 'TTS gagal');
-                if (btn) {
+                if (!isBatchMode) finishOperationProgress('error', 'TTS gagal');
+                if (btn && shouldLockMainButton) {
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
                 }
                 const mobileSceneNavVoice = document.getElementById('mobileSceneNavigator');
             if (mobileSceneNavVoice) mobileSceneNavVoice.classList.add('hidden');
             updateGlobalStatus("Voice Lab Aktif", "emerald");
-                return;
+                return { success: false, error: errorMessage };
             }
 
             const { pcm16, sampleRate } = result.data;
@@ -4251,15 +4395,25 @@ GENERAL RULES:
                     downloadBtn.onclick = () => {
                         const link = document.createElement('a');
                         link.href = audioUrl;
-                        link.download = `K_Voice_${voiceName}.wav`;
+                        link.download = options.fileName || `K_Voice_${voiceName}.wav`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
                     };
                 }
 
-                showToast("Sintesis suara manusiawi berhasil dirumuskan!", "success");
-                finishOperationProgress('success', 'TTS selesai');
+                if (!isBatchMode) showToast(sceneIndex === null ? "Sintesis suara manusiawi berhasil dirumuskan!" : `Voice scene ${sceneIndex + 1} berhasil dibuat.`, "success");
+                if (!isBatchMode) finishOperationProgress('success', 'TTS selesai');
+                if (sceneIndex !== null) {
+                    const sceneUrl = AudioMemoryRegistry.register(wavBlob);
+                    setSceneVoiceStatus(sceneIndex, {
+                        status: 'done',
+                        message: 'Audio siap diputar atau di-download.',
+                        fileName: options.fileName || buildSceneVoiceFileName(sceneIndex, voiceName),
+                        url: sceneUrl,
+                        blob: wavBlob
+                    });
+                }
 
                 const activeProjectId = AppStore.state.currentActiveHistoryId || null;
                 const activeId = generateSecureId();
@@ -4267,8 +4421,9 @@ GENERAL RULES:
                     id: activeId,
                     project_id: activeProjectId,
                     voice_name: voiceName,
-                    style_name: `${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel}`,
+                    style_name: `${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel}${sceneIndex !== null ? ` • Scene ${sceneIndex + 1}` : ''}`,
                     text_script: script,
+                    file_name: options.fileName || (sceneIndex !== null ? buildSceneVoiceFileName(sceneIndex, voiceName) : `K_Voice_${voiceName}.wav`),
                     audio_blob: wavBlob,
                     created_at: new Date()
                 };
@@ -4291,12 +4446,15 @@ GENERAL RULES:
                     await VoiceRepo.delete(removed.id);
                 }
                 AppStore.setState({ generationHistory: list });
+                return { success: true, blob: wavBlob, fileName: options.fileName || `K_Voice_${voiceName}.wav`, url: audioUrl };
             } catch (err) {
                 console.error("Gagal mendecode audio data:", err);
                 showToast("Gagal memproses sinyal audio.", "error");
-                finishOperationProgress('error', 'Audio gagal diproses');
+                if (!isBatchMode) finishOperationProgress('error', 'Audio gagal diproses');
+                if (sceneIndex !== null) setSceneVoiceStatus(sceneIndex, { status: 'failed', message: 'Audio gagal diproses setelah diterima.' });
+                return { success: false, error: 'Audio gagal diproses setelah diterima.' };
             } finally {
-                if (btn) {
+                if (btn && shouldLockMainButton) {
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
                 }
@@ -4316,6 +4474,7 @@ GENERAL RULES:
             Views.renderCharacterList();
             Views.renderHistory();
             Views.renderStoryboardHistoryList();
+            renderVoiceSceneQueue();
 
             if (state.globalApiKey !== oldState.globalApiKey) {
                 const dKey = document.getElementById('directorApiKey') as HTMLInputElement;
@@ -4871,6 +5030,56 @@ GENERAL RULES:
                 return;
             }
 
+            const loadSceneScriptBtn = target.closest('[data-action="load-scene-script-voice"]') as HTMLElement | null;
+            if (loadSceneScriptBtn) {
+                const index = parseInt(loadSceneScriptBtn.getAttribute('data-index') || '0', 10);
+                const scene = AppStore.state.activeStoryboardData?.scenes?.[index];
+                const voiceInput = document.getElementById('scriptInput') as HTMLTextAreaElement | null;
+                if (voiceInput && scene?.narrator_script) {
+                    voiceInput.value = scene.narrator_script;
+                    const event = new Event('input', { bubbles: true });
+                    voiceInput.dispatchEvent(event);
+                    showToast(`Narasi Scene ${index + 1} dimuat ke Voice Lab.`, 'success');
+                    voiceInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            const generateSceneVoiceBtn = target.closest('[data-action="generate-scene-voice"]') as HTMLElement | null;
+            if (generateSceneVoiceBtn) {
+                const index = parseInt(generateSceneVoiceBtn.getAttribute('data-index') || '0', 10);
+                await generateSceneVoice(index, false);
+                return;
+            }
+
+            const downloadSceneVoiceBtn = target.closest('[data-action="download-scene-voice"]') as HTMLElement | null;
+            if (downloadSceneVoiceBtn) {
+                const index = parseInt(downloadSceneVoiceBtn.getAttribute('data-index') || '0', 10);
+                const entry = getSceneVoiceEntry(index);
+                if (entry?.url) {
+                    const link = document.createElement('a');
+                    link.href = entry.url;
+                    link.download = entry.fileName || buildSceneVoiceFileName(index, (document.getElementById('voiceSelector') as HTMLSelectElement | null)?.value || 'voice');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    showToast('Audio scene belum tersedia untuk di-download.', 'warning');
+                }
+                return;
+            }
+
+            if (target.closest('[data-action="generate-all-scene-voices"]')) {
+                await generateAllSceneVoices();
+                return;
+            }
+
+            if (target.closest('[data-action="refresh-voice-queue"]')) {
+                renderVoiceSceneQueue();
+                showToast('Voice queue diperbarui.', 'success');
+                return;
+            }
+
             if (target.closest('[data-action="generate-voice"]')) {
                 await generateHumanTTS();
                 return;
@@ -5138,6 +5347,7 @@ GENERAL RULES:
                         activeStoryboardData: project.data_json,
                         activeRatio: project.ratio || '16:9',
                         sceneVersionHistory: {},
+                        voiceSceneStatus: {},
                         currentlyOpenDrawerId: null
                     });
                     const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement;
@@ -5507,6 +5717,7 @@ GENERAL RULES:
                     await VoiceRepo.delete(id);
                     const list = AppStore.state.generationHistory.filter((v: any) => v.id !== id);
                     AppStore.setState({ generationHistory: list });
+                return { success: true, blob: wavBlob, fileName: options.fileName || `K_Voice_${voiceName}.wav`, url: audioUrl };
                     showToast("Arsip audio berhasil dihapus.", "success");
                 }
                 return;
@@ -5523,7 +5734,8 @@ GENERAL RULES:
                         currentActiveHistoryId: id,
                         activeStoryboardData: item.data,
                         activeRatio: item.ratio,
-                        sceneVersionHistory: {}
+                        sceneVersionHistory: {},
+                        voiceSceneStatus: {}
                     });
                     const themeInput = document.getElementById('themeInput') as HTMLTextAreaElement;
                     if (themeInput) themeInput.value = item.theme;
