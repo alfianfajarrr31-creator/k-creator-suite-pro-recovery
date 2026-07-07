@@ -122,3 +122,43 @@ input[type="range"]::-webkit-slider-thumb {
         transform: none !important;
     }
 }
+
+/* ARC 5.2.1 — Mobile Header Overflow Fix */
+html, body, #root {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+    header {
+        max-width: 100vw !important;
+        overflow: hidden !important;
+    }
+
+    header nav,
+    #authStatusBadge,
+    #btnUserGuide,
+    #btnFailurePlaybook,
+    #btnCloudHistory,
+    #btnToggleInspector,
+    #globalEngineStatusBadge {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    #btnLoginGoogle,
+    #btnKeluarGoogle {
+        flex-shrink: 0 !important;
+        max-width: 104px !important;
+        white-space: nowrap !important;
+    }
+
+    main,
+    #tab-director,
+    #tab-voice,
+    #tab-affiliate {
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+}

@@ -3,7 +3,7 @@ export const HTML_CONTENT = `
     <div id="toast" class="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-50 font-medium border border-slate-800 pointer-events-none"></div>
 
     <!-- Header Block -->
-    <header class="h-14 md:h-16 border-b border-slate-855 bg-[#08090e] flex items-center px-2.5 md:px-6 justify-between shrink-0 z-30">
+    <header class="h-14 md:h-16 border-b border-slate-855 bg-[#08090e] flex items-center px-2.5 md:px-6 justify-between shrink-0 z-30 overflow-hidden">
         <div class="flex items-center gap-2 md:gap-3">
             <!-- Hamburger menu button on mobile -->
             <button id="btnHamburger" class="md:hidden p-2 rounded-xl hover:bg-slate-800 text-slate-300 focus:outline-none cursor-pointer flex items-center justify-center border border-slate-800/60 bg-[#0c0d12]" aria-label="Menu">
@@ -47,7 +47,7 @@ export const HTML_CONTENT = `
             </button>
         </nav>
 
-        <div class="flex items-center gap-2 md:gap-4">
+        <div class="flex items-center gap-2 md:gap-4 min-w-0 shrink-0">
             <div id="authStatusBadge" class="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-slate-500/10 border border-slate-700 text-[10px] font-semibold text-slate-400 max-w-[240px] truncate">
                 <span id="authUserLabel">Belum Login</span>
             </div>

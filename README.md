@@ -266,3 +266,23 @@ Patch ini merapikan workflow HP setelah Affiliate Package v1.2:
 - Scene navigator mobile ditambahkan: ↑ Atas, Prev, indikator scene aktif, Next.
 - Setiap scene di HP punya tombol Lanjut Scene Berikutnya / Kembali ke Atas.
 - Tidak mengubah Gemini, Supabase, Private Beta Gate, prompt engine, atau logic Affiliate.
+
+
+## ARC 5.2.1 — Mobile Header Overflow Fix
+
+Patch kecil untuk membersihkan tampilan mobile setelah ARC 5.2 Mobile Workflow Navigation.
+
+Perubahan:
+- Header mobile dibuat lebih bersih.
+- Tombol desktop seperti Riwayat Cloud, Data Tools, Panduan, dan Bantuan Prompt Gagal dipaksa tersembunyi di HP.
+- Akses mobile tetap lewat bottom navigation: Studio, Affiliate, Riwayat, Tools.
+- Mencegah horizontal overflow / tombol kanan atas kepotong.
+- Tidak mengubah Gemini, Supabase, prompt engine, affiliate logic, scene regenerate, atau cloud history logic.
+
+Checklist test:
+1. Buka dari HP portrait.
+2. Pastikan tombol kanan atas yang sebelumnya kepotong sudah hilang.
+3. Pastikan bottom nav tetap muncul.
+4. Test Riwayat dari bottom nav.
+5. Test Tools bottom sheet.
+6. Test generate dan scene navigator.

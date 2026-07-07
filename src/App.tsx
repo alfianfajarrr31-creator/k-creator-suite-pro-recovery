@@ -604,9 +604,12 @@ export default function App() {
                 gate.classList.add('hidden');
                 if (main) main.classList.remove('hidden');
                 if (mobileTabs) mobileTabs.classList.remove('hidden');
-                if (inspectorBtn) inspectorBtn.classList.remove('hidden');
-                if (cloudHistoryBtn) cloudHistoryBtn.classList.remove('hidden');
-                if (statusBadge) statusBadge.classList.remove('hidden');
+                // Keep desktop-only header utilities controlled by their responsive classes.
+                // Do not remove the base `hidden` class here, otherwise they become visible on mobile
+                // and create header overflow. Access on mobile stays available from the bottom nav.
+                if (inspectorBtn) inspectorBtn.classList.add('hidden');
+                if (cloudHistoryBtn) cloudHistoryBtn.classList.add('hidden');
+                if (statusBadge) statusBadge.classList.add('hidden');
             } else {
                 gate.innerHTML = getPrivateGateHTML(mode);
                 gate.classList.remove('hidden');
