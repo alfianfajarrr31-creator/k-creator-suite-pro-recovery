@@ -232,15 +232,15 @@ export default function App() {
             const selected = config[type] || config.success;
             toast.innerHTML = `
                 <div class="flex items-start gap-3">
-                    <span class="text-base leading-none mt-0.5">${selected.icon}</span>
-                    <div class="min-w-0">
-                        <div class="text-[10px] uppercase tracking-wider font-black opacity-80">${selected.title}</div>
-                        <div class="text-sm font-semibold leading-snug break-words">${escapeHTML(message)}</div>
+                    <span class="text-xl leading-none mt-0.5 shrink-0">${selected.icon}</span>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-[10px] uppercase tracking-wider font-black opacity-80 mb-1">${selected.title}</div>
+                        <div class="text-sm font-semibold leading-snug break-words whitespace-normal max-h-[120px] overflow-y-auto pr-1">${escapeHTML(message)}</div>
                     </div>
                 </div>
             `;
             toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
-            toast.className = `fixed bottom-6 right-6 max-w-[360px] px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-50 font-medium border backdrop-blur-xl pointer-events-none ${selected.cls}`;
+            toast.className = `fixed left-3 right-3 bottom-[92px] md:left-auto md:right-6 md:bottom-6 md:max-w-[420px] px-4 md:px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-[80] font-medium border backdrop-blur-xl pointer-events-none ${selected.cls}`;
             playNotificationSound(tone);
             setTimeout(() => {
                 toast.classList.remove('translate-y-12', 'opacity-0');
@@ -249,7 +249,7 @@ export default function App() {
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-12', 'opacity-0');
-            }, type === 'error' ? 5200 : 3200);
+            }, type === 'error' ? 7600 : 3200);
         }
 
         function getFriendlyFailureAdvice(message: any, context = 'generate'): { title: string; detail: string; tips: string[] } {

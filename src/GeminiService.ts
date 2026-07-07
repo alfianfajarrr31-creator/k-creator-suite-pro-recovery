@@ -23,9 +23,12 @@ export function validateStoryboardPayload(data: any) {
     return true;
 }
 
-async function getPrivateBetaAuthorizationHeader(url: string) {
+async function getPrivateBetaAuthorizationHeader(url: string, forceRefresh = false) {
     if (!url.startsWith('/api/gemini') || !isSupabaseConfigured()) return {};
     try {
+        if (forceRefresh) {
+            await supabase.auth.refreshSession();
+        }
         const { data } = await supabase.auth.getSession();
         const token = data?.session?.access_token;
         return token ? { Authorization: `Bearer ${token}` } : {};
@@ -57,12 +60,14 @@ export async function fetchWithBackoff(url: string, options: any) {
         }
     } catch (_) {}
 
+    let authRefreshRetried = false;
+
     for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
         
         try {
-            const privateBetaAuthHeader = await getPrivateBetaAuthorizationHeader(url);
+            const privateBetaAuthHeader = await getPrivateBetaAuthorizationHeader(url, authRefreshRetried);
             const response = await fetch(url, {
                 ...options,
                 headers: {
@@ -93,6 +98,13 @@ export async function fetchWithBackoff(url: string, options: any) {
             } catch (_) {}
 
             lastError = new Error(apiMessage);
+
+            if ((status === 401 || status === 403) && url.startsWith('/api/gemini') && isSupabaseConfigured() && !authRefreshRetried) {
+                authRefreshRetried = true;
+                await supabase.auth.refreshSession().catch(() => null);
+                await new Promise(res => setTimeout(res, 350));
+                continue;
+            }
 
             const isRetryable = (status >= 500 && status < 600) || status === 408;
             
