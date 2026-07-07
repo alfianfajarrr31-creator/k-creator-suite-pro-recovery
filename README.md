@@ -254,3 +254,15 @@ Patch ini memperbaiki tombol penting yang hilang/terpotong di tampilan HP portra
 - Membuat canvas header sticky hanya di desktop, supaya HP tidak terasa terkunci.
 - Membuat dropdown Tools Output lebih aman di mobile dan bisa discroll.
 - Tidak mengubah Gemini, Supabase, Private Beta Gate, atau prompt engine.
+
+## ARC 5.2 — Mobile Workflow Navigation
+
+Patch ini merapikan workflow HP setelah Affiliate Package v1.2:
+- Floating tombol Menu lama diganti dengan mobile bottom navigation.
+- Bottom navigation berisi Studio, Affiliate, Riwayat, dan Tools.
+- Tools dibuka sebagai bottom sheet agar area kerja tidak sempit.
+- Riwayat Cloud tetap bisa dibuka langsung dari HP portrait.
+- Tools sheet berisi Voice Lab, Affiliate Studio, Panduan, Bantuan Prompt Gagal, Data Tools, dan Logout.
+- Scene navigator mobile ditambahkan: ↑ Atas, Prev, indikator scene aktif, Next.
+- Setiap scene di HP punya tombol Lanjut Scene Berikutnya / Kembali ke Atas.
+- Tidak mengubah Gemini, Supabase, Private Beta Gate, prompt engine, atau logic Affiliate.

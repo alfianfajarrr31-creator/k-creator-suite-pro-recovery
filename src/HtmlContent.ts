@@ -97,22 +97,50 @@ export const HTML_CONTENT = `
 
 
 
-    <!-- Mobile Floating Workspace Menu: compact access without stealing vertical screen space -->
-    <details id="mobileWorkspaceMenu" class="md:hidden fixed right-3 bottom-20 z-50 group">
-        <summary class="list-none select-none cursor-pointer px-4 py-3 rounded-2xl bg-indigo-600 text-white shadow-2xl shadow-indigo-950/60 border border-indigo-400/30 text-xs font-black tracking-wide flex items-center gap-2">
-            ☰ Menu
-        </summary>
-        <div class="absolute right-0 bottom-full mb-3 w-64 rounded-2xl border border-slate-700 bg-[#08090e]/98 backdrop-blur-xl shadow-2xl p-3 grid gap-2">
-            <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-1 pb-1">Akses Cepat</div>
-            <button data-action="switch-tab" data-tab="director" class="w-full text-left px-3 py-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-200 text-xs font-bold cursor-pointer">🎬 Storyboard Studio</button>
-            <button data-action="switch-tab" data-tab="voice" class="w-full text-left px-3 py-2.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-200 text-xs font-bold cursor-pointer">🎙️ Voice Lab</button>
-            <button data-action="switch-tab" data-tab="affiliate" class="w-full text-left px-3 py-2.5 rounded-xl bg-orange-600/10 hover:bg-orange-600/25 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">🛒 Affiliate Content Studio</button>
-            <button data-action="open-cloud-history" class="w-full text-left px-3 py-2.5 rounded-xl bg-sky-600/10 hover:bg-sky-600/25 border border-sky-500/20 text-sky-200 text-xs font-bold cursor-pointer">☁️ Riwayat Cloud</button>
-            <button data-action="open-user-guide" class="w-full text-left px-3 py-2.5 rounded-xl bg-amber-600/10 hover:bg-amber-600/25 border border-amber-500/20 text-amber-200 text-xs font-bold cursor-pointer">📘 Panduan</button>
-            <button data-action="open-failure-playbook" class="w-full text-left px-3 py-2.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/25 border border-rose-500/20 text-rose-200 text-xs font-bold cursor-pointer">🚑 Bantuan Prompt Gagal</button>
-            <button data-action="toggle-inspector" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/70 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold cursor-pointer">🗄️ Data Tools</button>
+    <!-- Mobile Bottom Navigation: ARC 5.2 Mobile Workflow Navigation -->
+    <div id="mobileBottomNav" class="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-slate-800 bg-[#07080d]/95 backdrop-blur-xl shadow-2xl shadow-black/50 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.45rem)]">
+        <div class="grid grid-cols-4 gap-1.5">
+            <button id="mobileNavStudio" data-action="mobile-go-studio" class="py-2 rounded-2xl bg-indigo-600/15 border border-indigo-500/20 text-indigo-200 text-[10px] font-black leading-tight cursor-pointer">🎬<br>Studio</button>
+            <button id="mobileNavAffiliate" data-action="mobile-go-affiliate" class="py-2 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-200 text-[10px] font-black leading-tight cursor-pointer">🛒<br>Affiliate</button>
+            <button data-action="open-cloud-history" class="py-2 rounded-2xl bg-sky-600/10 border border-sky-500/20 text-sky-200 text-[10px] font-black leading-tight cursor-pointer">☁️<br>Riwayat</button>
+            <button data-action="mobile-open-tools" class="py-2 rounded-2xl bg-slate-800/75 border border-slate-700 text-slate-200 text-[10px] font-black leading-tight cursor-pointer">🧰<br>Tools</button>
         </div>
-    </details>
+    </div>
+
+    <!-- Mobile Tools Bottom Sheet -->
+    <div id="mobileToolsSheet" class="hidden md:hidden fixed inset-0 z-[70]">
+        <button data-action="mobile-close-tools" class="absolute inset-0 w-full h-full bg-black/60 cursor-pointer" aria-label="Tutup Tools"></button>
+        <div class="absolute inset-x-0 bottom-0 rounded-t-3xl border-t border-slate-700 bg-[#08090e] shadow-2xl p-4 pb-[calc(env(safe-area-inset-bottom)+5.25rem)]">
+            <div class="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-700"></div>
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                    <h3 class="text-sm font-black text-slate-100">Tools Cepat</h3>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Akses fitur tambahan tanpa bikin layar kerja sempit.</p>
+                </div>
+                <button data-action="mobile-close-tools" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold cursor-pointer">Tutup</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button data-action="switch-tab" data-tab="director" class="text-left px-3 py-3 rounded-2xl bg-indigo-600/12 border border-indigo-500/20 text-indigo-200 text-xs font-bold cursor-pointer">🎬 Storyboard Studio</button>
+                <button data-action="switch-tab" data-tab="voice" class="text-left px-3 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-200 text-xs font-bold cursor-pointer">🎙️ Voice Lab</button>
+                <button data-action="switch-tab" data-tab="affiliate" class="text-left px-3 py-3 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">🛒 Affiliate Studio</button>
+                <button data-action="toggle-output-tools" class="text-left px-3 py-3 rounded-2xl bg-purple-600/10 border border-purple-500/20 text-purple-200 text-xs font-bold cursor-pointer">📦 Tools Output</button>
+                <button data-action="open-user-guide" class="text-left px-3 py-3 rounded-2xl bg-amber-600/10 border border-amber-500/20 text-amber-200 text-xs font-bold cursor-pointer">📘 Panduan</button>
+                <button data-action="open-failure-playbook" class="text-left px-3 py-3 rounded-2xl bg-rose-600/10 border border-rose-500/20 text-rose-200 text-xs font-bold cursor-pointer">🚑 Prompt Gagal</button>
+                <button data-action="toggle-inspector" class="text-left px-3 py-3 rounded-2xl bg-slate-800/80 border border-slate-700 text-slate-200 text-xs font-bold cursor-pointer">🗄️ Data Tools</button>
+                <button data-action="logout-google" class="text-left px-3 py-3 rounded-2xl bg-rose-950/35 border border-rose-800/40 text-rose-200 text-xs font-bold cursor-pointer">🚪 Keluar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Scene Navigator: appears when reviewing generated scenes -->
+    <div id="mobileSceneNavigator" class="hidden md:hidden fixed left-2 right-2 bottom-[4.65rem] z-40 rounded-2xl border border-indigo-500/20 bg-[#08090e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-2">
+        <div class="grid grid-cols-4 gap-1.5 items-center">
+            <button data-action="mobile-scene-top" class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-[10px] font-black cursor-pointer">↑ Atas</button>
+            <button id="mobilePrevSceneBtn" data-action="mobile-prev-scene" class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-black cursor-pointer">← Prev</button>
+            <div id="mobileSceneIndicator" class="py-2 rounded-xl bg-indigo-600/15 border border-indigo-500/25 text-indigo-200 text-[10px] font-black text-center">S1/1</div>
+            <button id="mobileNextSceneBtn" data-action="mobile-next-scene" class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-black cursor-pointer">Next →</button>
+        </div>
+    </div>
 
     <!-- Main Workspace Container -->
     <main class="flex-1 flex overflow-hidden relative">

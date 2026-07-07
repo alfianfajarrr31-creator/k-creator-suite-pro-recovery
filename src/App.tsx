@@ -117,6 +117,7 @@ export default function App() {
                 globalApiKey: '',
                 activeRatio: '16:9',
                 activeStoryboardData: null as any,
+                activeMobileSceneIndex: 0,
                 activeSceneMode: 'auto',
                 characterImageBlob: null as Blob | null,
                 characterImageMime: '',
@@ -331,12 +332,82 @@ export default function App() {
             return { min: 32, max: 42 };
         }
 
+        function getActiveSceneCount() {
+            const scenes = AppStore.state.activeStoryboardData?.scenes;
+            return Array.isArray(scenes) ? scenes.length : 0;
+        }
+
+        function closeMobileToolsSheet() {
+            const sheet = document.getElementById('mobileToolsSheet');
+            if (sheet) sheet.classList.add('hidden');
+        }
+
+        function openMobileToolsSheet() {
+            const sheet = document.getElementById('mobileToolsSheet');
+            if (sheet) sheet.classList.remove('hidden');
+        }
+
+        function updateMobileNavActive(tabId = AppStore.state.activeTab) {
+            const studio = document.getElementById('mobileNavStudio');
+            const affiliate = document.getElementById('mobileNavAffiliate');
+            if (studio) {
+                studio.className = tabId === 'director'
+                    ? 'py-2 rounded-2xl bg-indigo-600/25 border border-indigo-400/35 text-indigo-100 text-[10px] font-black leading-tight cursor-pointer shadow-lg shadow-indigo-950/30'
+                    : 'py-2 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-200 text-[10px] font-black leading-tight cursor-pointer';
+            }
+            if (affiliate) {
+                affiliate.className = tabId === 'affiliate'
+                    ? 'py-2 rounded-2xl bg-orange-600/25 border border-orange-400/35 text-orange-100 text-[10px] font-black leading-tight cursor-pointer shadow-lg shadow-orange-950/30'
+                    : 'py-2 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-200 text-[10px] font-black leading-tight cursor-pointer';
+            }
+        }
+
+        function updateMobileSceneNavigator(index = AppStore.state.activeMobileSceneIndex || 0) {
+            const nav = document.getElementById('mobileSceneNavigator');
+            const indicator = document.getElementById('mobileSceneIndicator');
+            const prev = document.getElementById('mobilePrevSceneBtn') as HTMLButtonElement | null;
+            const next = document.getElementById('mobileNextSceneBtn') as HTMLButtonElement | null;
+            const count = getActiveSceneCount();
+            if (!nav) return;
+            if (count <= 0 || AppStore.state.activeTab !== 'director') {
+                nav.classList.add('hidden');
+                return;
+            }
+            const safeIndex = Math.max(0, Math.min(index, count - 1));
+            AppStore.state.activeMobileSceneIndex = safeIndex;
+            nav.classList.remove('hidden');
+            if (indicator) indicator.innerText = `S${safeIndex + 1}/${count}`;
+            if (prev) {
+                prev.disabled = safeIndex <= 0;
+                prev.className = safeIndex <= 0
+                    ? 'py-2 rounded-xl bg-slate-950 border border-slate-900 text-slate-700 text-[10px] font-black cursor-not-allowed'
+                    : 'py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-black cursor-pointer';
+            }
+            if (next) {
+                next.disabled = safeIndex >= count - 1;
+                next.className = safeIndex >= count - 1
+                    ? 'py-2 rounded-xl bg-slate-950 border border-slate-900 text-slate-700 text-[10px] font-black cursor-not-allowed'
+                    : 'py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-black cursor-pointer';
+            }
+        }
+
+        function scrollToStoryboardTop() {
+            const el = document.getElementById('storyboardContainer') || document.getElementById('sceneShortcutNav') || document.getElementById('emptyState');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
         function scrollToScene(index: number) {
             const el = document.getElementById(`sceneCard_${index}`);
             if (!el) {
                 showToast('Scene tidak ditemukan.', 'warning');
                 return;
             }
+            AppStore.setState({ activeMobileSceneIndex: index });
+            updateMobileSceneNavigator(index);
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             document.querySelectorAll('[data-scene-card]').forEach((card) => {
                 card.classList.remove('ring-2', 'ring-indigo-500', 'border-indigo-500/60');
@@ -345,6 +416,36 @@ export default function App() {
             setTimeout(() => {
                 el.classList.remove('ring-2', 'ring-indigo-500', 'border-indigo-500/60');
             }, 2200);
+        }
+
+        function scrollToRelativeScene(delta: number) {
+            const count = getActiveSceneCount();
+            if (count <= 0) return;
+            const current = AppStore.state.activeMobileSceneIndex || 0;
+            const nextIndex = Math.max(0, Math.min(current + delta, count - 1));
+            scrollToScene(nextIndex);
+        }
+
+        function updateActiveSceneFromViewport() {
+            if (AppStore.state.activeTab !== 'director') return;
+            const cards = Array.from(document.querySelectorAll('[data-scene-card]')) as HTMLElement[];
+            if (cards.length === 0) {
+                updateMobileSceneNavigator(0);
+                const nav = document.getElementById('mobileSceneNavigator');
+                if (nav) nav.classList.add('hidden');
+                return;
+            }
+            let closestIndex = AppStore.state.activeMobileSceneIndex || 0;
+            let closestDistance = Number.POSITIVE_INFINITY;
+            cards.forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+                const distance = Math.abs(rect.top - 90);
+                if (rect.bottom > 80 && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = index;
+                }
+            });
+            updateMobileSceneNavigator(closestIndex);
         }
 
         function renderSceneShortcutNav(data: any) {
@@ -358,6 +459,7 @@ export default function App() {
                 return;
             }
             nav.classList.remove('hidden');
+            updateMobileSceneNavigator(AppStore.state.activeMobileSceneIndex || 0);
             inner.innerHTML = `
                 <span class="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Jump to:</span>
                 ${scenes.map((scene: any, index: number) => `
@@ -3290,10 +3392,17 @@ GENERAL RULES:
                                 </div>
                                 <p class="text-[9px] text-slate-600 text-right">Tombol utama tetap terlihat. Aksi tambahan disimpan agar scene tidak terlalu penuh.</p>
                             </div>
+
+                            <!-- Mobile scene flow helper -->
+                            <div class="md:hidden pt-3 border-t border-slate-800/60 flex gap-2">
+                                ${index > 0 ? `<button class="flex-1 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-black cursor-pointer" data-action="jump-scene" data-index="${index - 1}">← Scene ${index}</button>` : `<button class="flex-1 py-2 rounded-xl bg-slate-950 border border-slate-900 text-slate-700 text-[10px] font-black cursor-not-allowed" disabled>Awal</button>`}
+                                ${index < data.scenes.length - 1 ? `<button class="flex-1 py-2 rounded-xl bg-indigo-600/15 border border-indigo-500/25 text-indigo-200 text-[10px] font-black cursor-pointer" data-action="jump-scene" data-index="${index + 1}">Lanjut Scene ${index + 2} ↓</button>` : `<button class="flex-1 py-2 rounded-xl bg-emerald-600/15 border border-emerald-500/25 text-emerald-200 text-[10px] font-black cursor-pointer" data-action="mobile-scene-top">↑ Kembali ke Atas</button>`}
+                            </div>
                         </div>
                     `;
                     deck.appendChild(card);
                 });
+                updateMobileSceneNavigator(AppStore.state.activeMobileSceneIndex || 0);
             }
         };
 
@@ -3944,7 +4053,9 @@ GENERAL RULES:
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
                 }
-                updateGlobalStatus("Voice Lab Aktif", "emerald");
+                const mobileSceneNavVoice = document.getElementById('mobileSceneNavigator');
+            if (mobileSceneNavVoice) mobileSceneNavVoice.classList.add('hidden');
+            updateGlobalStatus("Voice Lab Aktif", "emerald");
                 return;
             }
 
@@ -4036,7 +4147,9 @@ GENERAL RULES:
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
                 }
-                updateGlobalStatus("Voice Lab Aktif", "emerald");
+                const mobileSceneNavVoice = document.getElementById('mobileSceneNavigator');
+            if (mobileSceneNavVoice) mobileSceneNavVoice.classList.add('hidden');
+            updateGlobalStatus("Voice Lab Aktif", "emerald");
             }
         }
 
@@ -4278,6 +4391,44 @@ GENERAL RULES:
         const clickHandler = async (e: MouseEvent) => {
             const target = e.target as HTMLElement;
 
+            if (target.closest('[data-action="mobile-open-tools"]')) {
+                openMobileToolsSheet();
+                return;
+            }
+
+            if (target.closest('[data-action="mobile-close-tools"]')) {
+                closeMobileToolsSheet();
+                return;
+            }
+
+            if (target.closest('[data-action="mobile-go-studio"]')) {
+                closeMobileToolsSheet();
+                switchTab('director');
+                setTimeout(() => scrollToStoryboardTop(), 80);
+                return;
+            }
+
+            if (target.closest('[data-action="mobile-go-affiliate"]')) {
+                closeMobileToolsSheet();
+                switchTab('affiliate');
+                return;
+            }
+
+            if (target.closest('[data-action="mobile-scene-top"]')) {
+                scrollToStoryboardTop();
+                return;
+            }
+
+            if (target.closest('[data-action="mobile-prev-scene"]')) {
+                scrollToRelativeScene(-1);
+                return;
+            }
+
+            if (target.closest('[data-action="mobile-next-scene"]')) {
+                scrollToRelativeScene(1);
+                return;
+            }
+
             if (target.closest('[data-action="dismiss-generation-feedback"]')) {
                 clearGenerationFeedback();
                 return;
@@ -4289,6 +4440,7 @@ GENERAL RULES:
             }
 
             if (target.closest('[data-action="open-user-guide"]')) {
+                closeMobileToolsSheet();
                 openUserGuideModal();
                 return;
             }
@@ -4299,6 +4451,7 @@ GENERAL RULES:
             }
 
             if (target.closest('[data-action="open-failure-playbook"]')) {
+                closeMobileToolsSheet();
                 openFailurePlaybookModal();
                 return;
             }
@@ -4366,6 +4519,7 @@ GENERAL RULES:
             }
 
             if (target.closest('[data-action="open-cloud-history"]')) {
+                closeMobileToolsSheet();
                 await openCloudHistory();
                 return;
             }
@@ -4460,6 +4614,7 @@ GENERAL RULES:
 
             const switchTabBtn = target.closest('[data-action="switch-tab"]');
             if (switchTabBtn) {
+                closeMobileToolsSheet();
                 const tab = switchTabBtn.getAttribute('data-tab') || 'director';
                 switchTab(tab);
                 return;
@@ -5166,7 +5321,9 @@ GENERAL RULES:
                         };
                     }
                     showToast("Audio berhasil dimuat dari arsip!", "success");
-                    updateGlobalStatus("Voice Lab Aktif", "emerald");
+                    const mobileSceneNavVoice = document.getElementById('mobileSceneNavigator');
+            if (mobileSceneNavVoice) mobileSceneNavVoice.classList.add('hidden');
+            updateGlobalStatus("Voice Lab Aktif", "emerald");
                 }
                 return;
             }
@@ -5454,6 +5611,7 @@ GENERAL RULES:
 
         function switchTab(tabId: string) {
             AppStore.setState({ activeTab: tabId });
+            updateMobileNavActive(tabId);
             const tabs = ['director', 'voice', 'affiliate'];
             tabs.forEach((tab) => {
                 const section = document.getElementById(`tab-${tab}`);
@@ -5481,16 +5639,21 @@ GENERAL RULES:
             });
 
             if (tabId === 'director') {
+                updateMobileSceneNavigator(AppStore.state.activeMobileSceneIndex || 0);
                 updateGlobalStatus("Director Studio Active", "indigo");
                 AudioEngine.stop();
                 return;
             }
             if (tabId === 'affiliate') {
+                const mobileSceneNav = document.getElementById('mobileSceneNavigator');
+                if (mobileSceneNav) mobileSceneNav.classList.add('hidden');
                 updateGlobalStatus("Affiliate Studio Aktif", "orange");
                 AudioEngine.stop();
                 return;
             }
 
+            const mobileSceneNavVoice = document.getElementById('mobileSceneNavigator');
+            if (mobileSceneNavVoice) mobileSceneNavVoice.classList.add('hidden');
             updateGlobalStatus("Voice Lab Aktif", "emerald");
             const canvasEl = document.getElementById('canvasVisualizer') as HTMLCanvasElement;
             if (canvasEl) {
@@ -5584,6 +5747,8 @@ GENERAL RULES:
         document.addEventListener('input', inputHandler);
         document.addEventListener('change', changeHandler);
         window.addEventListener('unload', unloadHandler);
+        window.addEventListener('scroll', updateActiveSceneFromViewport, { passive: true });
+        window.addEventListener('resize', () => updateMobileSceneNavigator(AppStore.state.activeMobileSceneIndex || 0));
 
         initSupabaseAuth();
 
@@ -5638,6 +5803,7 @@ GENERAL RULES:
             document.removeEventListener('input', inputHandler);
             document.removeEventListener('change', changeHandler);
             window.removeEventListener('unload', unloadHandler);
+            window.removeEventListener('scroll', updateActiveSceneFromViewport);
             AudioMemoryRegistry.revokeAll();
             AudioEngine.stop();
         };
