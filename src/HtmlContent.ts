@@ -739,6 +739,31 @@ export const HTML_CONTENT = `
                     </select>
                 </div>
 
+                <!-- Human Voice Acting Layer -->
+                <div class="space-y-3 border-t border-slate-800/40 pt-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-semibold text-slate-455">Human Acting Layer</label>
+                        <p class="text-[10px] leading-relaxed text-slate-500">Tambahkan rasa manusiawi seperti senyum, hmmm, ketawa kecil, jeda sedih, atau nada penasaran.</p>
+                    </div>
+                    <select id="voiceHumanCue" class="w-full rounded-xl bg-[#0f111a] border border-slate-855 p-2.5 text-xs text-slate-200 focus:border-emerald-500 outline-none transition">
+                        <option value="natural" data-instruction="Keep the delivery natural and human, with subtle emotional color but no exaggerated acting.">Natural Human (Netral Manusiawi)</option>
+                        <option value="smiling" data-instruction="Perform with a gentle smile in the voice, warm and friendly, as if speaking to a close audience.">Smiling Voice (Senyum di Suara)</option>
+                        <option value="soft_laugh" data-instruction="Add one or two very subtle small laughs only where it feels natural, not comedic or exaggerated.">Soft Laugh (Ketawa Kecil Natural)</option>
+                        <option value="thinking" data-instruction="Add a thoughtful tone, tiny hmm moments, and reflective pauses before important lines.">Thinking / Hmm (Mikir, Hmmm)</option>
+                        <option value="sad_soft" data-instruction="Perform with a soft sad tone, controlled emotion, slower pauses, and a slight tremble only when appropriate.">Sad Soft (Sedih Halus)</option>
+                        <option value="suspense" data-instruction="Perform with suspense, careful pauses, quiet tension, and a slightly lower mysterious tone.">Suspense (Tegang Misterius)</option>
+                        <option value="shock" data-instruction="Perform with controlled surprise and urgency, not screaming, with sharper emphasis on reveal words.">Shocked Reveal (Kaget Terungkap)</option>
+                    </select>
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Intensitas Akting</label>
+                            <span id="humanCueIntensityVal" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold">Medium</span>
+                        </div>
+                        <input type="range" id="humanCueIntensity" min="1" max="3" value="2" class="w-full h-1 bg-slate-855 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition accent-emerald">
+                        <p class="text-[9px] text-slate-600">Low = halus, Medium = terasa natural, High = lebih ekspresif tapi tetap tidak berlebihan.</p>
+                    </div>
+                </div>
+
                 <!-- Voice Character Selector with expanded choices (23 voices) -->
                 <div class="space-y-2 border-t border-slate-800/40 pt-4">
                     <label class="block text-xs font-semibold text-slate-455">Aktor Vokal (Voice Character)</label>
@@ -834,7 +859,12 @@ export const HTML_CONTENT = `
                             <span class="text-[10px] text-slate-500 font-mono uppercase px-2 font-semibold font-bold">Tag Cepat:</span>
                             <button type="button" data-tag="[breath]" class="btn-inject-tag text-[10px] bg-[#11131c] hover:bg-emerald-500/10 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer font-bold">🫁 Tarik Napas</button>
                             <button type="button" data-tag="[sigh]" class="btn-inject-tag text-[10px] bg-[#11131c] hover:bg-emerald-500/10 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer font-bold">😮‍💨 Desah Nafas</button>
+                            <button type="button" data-tag="[smile]" class="btn-inject-tag text-[10px] bg-[#11131c] hover:bg-emerald-500/10 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer font-bold">😊 Senyum</button>
+                            <button type="button" data-tag="[hmm]" class="btn-inject-tag text-[10px] bg-[#11131c] hover:bg-emerald-500/10 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer font-bold">🤔 Hmmm</button>
+                            <button type="button" data-tag="[soft laugh]" class="btn-inject-tag text-[10px] bg-[#11131c] hover:bg-emerald-500/10 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer font-bold">😄 Ketawa Kecil</button>
+                            <button type="button" data-tag="[sad pause]" class="btn-inject-tag text-[10px] bg-[#11131c] hover:bg-emerald-500/10 text-emerald-400 border border-slate-800 px-2.5 py-1 rounded-lg font-medium transition cursor-pointer font-bold">😢 Jeda Sedih</button>
                         </div>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">Gunakan tag ini secukupnya. Jangan terlalu banyak agar voice over tetap natural.</p>
                         <textarea id="scriptInput" class="w-full h-40 rounded-2xl bg-[#08090d] border border-slate-855 focus:border-emerald-500 p-4 text-sm text-slate-200 outline-none resize-none transition duration-150 leading-relaxed" placeholder="Tulis atau tempel naskah Anda di sini..."></textarea>
                     </div>
 

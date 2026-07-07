@@ -4131,6 +4131,22 @@ GENERAL RULES:
         // ==========================================
         // 8. VOICE LAB SYNTHESIS PROCEDURES
         // ==========================================
+        function insertVoiceCueTag(tag: string) {
+            const input = document.getElementById('scriptInput') as HTMLTextAreaElement | null;
+            if (!input) return;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            const spacerBefore = start > 0 && !/\s$/.test(input.value.slice(0, start)) ? ' ' : '';
+            const spacerAfter = end < input.value.length && !/^\s/.test(input.value.slice(end)) ? ' ' : '';
+            input.value = `${input.value.slice(0, start)}${spacerBefore}${tag}${spacerAfter}${input.value.slice(end)}`;
+            const nextPos = start + spacerBefore.length + tag.length + spacerAfter.length;
+            input.focus();
+            input.setSelectionRange(nextPos, nextPos);
+            const charCount = document.getElementById('charCounter');
+            if (charCount) charCount.innerText = `${input.value.length} / 2000 karakter`;
+            showToast(`Tag ${tag} ditambahkan ke naskah.`, 'success');
+        }
+
         async function generateHumanTTS() {
             if (!ensurePrivateBetaAccess(true)) return;
             const script = (document.getElementById('scriptInput') as HTMLTextAreaElement).value.trim();
@@ -4152,13 +4168,17 @@ GENERAL RULES:
             const voiceName = (document.getElementById('voiceSelector') as HTMLSelectElement).value;
             const emotionSelect = document.getElementById('voiceEmotion') as HTMLSelectElement;
             const actingPrefix = emotionSelect.options[emotionSelect.selectedIndex].getAttribute('data-prefix') || "";
+            const humanCueSelect = document.getElementById('voiceHumanCue') as HTMLSelectElement | null;
+            const humanCueInstruction = humanCueSelect ? (humanCueSelect.options[humanCueSelect.selectedIndex].getAttribute('data-instruction') || "") : "";
+            const humanCueLabel = humanCueSelect ? humanCueSelect.options[humanCueSelect.selectedIndex].text : "Natural Human";
+            const humanCueIntensity = parseInt((document.getElementById('humanCueIntensity') as HTMLInputElement | null)?.value || '2', 10);
             const pace = parseFloat((document.getElementById('speechPace') as HTMLInputElement).value) / 10;
             const injectBreaths = (document.getElementById('injectBreaths') as HTMLInputElement).checked;
             const injectSighs = (document.getElementById('injectSighs') as HTMLInputElement).checked;
 
-            updateOperationProgress('Mengirim naskah ke Voice Lab...', 22, 'Server sedang memproses naskah dan voice style.');
+            updateOperationProgress('Mengirim naskah ke Voice Lab...', 22, 'Server sedang memproses naskah, voice style, dan human acting layer.');
             const result = await GeminiService.generateTTS(
-                script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, AppStore.state.globalApiKey
+                script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, AppStore.state.globalApiKey, humanCueInstruction, humanCueIntensity
             );
             updateOperationProgress('Mengolah audio...', 84, 'Audio diterima, sedang disiapkan untuk preview dan download.');
 
@@ -4202,7 +4222,7 @@ GENERAL RULES:
                 document.getElementById('visualizerEmpty')?.classList.add('hidden');
 
                 const playerTitle = document.getElementById('playerTitle');
-                if (playerTitle) playerTitle.innerText = `${voiceName} (${emotionSelect.options[emotionSelect.selectedIndex].text})`;
+                if (playerTitle) playerTitle.innerText = `${voiceName} (${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel})`;
                 const playerSubtitle = document.getElementById('playerSubtitle');
                 if (playerSubtitle) playerSubtitle.innerText = "Klip suara berhasil disintesis.";
                 const engineVoiceTag = document.getElementById('engineVoiceTag');
@@ -4234,7 +4254,7 @@ GENERAL RULES:
                     id: activeId,
                     project_id: activeProjectId,
                     voice_name: voiceName,
-                    style_name: emotionSelect.options[emotionSelect.selectedIndex].text,
+                    style_name: `${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel}`,
                     text_script: script,
                     audio_blob: wavBlob,
                     created_at: new Date()
@@ -4522,6 +4542,13 @@ GENERAL RULES:
         // Event delegation handlers
         const clickHandler = async (e: MouseEvent) => {
             const target = e.target as HTMLElement;
+
+            const voiceCueBtn = target.closest('.btn-inject-tag') as HTMLElement | null;
+            if (voiceCueBtn) {
+                const tag = voiceCueBtn.getAttribute('data-tag') || '';
+                if (tag) insertVoiceCueTag(tag);
+                return;
+            }
 
             if (target.closest('[data-action="mobile-open-tools"]')) {
                 openMobileToolsSheet();
@@ -5619,6 +5646,11 @@ GENERAL RULES:
             if (target.id === 'speechPace') {
                 const label = document.getElementById('paceVal');
                 if (label) label.innerText = `Normal (${parseFloat((target as HTMLInputElement).value) / 10}x)`;
+            }
+            if (target.id === 'humanCueIntensity') {
+                const val = parseInt((target as HTMLInputElement).value, 10);
+                const label = document.getElementById('humanCueIntensityVal');
+                if (label) label.innerText = val <= 1 ? 'Low' : val >= 3 ? 'High' : 'Medium';
             }
             if (target.id === 'sceneDuration') {
                 const label = document.getElementById('durationVal');

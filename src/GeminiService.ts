@@ -215,7 +215,9 @@ export const GeminiService = {
         pace: number,
         injectBreaths: boolean,
         injectSighs: boolean,
-        apiKey: string
+        apiKey: string,
+        humanCueInstruction: string = "",
+        humanCueIntensity: number = 2
     ) {
         try {
             const response = await fetchWithBackoff("/api/gemini/tts", {
@@ -227,7 +229,9 @@ export const GeminiService = {
                     actingPrefix,
                     pace,
                     injectBreaths,
-                    injectSighs
+                    injectSighs,
+                    humanCueInstruction,
+                    humanCueIntensity
                 })
             });
 

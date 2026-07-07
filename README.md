@@ -304,3 +304,15 @@ Mobile/desktop UX polish untuk proses panjang.
 - Prompt engine utama
 - Affiliate logic
 - Cloud History logic
+
+## ARC 5.3 — Voice Human Expression Layer
+
+Patch ini menambahkan layer ekspresi manusiawi di Voice Lab:
+
+- Human Acting Layer: Natural, Smiling Voice, Soft Laugh, Thinking/Hmm, Sad Soft, Suspense, Shocked Reveal.
+- Slider intensitas akting: Low, Medium, High.
+- Tag cepat tambahan di naskah: `[smile]`, `[hmm]`, `[soft laugh]`, `[sad pause]`.
+- Backend TTS menerjemahkan cue ekspresi menjadi instruksi vokal natural, bukan dibaca mentah.
+- Tetap menjaga API key lewat backend/server.
+
+Catatan: hasil ekspresi tetap tergantung kemampuan model TTS. Gunakan cue secukupnya agar voice over tidak terdengar berlebihan.

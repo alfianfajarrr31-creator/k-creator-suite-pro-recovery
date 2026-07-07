@@ -418,7 +418,7 @@ JSON fields:
 // 2. TTS PROXY ENDPOINT
 app.post("/api/gemini/tts", async (req, res) => {
     try {
-        const { script, voiceName, actingPrefix, pace, injectBreaths, injectSighs } = req.body;
+        const { script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, humanCueInstruction, humanCueIntensity } = req.body;
 
         const finalKey = process.env.GEMINI_API_KEY;
         if (!finalKey) {
@@ -428,15 +428,36 @@ app.post("/api/gemini/tts", async (req, res) => {
             });
         }
 
-        let cleanScript = script;
-        if (injectBreaths) {
-            cleanScript = cleanScript.replace(/\[breath\]/g, " ... [intake of soft breath] ... ");
+        let cleanScript = String(script || "");
+        const cueReplacements: Array<[RegExp, string]> = [
+            [/\[breath\]/gi, " ... (take a soft natural breath) ... "],
+            [/\[sigh\]/gi, " ... (release a gentle emotional sigh) ... "],
+            [/\[smile\]/gi, " ... (speak with a warm smile in the voice) ... "],
+            [/\[hmm\]/gi, " ... hmm ... "],
+            [/\[soft laugh\]/gi, " ... (give a tiny natural laugh) ... "],
+            [/\[laugh\]/gi, " ... (give a short soft laugh) ... "],
+            [/\[sad pause\]/gi, " ... (pause briefly, voice softens with sadness) ... "],
+            [/\[pause\]/gi, " ... (brief natural pause) ... "],
+            [/\[nervous laugh\]/gi, " ... (small nervous laugh, then continue) ... "]
+        ];
+        for (const [pattern, replacement] of cueReplacements) {
+            cleanScript = cleanScript.replace(pattern, replacement);
         }
-        if (injectSighs) {
-            cleanScript = cleanScript.replace(/\[sigh\]/g, " ... [emotional gentle sigh] ... ");
+        if (injectBreaths && !/soft natural breath/i.test(cleanScript)) {
+            cleanScript = cleanScript.replace(/([.!?])\s+/g, "$1 ... (take a tiny breath) ... ").slice(0, 4200);
+        }
+        if (injectSighs && !/gentle emotional sigh/i.test(cleanScript) && /(sedih|kecewa|hancur|menyesal|terluka|sad|regret|pain)/i.test(cleanScript)) {
+            cleanScript = cleanScript.replace(/^/, "... (release a gentle emotional sigh) ... ");
         }
 
-        const finalProcessedPrompt = `${actingPrefix} Speak at a pace of ${pace}x. Translate all breathing tags inside brackets into realistic breathing noises. Read naturally: ${cleanScript}`;
+        const intensityLabel = Number(humanCueIntensity) <= 1 ? "very subtle" : Number(humanCueIntensity) >= 3 ? "expressive but still controlled" : "natural medium";
+        const humanLayer = humanCueInstruction ? String(humanCueInstruction) : "Keep the delivery natural and human, with subtle emotional color but no exaggerated acting.";
+        const finalProcessedPrompt = `${actingPrefix}
+Voice acting direction: ${humanLayer}
+Acting intensity: ${intensityLabel}.
+Speak at a pace of ${pace}x.
+Important: do not read bracket labels literally. Convert cue tags and parenthetical acting notes into natural vocal performance such as smile in the voice, tiny laugh, hmm, breath, sad pause, or emotional softness. Keep it realistic for Indonesian creator voice-over, not theatrical overacting.
+Read naturally: ${cleanScript}`;
         const modelName = "gemini-3.1-flash-tts-preview";
         const validatedUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`;
 
