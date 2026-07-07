@@ -2,6 +2,31 @@ export const HTML_CONTENT = `
     <!-- Toast Notification System -->
     <div id="toast" class="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-12 opacity-0 text-sm z-50 font-medium border border-slate-800 pointer-events-none"></div>
 
+
+
+    <!-- Operation Progress Signal: shows long generate/regenerate status clearly -->
+    <div id="operationProgressPanel" class="hidden fixed top-16 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[560px] z-[70] rounded-2xl border border-indigo-500/25 bg-[#08090e]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden">
+        <div class="p-4 space-y-3">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span id="operationProgressIcon" class="text-lg">⏳</span>
+                        <h3 id="operationProgressTitle" class="text-sm font-black text-slate-100 truncate">Sedang memproses...</h3>
+                    </div>
+                    <p id="operationProgressDetail" class="text-[11px] text-slate-400 mt-1 leading-relaxed">Jangan tutup halaman ini dulu.</p>
+                </div>
+                <div id="operationProgressPercent" class="shrink-0 text-[11px] font-black text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-2.5 py-1">0%</div>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-800 overflow-hidden border border-slate-700/50">
+                <div id="operationProgressBar" class="h-full w-[0%] rounded-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 transition-all duration-500"></div>
+            </div>
+            <div class="flex items-center justify-between gap-3 text-[10px] text-slate-500">
+                <span id="operationProgressHint">Kalau gagal, aplikasi akan kasih alasan dan tombol bisa dicoba ulang.</span>
+                <span id="operationProgressElapsed" class="font-mono text-slate-400">00s</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Block -->
     <header class="h-14 md:h-16 border-b border-slate-855 bg-[#08090e] flex items-center px-2.5 md:px-6 justify-between shrink-0 z-30 overflow-hidden">
         <div class="flex items-center gap-2 md:gap-3">

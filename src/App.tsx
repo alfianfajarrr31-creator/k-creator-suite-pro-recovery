@@ -323,6 +323,91 @@ export default function App() {
             panel.innerHTML = '';
         }
 
+
+        let activeOperationTimer: any = null;
+        let activeOperationStartedAt = 0;
+        let activeOperationProgress = 0;
+        let activeOperationTitle = '';
+
+        function formatElapsedOperationTime(ms: number) {
+            const seconds = Math.max(0, Math.floor(ms / 1000));
+            const min = Math.floor(seconds / 60);
+            const sec = seconds % 60;
+            return min > 0 ? `${min}:${sec.toString().padStart(2, '0')}` : `${sec.toString().padStart(2, '0')}s`;
+        }
+
+        function setOperationProgressUI(progress: number, title?: string, detail?: string, icon = '⏳') {
+            const panel = document.getElementById('operationProgressPanel');
+            if (!panel) return;
+            const safeProgress = Math.max(0, Math.min(100, Math.round(progress)));
+            activeOperationProgress = safeProgress;
+            const bar = document.getElementById('operationProgressBar') as HTMLElement | null;
+            const percent = document.getElementById('operationProgressPercent');
+            const titleEl = document.getElementById('operationProgressTitle');
+            const detailEl = document.getElementById('operationProgressDetail');
+            const iconEl = document.getElementById('operationProgressIcon');
+            const elapsedEl = document.getElementById('operationProgressElapsed');
+
+            if (bar) bar.style.width = `${safeProgress}%`;
+            if (percent) percent.textContent = `${safeProgress}%`;
+            if (title && titleEl) titleEl.textContent = title;
+            if (detail && detailEl) detailEl.textContent = detail;
+            if (iconEl) iconEl.textContent = icon;
+            if (elapsedEl && activeOperationStartedAt) elapsedEl.textContent = formatElapsedOperationTime(Date.now() - activeOperationStartedAt);
+        }
+
+        function startOperationProgress(title: string, detail = 'AI sedang memproses request. Jangan klik berulang dulu.', expectedSeconds = 35) {
+            const panel = document.getElementById('operationProgressPanel');
+            if (!panel) return;
+            if (activeOperationTimer) clearInterval(activeOperationTimer);
+            activeOperationStartedAt = Date.now();
+            activeOperationProgress = 7;
+            activeOperationTitle = title;
+            panel.classList.remove('hidden');
+            setOperationProgressUI(7, title, detail, '⏳');
+            try { document.title = `⏳ ${title} — K Creator Suite Pro`; } catch (_) {}
+
+            const tickMs = 850;
+            activeOperationTimer = setInterval(() => {
+                const elapsed = Date.now() - activeOperationStartedAt;
+                const estimated = Math.max(10000, expectedSeconds * 1000);
+                const base = Math.min(88, 7 + (elapsed / estimated) * 78);
+                const nudge = Math.min(2.5, Math.random() * 2.5);
+                const next = Math.max(activeOperationProgress, Math.min(92, base + nudge));
+                const hint = document.getElementById('operationProgressHint');
+                if (hint) {
+                    hint.textContent = elapsed > 45000
+                        ? 'Masih diproses. Kalau nanti gagal, alasan error akan tampil di panel.'
+                        : 'Kalau gagal, aplikasi akan kasih alasan dan tombol bisa dicoba ulang.';
+                }
+                setOperationProgressUI(next, activeOperationTitle, undefined, '⏳');
+            }, tickMs);
+        }
+
+        function updateOperationProgress(title: string, progress?: number, detail?: string) {
+            const panel = document.getElementById('operationProgressPanel');
+            if (!panel || panel.classList.contains('hidden')) return;
+            if (title) activeOperationTitle = title;
+            setOperationProgressUI(progress ?? Math.min(92, activeOperationProgress + 8), title, detail, '⏳');
+        }
+
+        function finishOperationProgress(type: 'success' | 'error' | 'warning' = 'success', message = '') {
+            const panel = document.getElementById('operationProgressPanel');
+            if (!panel) return;
+            if (activeOperationTimer) clearInterval(activeOperationTimer);
+            activeOperationTimer = null;
+
+            const icon = type === 'success' ? '✅' : type === 'warning' ? '🟡' : '⚠️';
+            const title = message || (type === 'success' ? 'Selesai diproses' : 'Proses belum berhasil');
+            setOperationProgressUI(type === 'success' ? 100 : Math.max(activeOperationProgress, 100), title, type === 'success' ? 'Hasil sudah siap dicek.' : 'Cek pesan error atau coba ulang prosesnya.', icon);
+            try { document.title = 'K Creator Suite Pro'; } catch (_) {}
+
+            setTimeout(() => {
+                panel.classList.add('hidden');
+                setOperationProgressUI(0, 'Sedang memproses...', 'Jangan tutup halaman ini dulu.', '⏳');
+            }, type === 'success' ? 1200 : 2600);
+        }
+
         function getNarrationWordBudget(seconds: number): { min: number; max: number } {
             const safeSeconds = Number(seconds) || 8;
             if (safeSeconds <= 5) return { min: 8, max: 12 };
@@ -1441,10 +1526,12 @@ ${safe}`;
                 }
                 updateGlobalStatus(mode === 'shorten' ? 'Shortening Narration' : 'Regenerating Narration', 'amber');
                 clearGenerationFeedback();
+                startOperationProgress(mode === 'shorten' ? 'Memendekkan Semua Narasi' : 'Generate Semua Narasi', mode === 'shorten' ? 'AI sedang membuat narasi lebih pendek sesuai durasi scene.' : 'AI sedang menulis ulang narasi tanpa mengubah prompt visual.', 35);
 
                 const theme = buildNarrationOnlyRewriteTheme(storyboardData, mode);
                 const sceneCount = String(storyboardData.scenes.length || 5);
                 const sceneDuration = String(storyboardData.scenes[0]?.estimated_duration || (document.getElementById('sceneDuration') as HTMLInputElement | null)?.value || 8);
+                updateOperationProgress('Mengirim request narasi...', 24, 'Visual prompt tetap aman, hanya narasi yang diperbarui.');
                 const result = await GeminiService.generateStoryboard(
                     theme,
                     (document.getElementById('narratorStyle') as HTMLSelectElement | null)?.value || 'narator_dokumenter',
@@ -1464,12 +1551,14 @@ ${safe}`;
                     const errorMessage = result.error || 'Generate narasi gagal.';
                     showToast(errorMessage, 'error');
                     showGenerationFeedback(errorMessage, 'regenerate');
+                    finishOperationProgress('error', 'Generate narasi gagal');
                     return;
                 }
 
                 const nextScenes = Array.isArray(result.data?.scenes) ? result.data.scenes : [];
                 if (nextScenes.length === 0) {
                     showToast('AI belum mengembalikan narasi yang bisa dipakai.', 'warning');
+                    finishOperationProgress('warning', 'Narasi belum valid');
                     return;
                 }
 
@@ -1489,11 +1578,13 @@ ${safe}`;
                 markActiveStoryboardDirty(mode === 'shorten' ? 'All narration shortened' : 'All narration regenerated');
                 setCloudSaveStatus('unsaved', 'Narration Updated');
                 showToast(mode === 'shorten' ? 'Semua narasi berhasil dipendekkan.' : 'Semua narasi berhasil di-generate ulang.', 'success');
+                finishOperationProgress('success', mode === 'shorten' ? 'Narasi dipendekkan' : 'Narasi diperbarui');
             } catch (err: any) {
                 console.error('Regenerate all narration failed:', err);
                 const errorMessage = err?.message || 'Generate semua narasi gagal.';
                 showToast(errorMessage, 'error');
                 showGenerationFeedback(errorMessage, 'regenerate');
+                finishOperationProgress('error', 'Generate narasi gagal');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -1800,6 +1891,8 @@ ${safe}`;
                 ].filter(Boolean).join('\n');
 
                 showToast(`Regenerating Scene ${scene.scene_number || index + 1}...`, 'success');
+                startOperationProgress(`Regenerate Scene ${scene.scene_number || index + 1}`, 'AI sedang memperbaiki satu scene berdasarkan komentar kamu.', 35);
+                updateOperationProgress('Mengirim komentar repair...', 22, 'Scene lain tetap aman, hanya scene ini yang diproses.');
                 const result = await GeminiService.generateStoryboard(
                     regenTheme,
                     narratorStyle,
@@ -1819,25 +1912,30 @@ ${safe}`;
                     const errorMessage = result.error || 'Regenerate scene gagal.';
                     showToast(errorMessage, 'error');
                     showGenerationFeedback(errorMessage, 'regenerate');
+                    finishOperationProgress('error', 'Regenerate scene gagal');
                     return;
                 }
 
+                updateOperationProgress('Merapikan scene baru...', 88, 'AI sudah mengembalikan scene pengganti.');
                 const replacement = result.data?.scenes?.[0];
                 if (!replacement) {
                     const errorMessage = 'AI tidak mengembalikan scene pengganti yang valid.';
                     showToast(errorMessage, 'error');
                     showGenerationFeedback(errorMessage, 'regenerate');
+                    finishOperationProgress('warning', 'Scene belum valid');
                     return;
                 }
 
                 replacement.scene_number = scene.scene_number || index + 1;
                 replacement.estimated_duration = replacement.estimated_duration || scene.estimated_duration || 8;
                 updateSceneAtIndex(index, replacement, `Scene ${replacement.scene_number} berhasil di-regenerate. Review dulu sebelum Save / Update Cloud.`);
+                finishOperationProgress('success', 'Scene berhasil diperbaiki');
             } catch (err: any) {
                 console.error('Regenerate scene failed:', err);
                 const errorMessage = err?.message || 'Regenerate scene gagal.';
                 showToast(errorMessage, 'error');
                 showGenerationFeedback(errorMessage, 'regenerate');
+                finishOperationProgress('error', 'Regenerate scene gagal');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -2012,6 +2110,8 @@ GENERAL RULES:
                 ].filter(Boolean).join('\n');
 
                 showToast(`Regenerating ${getTargetedRegenLabel(target)} Scene ${scene.scene_number || index + 1}...`, 'success');
+                startOperationProgress(`Perbaiki ${getTargetedRegenLabel(target)}`, 'AI hanya memperbaiki field yang dipilih. Field lain tetap dijaga.', 30);
+                updateOperationProgress('Mengirim request field repair...', 24, 'Menunggu respons AI untuk field yang dipilih.');
                 const result = await GeminiService.generateStoryboard(
                     regenTheme,
                     narratorStyle,
@@ -2031,14 +2131,17 @@ GENERAL RULES:
                     const errorMessage = result.error || 'Regenerate field gagal.';
                     showToast(errorMessage, 'error');
                     showGenerationFeedback(errorMessage, 'regenerate');
+                    finishOperationProgress('error', 'Perbaikan field gagal');
                     return;
                 }
 
+                updateOperationProgress('Merapikan field baru...', 88, 'AI sudah mengembalikan hasil perbaikan.');
                 const replacement = result.data?.scenes?.[0];
                 if (!replacement) {
                     const errorMessage = 'AI tidak mengembalikan field pengganti yang valid.';
                     showToast(errorMessage, 'error');
                     showGenerationFeedback(errorMessage, 'regenerate');
+                    finishOperationProgress('warning', 'Field belum valid');
                     return;
                 }
 
@@ -2060,11 +2163,13 @@ GENERAL RULES:
 
                 updates.estimated_duration = scene.estimated_duration || 8;
                 updateSceneAtIndex(index, updates, `${getTargetedRegenLabel(target)} Scene ${scene.scene_number || index + 1} berhasil diperbaiki. Review dulu sebelum Save / Update Cloud.`);
+                finishOperationProgress('success', 'Field berhasil diperbaiki');
             } catch (err: any) {
                 console.error('Regenerate scene field failed:', err);
                 const errorMessage = err?.message || 'Regenerate field gagal.';
                 showToast(errorMessage, 'error');
                 showGenerationFeedback(errorMessage, 'regenerate');
+                finishOperationProgress('error', 'Perbaikan field gagal');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -3914,15 +4019,18 @@ GENERAL RULES:
             }, 2500);
 
             updateGlobalStatus("Director Engine Thinking", "amber");
+            startOperationProgress('Generate Storyboard', 'AI sedang membuat storyboard, prompt gambar, prompt video, narasi, caption, dan thumbnail.', 45);
 
             const sceneCount = (document.getElementById('sceneCountInput') as HTMLInputElement)?.value || '5';
             const sceneDurVal = (document.getElementById('sceneDuration') as HTMLInputElement)?.value || '8';
 
             let result;
             try {
+                updateOperationProgress('Menghubungi AI...', 18, 'Request sedang dikirim ke server.');
                 result = await GeminiService.generateStoryboard(
                     theme, narratorStyle, animStyle, constraints, includeCta, AppStore.state.activeRatio, AppStore.state.activeSceneMode, sceneCount, sceneDurVal, AppStore.state.globalApiKey, getStoryboardOutputLanguage(), getCharacterConsistencyMode()
                 );
+                updateOperationProgress('Merapikan hasil...', 92, 'AI sudah memberi respons. Sistem sedang menyiapkan hasil.');
             } finally {
                 clearInterval(progressInterval);
             }
@@ -3931,6 +4039,7 @@ GENERAL RULES:
                 const errorMessage = result.error || "Gagal merumuskan storyboard. Coba lagi atau cek konfigurasi server.";
                 showToast(errorMessage, "error");
                 showGenerationFeedback(errorMessage, 'generate');
+                finishOperationProgress('error', 'Generate gagal');
                 addDBLog(`Generate gagal: ${errorMessage}`, 'error');
                 if (btn) {
                     btn.disabled = false;
@@ -3994,6 +4103,7 @@ GENERAL RULES:
                 clearGenerationFeedback();
                 setCloudSaveStatus(AppStore.state.authUser?.id ? 'unsaved' : 'guest', AppStore.state.authUser?.id ? 'Unsaved' : 'Guest Draft');
                 showToast("Naskah visual storyboard berhasil dirumuskan!", "success");
+                finishOperationProgress('success', 'Generate selesai');
 
                 if (AppStore.state.authUser?.id && isSupabaseConfigured()) {
                     saveActiveProjectToCloud(true).then((cloudId) => {
@@ -4008,6 +4118,7 @@ GENERAL RULES:
                 const errorMessage = err?.message || "Gagal mengamankan draf data ke penyimpanan.";
                 showToast(errorMessage, "error");
                 showGenerationFeedback(errorMessage, 'generate');
+                finishOperationProgress('error', 'Generate gagal');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4030,6 +4141,7 @@ GENERAL RULES:
 
             AudioEngine.stop();
             updateGlobalStatus("Synthesizing Audio Engine", "amber");
+            startOperationProgress('Sintesis Suara', 'AI sedang membuat audio TTS. Tunggu sampai proses selesai atau muncul error.', 35);
 
             const btn = document.getElementById('generateVoiceBtn') as HTMLButtonElement;
             if (btn) {
@@ -4044,14 +4156,17 @@ GENERAL RULES:
             const injectBreaths = (document.getElementById('injectBreaths') as HTMLInputElement).checked;
             const injectSighs = (document.getElementById('injectSighs') as HTMLInputElement).checked;
 
+            updateOperationProgress('Mengirim naskah ke Voice Lab...', 22, 'Server sedang memproses naskah dan voice style.');
             const result = await GeminiService.generateTTS(
                 script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, AppStore.state.globalApiKey
             );
+            updateOperationProgress('Mengolah audio...', 84, 'Audio diterima, sedang disiapkan untuk preview dan download.');
 
             if (!result.success) {
                 const errorMessage = result.error || "Sintesis audio gagal.";
                 showToast(errorMessage, "error");
                 showGenerationFeedback(errorMessage, 'tts');
+                finishOperationProgress('error', 'TTS gagal');
                 if (btn) {
                     btn.disabled = false;
                     btn.innerText = "Sintesis Suara (TTS)";
@@ -4111,6 +4226,7 @@ GENERAL RULES:
                 }
 
                 showToast("Sintesis suara manusiawi berhasil dirumuskan!", "success");
+                finishOperationProgress('success', 'TTS selesai');
 
                 const activeProjectId = AppStore.state.currentActiveHistoryId || null;
                 const activeId = generateSecureId();
@@ -4145,6 +4261,7 @@ GENERAL RULES:
             } catch (err) {
                 console.error("Gagal mendecode audio data:", err);
                 showToast("Gagal memproses sinyal audio.", "error");
+                finishOperationProgress('error', 'Audio gagal diproses');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4242,12 +4359,14 @@ GENERAL RULES:
                 btn.innerText = "⏳ Generating...";
             }
             updateGlobalStatus("Memperbarui Cover Hook...", "amber");
+            startOperationProgress('Regenerate Thumbnail Text', 'AI sedang membuat ulang teks thumbnail dan prompt cover.', 25);
 
             try {
                 const currentText = getActiveStoryboardTextReference();
                 const theme = (document.getElementById('themeInput') as HTMLTextAreaElement)?.value || "";
                 const title = activeData.youtube_title || "";
 
+                updateOperationProgress('Mengirim data thumbnail...', 25, 'Storyboard aktif dipakai sebagai konteks.');
                 const response = await fetch("/api/gemini/regenerate-thumbnail-text", {
                     method: "POST",
                     headers: await getPrivateBetaAuthHeaders(),
@@ -4292,11 +4411,15 @@ GENERAL RULES:
                     }
 
                     showToast("Teks & Prompt Thumbnail berhasil diperbarui!", "success");
+                    finishOperationProgress('success', 'Thumbnail diperbarui');
                     await logWorkflowActivity("Memperbarui data visual cover thumbnail via AI", "success");
+                } else {
+                    finishOperationProgress('warning', 'Thumbnail belum valid');
                 }
             } catch (err: any) {
                 console.error("Regen thumbnail error:", err);
                 showToast("Gagal memperbarui thumbnail text: " + (err.message || err), "error");
+                finishOperationProgress('error', 'Thumbnail gagal');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4320,6 +4443,7 @@ GENERAL RULES:
                 btn.innerText = "⏳ Generating...";
             }
             updateGlobalStatus("Memperbarui Paket Publishing...", "amber");
+            startOperationProgress('Regenerate Publishing Package', 'AI sedang memperbarui judul, caption, hashtag, thumbnail text, dan video name.', 30);
 
             try {
                 const currentText = getActiveStoryboardTextReference();
@@ -4328,6 +4452,7 @@ GENERAL RULES:
                 const animStyle = (document.getElementById('animationStyle') as HTMLSelectElement)?.value || "default";
                 const outputLanguage = getStoryboardOutputLanguage();
 
+                updateOperationProgress('Mengirim paket publishing...', 25, 'Scene visual tetap aman, hanya materi publishing yang diperbarui.');
                 const response = await fetch("/api/gemini/regenerate-publishing", {
                     method: "POST",
                     headers: await getPrivateBetaAuthHeaders(),
@@ -4376,11 +4501,15 @@ GENERAL RULES:
                     }
 
                     showToast("Paket Publishing berhasil di-regenerate secara penuh!", "success");
+                    finishOperationProgress('success', 'Publishing diperbarui');
                     await logWorkflowActivity("Memperbarui asisten optimistis materi publishing", "success");
+                } else {
+                    finishOperationProgress('warning', 'Publishing belum valid');
                 }
             } catch (err: any) {
                 console.error("Regen publishing package error:", err);
                 showToast("Gagal memperbarui publishing package: " + (err.message || err), "error");
+                finishOperationProgress('error', 'Publishing gagal');
             } finally {
                 if (btn) {
                     btn.disabled = false;

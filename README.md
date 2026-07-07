@@ -286,3 +286,21 @@ Checklist test:
 4. Test Riwayat dari bottom nav.
 5. Test Tools bottom sheet.
 6. Test generate dan scene navigator.
+
+## ARC 5.2.2 — Operation Progress Signal Patch
+
+Mobile/desktop UX polish untuk proses panjang.
+
+### Ditambahkan
+- Global operation progress panel untuk generate storyboard, TTS, regenerate scene, targeted repair, generate/shorten all narration, regenerate thumbnail, dan regenerate publishing package.
+- Progress bar dengan persen estimasi, elapsed time, status proses, dan hint ketika proses lama.
+- State sukses/gagal/warning yang lebih jelas sebelum panel hilang.
+- Document title berubah sementara saat proses panjang agar user tahu tab sedang memproses.
+
+### Tidak diubah
+- Gemini model
+- Supabase auth/save/history
+- Private Beta Gate
+- Prompt engine utama
+- Affiliate logic
+- Cloud History logic
