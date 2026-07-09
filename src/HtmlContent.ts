@@ -972,13 +972,13 @@ export const HTML_CONTENT = `
         <section id="tab-affiliate" class="flex-1 flex overflow-hidden hidden">
             <aside id="affiliateAside" class="mobile-sidebar w-80 border-r border-slate-855 bg-[#08090e] p-5 overflow-y-auto space-y-4 flex flex-col shrink-0">
                 <div class="space-y-1">
-                    <h2 class="text-xs font-bold text-orange-400 uppercase tracking-wider font-mono">Affiliate Studio v1.4</h2>
-                    <p class="text-xs text-slate-400 leading-relaxed">Alur baru: input produk lebih ringan, output jadi scene card, dan setiap prompt bisa dicopy langsung.</p>
+                    <h2 class="text-xs font-bold text-orange-400 uppercase tracking-wider font-mono">Affiliate Studio v1.5</h2>
+                    <p class="text-xs text-slate-400 leading-relaxed">Alur baru: upload produk + model dianalisis dulu, lalu digabung jadi merged visual reference prompt yang lebih kuat.</p>
                 </div>
 
                 <div class="rounded-xl border border-orange-500/15 bg-orange-500/5 p-3">
                     <div class="flex items-center gap-2 text-[11px] font-bold text-orange-300 uppercase tracking-wider"><span>⚡</span><span>Quick Flow</span></div>
-                    <p class="mt-1 text-[10px] leading-relaxed text-slate-500">Minimal isi nama produk + pilih tipe konten. Detail lain bisa diisi kalau mau hasil lebih akurat.</p>
+                    <p class="mt-1 text-[10px] leading-relaxed text-slate-500">Minimal isi nama produk. Kalau upload foto produk/model, app akan membaca referensi dan membuat deskripsi gabungan produk + host agar prompt visual lebih akurat.</p>
                 </div>
 
                 <div class="space-y-3 border-t border-slate-800/40 pt-3">
@@ -1092,9 +1092,9 @@ export const HTML_CONTENT = `
                     <div class="rounded-3xl border border-orange-500/15 bg-gradient-to-br from-orange-500/10 via-slate-950/50 to-[#08090e] p-5 md:p-6 shadow-2xl">
                         <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                             <div>
-                                <p class="text-[10px] font-mono font-bold text-orange-300 uppercase tracking-[0.2em]">Affiliate UX & Direct Copy v1.4</p>
+                                <p class="text-[10px] font-mono font-bold text-orange-300 uppercase tracking-[0.2em]">Affiliate Reference Brain v1.5</p>
                                 <h2 class="mt-2 text-xl md:text-2xl font-black text-white tracking-tight">Affiliate Content Package</h2>
-                                <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-2xl leading-relaxed">Hasil dibuat seperti production package: scene card, upload copy, prompt bank, safety check. Setiap prompt punya tombol copy sendiri.</p>
+                                <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-2xl leading-relaxed">Hasil dibuat seperti production package dengan product-aware reference brain: produk + model digabung ke prompt scene, lalu setiap prompt bisa dicopy langsung.</p>
                             </div>
                             <div class="flex flex-wrap gap-2">
                                 <button data-action="copy-affiliate-output" class="px-4 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">Copy All Package</button>

@@ -1136,6 +1136,81 @@ export default function App() {
             return input?.files?.[0]?.name || '';
         }
 
+
+        function getAffiliateFile(id: string): File | null {
+            const input = document.getElementById(id) as HTMLInputElement | null;
+            return input?.files?.[0] || null;
+        }
+
+        async function affiliateImageToInlinePart(file: File | null): Promise<any | null> {
+            if (!file || !file.type.startsWith('image/')) return null;
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = () => {
+                    img.onload = () => {
+                        try {
+                            const maxSide = 1400;
+                            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+                            const canvas = document.createElement('canvas');
+                            canvas.width = Math.max(1, Math.round(img.width * scale));
+                            canvas.height = Math.max(1, Math.round(img.height * scale));
+                            const ctx = canvas.getContext('2d');
+                            if (!ctx) return reject(new Error('Canvas tidak tersedia'));
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            resolve(canvas.toDataURL('image/jpeg', 0.82));
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    img.onerror = () => reject(new Error('Gambar referensi tidak bisa dibaca'));
+                    img.src = String(reader.result || '');
+                };
+                reader.onerror = () => reject(reader.error || new Error('File gambar gagal dibaca'));
+                reader.readAsDataURL(file);
+            });
+            return {
+                mimeType: 'image/jpeg',
+                data: dataUrl.split(',')[1] || dataUrl
+            };
+        }
+
+        function getAffiliateReferenceFallback(product: string, category: string, productNotes: string, modelNotes: string, productImageName: string, modelImageName: string) {
+            const categoryIsFood = category === 'food' || /(stevia|pemanis|gula|kopi|teh|minuman|snack|makanan|sirup|susu|coklat|matcha)/i.test(product);
+            const productVisual = productNotes
+                ? `Produk ${product} harus mengikuti catatan visual manual berikut: ${productNotes}.`
+                : productImageName
+                    ? `Produk ${product} harus mengikuti foto referensi uploaded: bentuk kemasan, warna dominan, area label, tekstur packaging, ukuran relatif di tangan, dan detail fisik yang terlihat.`
+                    : `Produk ${product} harus divisualkan jelas sebagai subjek utama, dengan packaging atau bentuk produk yang rapi dan mudah dikenali.`;
+            const modelVisual = modelNotes
+                ? `Host/model mengikuti catatan manual berikut: ${modelNotes}.`
+                : modelImageName
+                    ? `Host/model mengikuti foto referensi uploaded untuk pose, framing, outfit, ekspresi, dan vibe; jangan mengubah identitas visual secara berlebihan.`
+                    : `Gunakan host generik atau tangan natural bergaya UGC Indonesia.`;
+            return {
+                product_visual_description: productVisual,
+                model_visual_description: modelVisual,
+                merged_reference_prompt: `${productVisual} ${modelVisual} Gabungkan produk dan host dalam satu frame natural affiliate: produk tetap paling jelas, host hanya membantu menunjukkan, memegang, menuang, membuka, atau mendemokan produk.`,
+                product_specific_benefits: categoryIsFood
+                    ? `Gunakan angle spesifik makanan/minuman: alternatif pemanis untuk kopi, teh, atau minuman harian; praktis ditakar; cocok untuk orang yang ingin mengatur rasa manis tanpa klaim kesehatan berlebihan.`
+                    : `Tampilkan manfaat spesifik dari data produk dan catatan user, bukan kalimat umum.` ,
+                product_specific_caveat: categoryIsFood
+                    ? `Cek komposisi, takaran saji, label produk, rasa, dan kecocokan pribadi. Hindari klaim menurunkan berat badan, aman untuk semua kondisi, atau menyembuhkan penyakit.`
+                    : `Cek varian, ukuran, material, ulasan toko, dan kecocokan kebutuhan sebelum checkout.`,
+                best_visual_demo: categoryIsFood
+                    ? `Demo paling kuat: host menyiapkan kopi/teh/minuman, menunjukkan produk dekat kamera, menuang/mencampur dengan takaran wajar, lalu memberi first impression rasa secara aman.`
+                    : `Demo paling kuat: close-up produk, tampilkan detail, lalu perlihatkan pemakaian nyata dalam rutinitas singkat.`,
+                scene_visual_rules: [
+                    `Produk harus terlihat jelas sebagai subjek utama di tiap scene penting.`,
+                    `Gabungkan referensi produk dan model dalam satu prompt, jangan cuma menulis nama file.`,
+                    `Gunakan visual demo yang relevan dengan kategori produk.`
+                ],
+                safety_notes: categoryIsFood
+                    ? `Untuk produk makanan/minuman, jangan membuat klaim medis, diet pasti, atau cocok untuk semua orang. Pakai bahasa: bisa jadi opsi, cek komposisi, cek takaran, dan sesuaikan kebutuhan pribadi.`
+                    : `Hindari klaim paling murah, pasti viral, dijamin bagus, 100% original tanpa bukti, dan hasil pasti.`
+            };
+        }
+
         function buildCopyButton(action: string, label: string, attrs = '') {
             return `<button data-action="${action}" ${attrs} class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 hover:text-orange-200 transition cursor-pointer">${label}</button>`;
         }
@@ -1186,7 +1261,7 @@ export default function App() {
             return labels[category] || 'Auto / belum pasti';
         }
 
-        function buildAffiliatePackage() {
+        function buildAffiliatePackage(referenceBrain: any = null) {
             const product = getInputValue('affiliateProductName', 'produk pilihan ini');
             const productLink = getInputValue('affiliateProductLink', '');
             const marketplace = getInputValue('affiliateMarketplace', 'Marketplace');
@@ -1210,12 +1285,16 @@ export default function App() {
             const categoryLabel = getAffiliateCategoryLabel(category);
             const proofLine = socialProof ? `Social proof: ${socialProof}` : 'Social proof: cek rating dan ulasan toko.';
             const priceLine = price ? `Harga: ${price}` : 'Harga: cek harga terbaru di marketplace.';
-            const referenceUsage = [
-                productImageName ? `Gunakan foto produk uploaded (${productImageName}) sebagai referensi bentuk, warna, packaging, tekstur, dan detail produk.` : 'Tidak ada foto produk uploaded; gunakan data produk manual sebagai acuan visual.',
-                productNotes ? `Catatan produk: ${productNotes}.` : '',
-                modelImageName ? `Gunakan foto model/host uploaded (${modelImageName}) sebagai referensi pose, framing, vibe host, outfit, dan ekspresi. Jangan mengubah identitas model secara berlebihan.` : 'Tidak ada referensi model; gunakan tangan/host generik natural sesuai format affiliate.',
-                modelNotes ? `Catatan model/host: ${modelNotes}.` : ''
-            ].filter(Boolean).join(' ');
+            const fallbackBrain = getAffiliateReferenceFallback(product, category, productNotes, modelNotes, productImageName, modelImageName);
+            const visualBrain = referenceBrain || fallbackBrain;
+            const productVisualDescription = visualBrain.product_visual_description || fallbackBrain.product_visual_description;
+            const modelVisualDescription = visualBrain.model_visual_description || fallbackBrain.model_visual_description;
+            const mergedReferencePrompt = visualBrain.merged_reference_prompt || fallbackBrain.merged_reference_prompt;
+            const productAwareBenefits = visualBrain.product_specific_benefits || benefits || fallbackBrain.product_specific_benefits;
+            const productAwareCaveat = visualBrain.product_specific_caveat || caveat || fallbackBrain.product_specific_caveat;
+            const bestVisualDemo = visualBrain.best_visual_demo || fallbackBrain.best_visual_demo;
+            const sceneVisualRules = Array.isArray(visualBrain.scene_visual_rules) ? visualBrain.scene_visual_rules : fallbackBrain.scene_visual_rules;
+            const referenceUsage = `GLOBAL MERGED REFERENCE PROMPT: ${mergedReferencePrompt} Product visual description: ${productVisualDescription} Host/model visual description: ${modelVisualDescription} Best demo direction: ${bestVisualDemo}`;
 
             const outputModeLabelMap: Record<string, string> = {
                 'ai-video': 'AI Video Package',
@@ -1253,12 +1332,24 @@ ${styleLabel} untuk ${audience}.
 Kenapa angle ini cocok:
 - Produk affiliate perlu terlihat natural, jelas, dan mudah dipercaya.
 - Scene awal harus menjawab masalah atau rasa penasaran audiens sebelum produk dijual.
-- Manfaat utama yang perlu diangkat: ${benefits}.
+- Manfaat utama yang perlu diangkat: ${productAwareBenefits}.
 - Info objektif yang perlu muncul: ${priceLine} dan ${proofLine}.
-- Catatan jujur wajib disisipkan supaya konten tidak terasa hard selling: ${caveat}.
+- Catatan jujur wajib disisipkan supaya konten tidak terasa hard selling: ${productAwareCaveat}.
 
-Reference Usage:
-${referenceUsage}
+Merged Visual Reference:
+${mergedReferencePrompt}
+
+Product Detail Description:
+${productVisualDescription}
+
+Model / Host Detail Description:
+${modelVisualDescription}
+
+Best Visual Demo:
+${bestVisualDemo}
+
+Scene Visual Rules:
+${sceneVisualRules.map((rule: string) => `- ${rule}`).join("\n")}
 
 Risiko klaim yang perlu dihindari:
 Jangan menulis “paling murah”, “pasti viral”, “dijamin bagus”, “100% original”, atau hasil pasti kalau tidak ada bukti.`;
@@ -1295,18 +1386,29 @@ Jangan menulis “paling murah”, “pasti viral”, “dijamin bagus”, “10
                 ugc: [
                     { title: 'UGC Hook', purpose: 'Buka seperti rekomendasi teman.', visual: `Host/tangan menunjukkan ${product} secara natural.`, action: 'Kamera handheld ringan, produk langsung terlihat.', narration: `Aku nemu ${product} dan menurutku ini menarik buat dicek.`, overlay: 'NEMU PRODUK INI' },
                     { title: 'Unboxing Cepat', purpose: 'Tampilkan isi produk.', visual: `Produk dibuka dari packaging atau ditaruh di meja.`, action: 'Buka/tunjukkan produk 2-3 angle.', narration: `Begitu dibuka, detailnya kurang lebih seperti ini.`, overlay: 'UNBOXING CEPAT' },
-                    { title: 'Benefit', purpose: 'Kasih alasan kenapa menarik.', visual: `3 poin manfaat muncul di sekitar produk.`, action: `Sorot manfaat: ${benefits}.`, narration: `Yang bikin menarik: ${benefits}.`, overlay: 'KENAPA MENARIK?' },
-                    { title: 'Catatan', purpose: 'Jaga trust.', visual: 'Produk close-up, bagian detail ditunjukkan.', action: 'Tunjukkan hal yang perlu dicek.', narration: `Tapi sebelum checkout, catat ini: ${caveat}.`, overlay: 'CATATAN JUJUR' },
+                    { title: 'Benefit', purpose: 'Kasih alasan kenapa menarik.', visual: `3 poin manfaat muncul di sekitar produk.`, action: `Sorot manfaat spesifik: ${productAwareBenefits}.`, narration: `Yang bikin menarik: ${productAwareBenefits}.`, overlay: 'KENAPA MENARIK?' },
+                    { title: 'Catatan', purpose: 'Jaga trust.', visual: 'Produk close-up, bagian detail ditunjukkan.', action: 'Tunjukkan hal yang perlu dicek.', narration: `Tapi sebelum checkout, catat ini: ${productAwareCaveat}.`, overlay: 'CATATAN JUJUR' },
                     { title: 'CTA', purpose: 'Ajak cek produk.', visual: 'Produk final + teks CTA.', action: 'Frame produk stabil, CTA terlihat.', narration: `${cta}.`, overlay: cta.toUpperCase() }
                 ],
                 hard: [
                     { title: 'Promo Hook', purpose: 'Buka dengan value dan promo.', visual: 'Produk dengan teks harga/promo besar namun tetap rapi.', action: 'Tampilkan produk cepat, highlight harga dan social proof.', narration: `Lagi cari ${product}? Ini bisa jadi opsi yang menarik buat dicek.`, overlay: 'CEK PROMONYA' },
-                    { title: 'Benefit Cepat', purpose: 'Kasih alasan beli cepat.', visual: '3 manfaat muncul satu per satu di sekitar produk.', action: `Visual highlight: ${benefits}.`, narration: `Poin menariknya: ${benefits}.`, overlay: '3 ALASAN CEK' },
+                    { title: 'Benefit Cepat', purpose: 'Kasih alasan beli cepat.', visual: '3 manfaat muncul satu per satu di sekitar produk.', action: `Visual highlight: ${productAwareBenefits}.`, narration: `Poin menariknya: ${productAwareBenefits}.`, overlay: '3 ALASAN CEK' },
                     { title: 'Harga & Bukti', purpose: 'Dorong decision dengan info objektif.', visual: 'Insert harga, rating, terjual, dan marketplace.', action: `Tampilkan ${priceLine} dan ${proofLine}.`, narration: `${priceLine}. ${proofLine}. Harga dan promo bisa berubah, jadi cek lagi sebelum checkout.`, overlay: `${price}` },
                     { title: 'Demo Kilat', purpose: 'Biar tidak cuma jualan.', visual: 'Produk dipakai secara cepat dan jelas.', action: 'Demo penggunaan 2-3 detik.', narration: `Biar lebih kebayang, ini contoh pemakaiannya secara langsung.`, overlay: 'DEMO KILAT' },
                     { title: 'CTA Tegas', purpose: 'Akhiri dengan ajakan jelas.', visual: 'Frame produk + teks CTA besar.', action: 'Closing tegas tapi tidak menipu.', narration: `${cta}. Jangan lupa tetap cek varian dan ulasan tokonya.`, overlay: cta.toUpperCase() }
                 ]
             };
+            sceneBlueprints.food = [
+                { title: 'Hook Minuman Manis', purpose: 'Tarik perhatian dengan konteks pemanis/minuman.', visual: `Host berada di meja dapur atau meja kerja dengan gelas kopi/teh/minuman dan ${product} terlihat jelas di dekat gelas.`, action: 'Mulai dari gelas minuman, lalu tangan membawa produk masuk ke frame.', narration: `Kalau kamu masih suka minuman manis tapi lagi coba lebih ngatur gula, ${product} ini bisa kamu cek dulu.`, overlay: 'SUKA MANIS?' },
+                { title: 'Product Detail Close-Up', purpose: 'Buat produk terlihat kuat dan sesuai referensi.', visual: `Close-up packaging ${product}; warna, label area, bentuk kemasan, dan tekstur produk mengikuti referensi upload.`, action: 'Slow push-in ke packaging, putar sedikit agar detail produk terlihat.', narration: `Ini detail produknya, dari packaging sampai cara pakainya perlu kamu lihat sebelum checkout.`, overlay: 'CEK DETAIL' },
+                { title: 'Demo Pakai', purpose: 'Tunjukkan penggunaan nyata.', visual: `Host menggunakan ${product} pada kopi, teh, atau minuman harian dengan gerakan natural.`, action: 'Tangan membuka produk, menambahkan pemanis ke minuman, lalu mengaduk perlahan.', narration: `Cara pakainya simpel, tinggal sesuaikan takaran dengan selera dan petunjuk di label.`, overlay: 'DEMO PAKAI' },
+                { title: 'Catatan Aman', purpose: 'Jaga trust dan hindari klaim berlebihan.', visual: `Produk tetap di dekat minuman, host menunjuk area label/komposisi secara natural.`, action: 'Close-up label/kemasan, jangan membuat klaim medis atau diet ekstrem.', narration: `Catatan jujur: tetap cek komposisi, takaran saji, dan cocokkan dengan kebutuhan kamu.`, overlay: 'CEK LABEL' },
+                { title: 'CTA Natural', purpose: 'Ajak cek produk tanpa hard selling.', visual: `Final frame: ${product}, gelas minuman, dan host/tangan dalam komposisi rapi.`, action: 'Frame stabil, produk jelas, overlay CTA singkat.', narration: `${cta}. Bandingin juga review dan harga terbarunya sebelum checkout.`, overlay: cta.toUpperCase() }
+            ];
+            if (category === 'food' || /(stevia|pemanis|gula|kopi|teh|minuman|snack|makanan|sirup|susu|coklat|matcha)/i.test(product)) {
+                sceneBlueprints.honest = sceneBlueprints.food;
+                sceneBlueprints.ugc = sceneBlueprints.food;
+            }
             sceneBlueprints.listicle = sceneBlueprints.ugc;
             sceneBlueprints.soft = sceneBlueprints.problem;
             sceneBlueprints.story = sceneBlueprints.pov;
@@ -1324,22 +1426,36 @@ Jangan menulis “paling murah”, “pasti viral”, “dijamin bagus”, “10
 
             const scenes = blueprints.slice(0, sceneCount).map((scene, index) => {
                 const sceneNumber = index + 1;
-                const textToImage = `Vertical 9:16 ${outputModeLabel} affiliate scene for ${platform}. ${scene.visual} Product: "${product}". Marketplace context: ${marketplace}. Audience: ${audience}. Reference instruction: ${referenceUsage} Natural Indonesian social commerce visual, realistic lighting, clean composition, readable space for overlay text "${scene.overlay}", trustworthy product review mood, no exaggerated claims.`;
+                const textToImage = `Vertical 9:16 ${outputModeLabel} affiliate scene for ${platform}. ${scene.visual} Product: "${product}". MERGED PRODUCT + MODEL REFERENCE: ${mergedReferencePrompt} PRODUCT DETAIL DESCRIPTION: ${productVisualDescription} HOST/MODEL DETAIL DESCRIPTION: ${modelVisualDescription} Scene-specific demo: ${scene.action}. Marketplace context: ${marketplace}. Audience: ${audience}. Natural Indonesian social commerce visual, realistic lighting, clean composition, readable space for overlay text "${scene.overlay}", trustworthy product review mood, product must be sharp and recognizable, no exaggerated claims.`;
                 const imageToVideo = `[SCENE ${sceneNumber} MOTION] ${scene.action}
-[PRODUCT FOCUS] Keep ${product} clear as the main subject.
-[REFERENCE USAGE] ${referenceUsage}
+[MERGED REFERENCE] Combine the uploaded product and uploaded host/model in one natural affiliate frame. ${mergedReferencePrompt}
+[PRODUCT DETAIL] ${productVisualDescription}
+[HOST/MODEL DETAIL] ${modelVisualDescription}
+[PRODUCT FOCUS] Keep ${product} sharp, readable, and clearly the main subject. Do not replace it with a generic object.
 [TEXT OVERLAY] Show short Indonesian overlay: "${scene.overlay}".
 [CAMERA] Vertical 9:16, stable handheld or static tripod, simple cuts, no excessive transition.
-[ATMOSPHERE] Natural affiliate content, honest review, not too salesy.
-[SAFETY] Avoid claims like paling murah, pasti viral, dijamin bagus, or guaranteed results.`;
+[ATMOSPHERE] Natural Indonesian affiliate content, honest review, not too salesy.
+[SAFETY] ${visualBrain.safety_notes || 'Avoid exaggerated or guaranteed claims.'}`;
                 const sfx = `Natural room tone, soft package/hand movement sounds, light tap/click when showing product detail, subtle upbeat social-commerce bed music.`;
                 const fullScene = `SCENE ${sceneNumber} — ${scene.title}
 
 Tujuan Scene:
 ${scene.purpose}
 
-Reference Usage:
-${referenceUsage}
+Merged Visual Reference:
+${mergedReferencePrompt}
+
+Product Detail Description:
+${productVisualDescription}
+
+Model / Host Detail Description:
+${modelVisualDescription}
+
+Best Visual Demo:
+${bestVisualDemo}
+
+Scene Visual Rules:
+${sceneVisualRules.map((rule: string) => `- ${rule}`).join("\n")}
 
 Visual:
 ${scene.visual}
@@ -1387,7 +1503,7 @@ THUMBNAIL TEXT:
 - “KEPAKE BANGET?”
 - “CEK SEBELUM BELI”`;
             const title = `${product} Ini Worth It Buat Dicek?`;
-            const captionOnly = `${product} ini bisa jadi opsi buat ${audience}. Yang menarik: ${benefits}. Catatan jujur: ${caveat}.`;
+            const captionOnly = `${product} ini bisa jadi opsi buat ${audience}. Yang menarik: ${productAwareBenefits}. Catatan jujur: ${productAwareCaveat}.`;
             const hashtags = `#AffiliateIndonesia #ShopeeAffiliate #TikTokShopAffiliate #RacunBelanja #RekomendasiProduk #ReviewJujur #BelanjaOnline #${platform.replace(/\s+/g, '')}`;
             const thumbnailText = `WORTH IT? / CEK SEBELUM BELI / KEPAKE BANGET?`;
             const uploadCopy = `UPLOAD COPY PACKAGE
@@ -1455,7 +1571,7 @@ ${uploadCopy}
 ---
 
 ${safe}`;
-            return { strategyText, angles, hookText, uploadCopy, caption: uploadCopy, safe, storyboardText, allImagePrompts, allVideoPrompts, allNarrations, full, scenes, title, captionOnly, hashtags, cta, thumbnailText };
+            return { strategyText, angles, hookText, uploadCopy, caption: uploadCopy, safe, storyboardText, allImagePrompts, allVideoPrompts, allNarrations, full, scenes, title, captionOnly, hashtags, cta, thumbnailText, visualBrain };
         }
 
         function renderAffiliateSceneCards(pack: any) {
@@ -1513,32 +1629,83 @@ ${safe}`;
             });
         }
 
-        function generateAffiliateContent() {
-            const product = getInputValue('affiliateProductName');
+        async function generateAffiliateContent() {
+            const product = getInputValue('affiliateProductName', '');
             if (!product) {
-                showToast('Isi nama produk dulu.', 'warning');
+                showToast('Nama produk wajib diisi dulu.', 'warning');
                 return;
             }
-            const pack = buildAffiliatePackage();
-            AppStore.setState({ activeAffiliatePackage: pack });
-            setText('affiliateStrategyText', pack.strategyText);
-            setText('affiliateAnglesText', pack.angles);
-            setText('affiliateHookText', pack.hookText);
-            setText('affiliateStoryboardText', pack.storyboardText);
-            setText('affiliateCaptionText', pack.uploadCopy);
-            setText('affiliateImagePromptsText', pack.allImagePrompts);
-            setText('affiliateVideoPromptsText', pack.allVideoPrompts);
-            setText('affiliateNarrationText', pack.allNarrations);
-            setText('affiliateSafeText', pack.safe);
-            renderAffiliateSceneCards(pack);
-            renderAffiliateUploadCopy(pack);
-            const empty = document.getElementById('affiliateOutputEmpty');
-            const panel = document.getElementById('affiliateOutputPanel');
-            empty?.classList.add('hidden');
-            panel?.classList.remove('hidden');
-            switchAffiliateResultTab('scene');
-            try { localStorage.setItem('kc_affiliate_last_output', pack.full); } catch (_) {}
-            showToast('Affiliate package per scene berhasil dibuat.', 'success');
+            const btn = document.getElementById('btnGenerateAffiliate') as HTMLButtonElement | null;
+            const originalText = btn?.textContent || 'Generate Affiliate Package';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Analyzing Product + Model Reference...';
+            }
+            try {
+                const productImage = await affiliateImageToInlinePart(getAffiliateFile('affiliateProductImage'));
+                const modelImage = await affiliateImageToInlinePart(getAffiliateFile('affiliateModelImage'));
+                let referenceBrain: any = null;
+                if (productImage || modelImage) {
+                    const result = await GeminiService.analyzeAffiliateReferences({
+                        product,
+                        marketplace: getInputValue('affiliateMarketplace', 'Marketplace'),
+                        category: getInputValue('affiliateCategory', 'auto'),
+                        benefits: getInputValue('affiliateBenefits', ''),
+                        caveat: getInputValue('affiliateCaveat', ''),
+                        audience: getInputValue('affiliateAudience', ''),
+                        contentStyle: getInputValue('affiliateContentStyle', 'auto'),
+                        productNotes: getInputValue('affiliateProductNotes', ''),
+                        modelNotes: getInputValue('affiliateModelNotes', ''),
+                        productImage,
+                        modelImage
+                    });
+                    if (result.success && result.data) {
+                        referenceBrain = result.data;
+                    } else {
+                        showToast(`AI reference analysis gagal, pakai fallback lokal: ${result.error || 'unknown error'}`, 'warning');
+                    }
+                }
+
+                const pack = buildAffiliatePackage(referenceBrain);
+                AppStore.setState({ activeAffiliatePackage: pack });
+                const empty = document.getElementById('affiliateOutputEmpty');
+                const filled = document.getElementById('affiliateOutputFilled');
+                if (empty) empty.classList.add('hidden');
+                if (filled) filled.classList.remove('hidden');
+                setText('affiliateStrategyText', pack.strategyText);
+                setText('affiliateHookText', pack.hookText);
+                setText('affiliatePromptBankText', `ALL TEXT-TO-IMAGE PROMPTS
+
+${pack.allImagePrompts}
+
+---
+
+ALL IMAGE-TO-VIDEO PROMPTS
+
+${pack.allVideoPrompts}
+
+---
+
+ALL NARRATION / VO
+
+${pack.allNarrations}`);
+                setText('affiliateSafeText', pack.safe);
+                renderAffiliateSceneCards(pack);
+                renderAffiliateUploadCopy(pack);
+                const sceneTab = document.querySelector('[data-action="affiliate-result-tab"][data-tab="scene"]') as HTMLElement | null;
+                if (sceneTab) {
+                    switchAffiliateResultTab('scene');
+                }
+                showToast(referenceBrain ? 'Affiliate package dibuat dengan AI merged product + model reference.' : 'Affiliate package dibuat dengan fallback reference lokal.', 'success');
+            } catch (err: any) {
+                console.error('Affiliate generate failed:', err);
+                showToast(err?.message || 'Affiliate package gagal dibuat.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            }
         }
 
         function resetAffiliateForm() {

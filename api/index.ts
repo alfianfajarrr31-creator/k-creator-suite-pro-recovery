@@ -415,6 +415,100 @@ JSON fields:
     }
 });
 
+
+
+// 1.7. AFFILIATE REFERENCE VISION ENDPOINT
+app.post("/api/gemini/affiliate-reference", async (req, res) => {
+    try {
+        const { product, marketplace, category, benefits, caveat, audience, contentStyle, productNotes, modelNotes, productImage, modelImage } = req.body || {};
+        const finalKey = process.env.GEMINI_API_KEY;
+        if (!finalKey) {
+            return res.status(400).json({ success: false, error: "Environment GEMINI_API_KEY belum dikonfigurasi" });
+        }
+
+        const systemPrompt = `You are K-Affiliate Visual Director, an expert in product-aware social commerce prompts.
+Analyze uploaded reference images if provided, then create a compact but strong merged visual reference for AI image/video generation.
+Return ONLY valid JSON. Do not use markdown. Do not invent unreadable text on packaging; say "visible packaging label area" if text is not clear.
+Important rules:
+- Describe the product visually: shape, color, packaging type, label placement, materials, size impression, visible objects, and how it should be held/placed.
+- Describe the host/model visually only in non-sensitive visual terms: pose, framing, clothing colors/style, expression, hair style if visible, camera angle, lighting vibe. Do not identify the person or infer sensitive attributes.
+- Merge product + model into a reusable prompt instruction so image generation can combine them in one scene.
+- Make product-specific affiliate ideas, not generic benefits. If product is food/beverage/sweetener, mention drink/food usage, serving/taste context, label/ingredient check, and avoid medical/diet guarantee claims.
+- Keep Indonesian content natural for TikTok/Shopee/TikTok Shop affiliate.
+
+JSON fields:
+{
+  "product_visual_description": "...",
+  "model_visual_description": "...",
+  "merged_reference_prompt": "...",
+  "product_specific_benefits": "...",
+  "product_specific_caveat": "...",
+  "best_visual_demo": "...",
+  "scene_visual_rules": ["..."],
+  "safety_notes": "..."
+}`;
+
+        const userText = `Product name: ${product || '-'}
+Marketplace: ${marketplace || '-'}
+Category: ${category || '-'}
+Content style: ${contentStyle || '-'}
+Audience: ${audience || '-'}
+Manual benefits: ${benefits || '-'}
+Manual caveat: ${caveat || '-'}
+Product notes: ${productNotes || '-'}
+Model/host notes: ${modelNotes || '-'}
+Task: Build a merged product + model visual reference prompt for affiliate content scene generation. Make it product-aware and ready to paste into text-to-image prompts.`;
+
+        const parts: any[] = [{ text: userText }];
+        if (productImage?.data && productImage?.mimeType) {
+            parts.push({ inline_data: { mime_type: productImage.mimeType, data: productImage.data } });
+        }
+        if (modelImage?.data && modelImage?.mimeType) {
+            parts.push({ inline_data: { mime_type: modelImage.mimeType, data: modelImage.data } });
+        }
+
+        const payload = {
+            contents: [{ parts }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        product_visual_description: { type: "STRING" },
+                        model_visual_description: { type: "STRING" },
+                        merged_reference_prompt: { type: "STRING" },
+                        product_specific_benefits: { type: "STRING" },
+                        product_specific_caveat: { type: "STRING" },
+                        best_visual_demo: { type: "STRING" },
+                        scene_visual_rules: { type: "ARRAY", items: { type: "STRING" } },
+                        safety_notes: { type: "STRING" }
+                    },
+                    required: ["product_visual_description", "model_visual_description", "merged_reference_prompt", "product_specific_benefits", "product_specific_caveat", "best_visual_demo", "scene_visual_rules", "safety_notes"]
+                }
+            }
+        };
+
+        const validatedUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${finalKey}`;
+        const rawResponse = await fetch(validatedUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-Agent": "aistudio-build" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!rawResponse.ok) {
+            const errorText = await rawResponse.text();
+            return res.status(rawResponse.status).json({ success: false, error: `Affiliate reference analysis gagal (${rawResponse.status}): ${errorText.slice(0, 400)}` });
+        }
+
+        const data = await rawResponse.json();
+        return res.json(data);
+    } catch (error: any) {
+        console.error("Affiliate reference backend error:", error);
+        return res.status(500).json({ success: false, error: error.message || String(error) });
+    }
+});
+
 // 2. TTS PROXY ENDPOINT
 app.post("/api/gemini/tts", async (req, res) => {
     try {

@@ -162,6 +162,34 @@ export async function fetchWithBackoff(url: string, options: any) {
 }
 
 export const GeminiService = {
+
+    async analyzeAffiliateReferences(payload: any) {
+        try {
+            const response = await fetchWithBackoff('/api/gemini/affiliate-reference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                let errMsg = `Affiliate reference analysis gagal (${response.status})`;
+                try {
+                    const parsedErr = JSON.parse(errText);
+                    if (parsedErr.error) errMsg = parsedErr.error;
+                } catch (_) {}
+                return { success: false, data: null, error: errMsg };
+            }
+
+            const jsonResult = await response.json();
+            const rawText = jsonResult.candidates?.[0]?.content?.parts?.[0]?.text;
+            const cleanedJsonText = sanitizeAndCleanJSON(rawText || '{}');
+            const parsedData = JSON.parse(cleanedJsonText);
+            return { success: true, data: parsedData, error: null };
+        } catch (err: any) {
+            return { success: false, data: null, error: err.message || err };
+        }
+    },
     async generateStoryboard(
         theme: string,
         narratorStyle: string,
