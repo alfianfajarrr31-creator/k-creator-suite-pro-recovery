@@ -972,81 +972,57 @@ export const HTML_CONTENT = `
         <section id="tab-affiliate" class="flex-1 flex overflow-hidden hidden">
             <aside id="affiliateAside" class="mobile-sidebar w-80 border-r border-slate-855 bg-[#08090e] p-5 overflow-y-auto space-y-4 flex flex-col shrink-0">
                 <div class="space-y-1">
-                    <h2 class="text-xs font-bold text-orange-400 uppercase tracking-wider font-mono">Affiliate Content Studio</h2>
-                    <p class="text-xs text-slate-400 leading-relaxed">Buat paket konten affiliate Shopee, TikTok Shop, Tokopedia, Lazada, dan marketplace lain.</p>
+                    <h2 class="text-xs font-bold text-orange-400 uppercase tracking-wider font-mono">Affiliate Studio v1.4</h2>
+                    <p class="text-xs text-slate-400 leading-relaxed">Alur baru: input produk lebih ringan, output jadi scene card, dan setiap prompt bisa dicopy langsung.</p>
                 </div>
 
                 <div class="rounded-xl border border-orange-500/15 bg-orange-500/5 p-3">
-                    <div class="flex items-center gap-2 text-[11px] font-bold text-orange-300 uppercase tracking-wider"><span>🧭</span><span>Default: Market Trend Auto</span></div>
-                    <p class="mt-1 text-[10px] leading-relaxed text-slate-500">Tidak dikunci ke claymation. Sistem memilih angle dari kategori produk dan gaya konten affiliate yang umum dipakai.</p>
+                    <div class="flex items-center gap-2 text-[11px] font-bold text-orange-300 uppercase tracking-wider"><span>⚡</span><span>Quick Flow</span></div>
+                    <p class="mt-1 text-[10px] leading-relaxed text-slate-500">Minimal isi nama produk + pilih tipe konten. Detail lain bisa diisi kalau mau hasil lebih akurat.</p>
                 </div>
 
-                <div class="space-y-2 border-t border-slate-800/40 pt-3">
-                    <label class="block text-xs font-semibold text-slate-400">Nama Produk</label>
-                    <input id="affiliateProductName" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition" placeholder="Contoh: organizer tas mini, gantungan kunci Luffy...">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 border-t border-slate-800/40 pt-3">
+                <div class="space-y-3 border-t border-slate-800/40 pt-3">
+                    <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-orange-300"><span>1</span><span>Product Source</span></div>
                     <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Marketplace</label>
-                        <select id="affiliateMarketplace" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
-                            <option>Shopee</option>
-                            <option>TikTok Shop</option>
-                            <option>Tokopedia</option>
-                            <option>Lazada</option>
-                            <option>Marketplace Umum</option>
-                        </select>
+                        <label class="block text-xs font-semibold text-slate-400">Nama Produk <span class="text-orange-400">*</span></label>
+                        <input id="affiliateProductName" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition" placeholder="Contoh: organizer tas mini, gantungan kunci Luffy...">
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Kategori</label>
-                        <select id="affiliateCategory" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
-                            <option value="auto">Auto / belum pasti</option>
-                            <option value="fashion">Fashion</option>
-                            <option value="beauty">Beauty / Skincare</option>
-                            <option value="home">Home Living / Cleaning</option>
-                            <option value="gadget">Gadget / Aksesoris HP</option>
-                            <option value="food">Food / Snack</option>
-                            <option value="hobby">Hobi / Anime / Koleksi</option>
-                            <option value="baby">Mom & Baby</option>
-                            <option value="office">Office / Produktivitas</option>
-                        </select>
+                        <label class="block text-xs font-semibold text-slate-400">Link Produk <span class="text-slate-600">opsional</span></label>
+                        <input id="affiliateProductLink" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition" placeholder="Paste link Shopee / TikTok Shop / marketplace...">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="rounded-xl border border-slate-800 bg-[#0f111a] p-3 cursor-pointer hover:border-orange-500/50 transition">
+                            <span class="block text-[10px] font-black uppercase text-slate-400">Upload Produk</span>
+                            <span class="block text-[10px] text-slate-600 mt-1">foto produk / packaging</span>
+                            <input id="affiliateProductImage" type="file" accept="image/*" class="mt-2 block w-full text-[10px] text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-orange-600/20 file:text-orange-200 file:px-2 file:py-1 file:text-[10px] file:font-bold">
+                        </label>
+                        <label class="rounded-xl border border-slate-800 bg-[#0f111a] p-3 cursor-pointer hover:border-orange-500/50 transition">
+                            <span class="block text-[10px] font-black uppercase text-slate-400">Upload Model</span>
+                            <span class="block text-[10px] text-slate-600 mt-1">opsional host/reference</span>
+                            <input id="affiliateModelImage" type="file" accept="image/*" class="mt-2 block w-full text-[10px] text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-orange-600/20 file:text-orange-200 file:px-2 file:py-1 file:text-[10px] file:font-bold">
+                        </label>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 border-t border-slate-800/40 pt-3">
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Harga</label>
-                        <input id="affiliatePrice" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-orange-500 outline-none transition" placeholder="Rp11.900">
+                <div class="space-y-3 border-t border-slate-800/40 pt-3">
+                    <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-orange-300"><span>2</span><span>Content Type</span></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-semibold text-slate-400">Marketplace</label>
+                            <select id="affiliateMarketplace" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
+                                <option>Shopee</option><option>TikTok Shop</option><option>Tokopedia</option><option>Lazada</option><option>Marketplace Umum</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-xs font-semibold text-slate-400">Platform</label>
+                            <select id="affiliatePlatform" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
+                                <option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Facebook Pro</option><option>Shopee Video</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Rating / Terjual</label>
-                        <input id="affiliateSocialProof" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-orange-500 outline-none transition" placeholder="4.9 • 1rb+ terjual">
-                    </div>
-                </div>
-
-                <div class="space-y-2 border-t border-slate-800/40 pt-3">
-                    <label class="block text-xs font-semibold text-slate-400">Keunggulan Produk</label>
-                    <textarea id="affiliateBenefits" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition h-16 resize-none" placeholder="Contoh: murah, compact, lucu, bahan tebal, mudah dipakai..."></textarea>
-                </div>
-
-                <div class="space-y-2 border-t border-slate-800/40 pt-3">
-                    <label class="block text-xs font-semibold text-slate-400">Catatan Jujur / Kekurangan</label>
-                    <textarea id="affiliateCaveat" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition h-14 resize-none" placeholder="Opsional: ukurannya kecil, warna bisa beda sedikit, cocok untuk penggunaan ringan..."></textarea>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 border-t border-slate-800/40 pt-3">
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Platform</label>
-                        <select id="affiliatePlatform" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
-                            <option>TikTok</option>
-                            <option>Instagram Reels</option>
-                            <option>YouTube Shorts</option>
-                            <option>Facebook Pro</option>
-                            <option>Shopee Video</option>
-                        </select>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Style Konten</label>
+                        <label class="block text-xs font-semibold text-slate-400">Tipe Konten</label>
                         <select id="affiliateContentStyle" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
                             <option value="auto">Market Trend Auto</option>
                             <option value="honest">Honest Review</option>
@@ -1056,31 +1032,58 @@ export const HTML_CONTENT = `
                             <option value="beforeafter">Before–After</option>
                             <option value="listicle">Top Recommendation</option>
                             <option value="soft">Soft Selling</option>
-                            <option value="hard">Hard Selling Promo</option>
-                            <option value="story">Storytelling Pendek</option>
+                            <option value="hard">Promo / Flash Sale</option>
+                            <option value="story">Storytelling Racun</option>
                             <option value="niche">Niche Creator Mode</option>
                         </select>
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-semibold text-slate-400">Output Mode</label>
+                            <select id="affiliateOutputMode" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
+                                <option value="ai-video">AI Video Package</option>
+                                <option value="record-manual">Rekam Manual / UGC</option>
+                                <option value="no-face">No Face Product Demo</option>
+                                <option value="talking-head">Talking Head Review</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-xs font-semibold text-slate-400">Jumlah Scene</label>
+                            <select id="affiliateSceneCount" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
+                                <option value="3">3 Scene Short</option>
+                                <option value="5" selected>5 Scene Standard</option>
+                                <option value="7">7 Scene Detail</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 border-t border-slate-800/40 pt-3">
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">Target Audiens</label>
-                        <input id="affiliateAudience" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-orange-500 outline-none transition" placeholder="anak kos, ibu rumah tangga, fans anime...">
+                <details class="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 group">
+                    <summary class="cursor-pointer text-xs font-black text-slate-300 flex items-center justify-between">Advanced Details <span class="text-slate-600 group-open:hidden">＋</span><span class="text-slate-600 hidden group-open:inline">－</span></summary>
+                    <div class="mt-3 space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="space-y-2">
+                                <label class="block text-xs font-semibold text-slate-400">Kategori</label>
+                                <select id="affiliateCategory" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
+                                    <option value="auto">Auto / belum pasti</option><option value="fashion">Fashion</option><option value="beauty">Beauty / Skincare</option><option value="home">Home Living / Cleaning</option><option value="gadget">Gadget / Aksesoris HP</option><option value="food">Food / Snack</option><option value="hobby">Hobi / Anime / Koleksi</option><option value="baby">Mom & Baby</option><option value="office">Office / Produktivitas</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-xs font-semibold text-slate-400">Harga</label>
+                                <input id="affiliatePrice" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-orange-500 outline-none transition" placeholder="Rp11.900">
+                            </div>
+                        </div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Rating / Terjual</label><input id="affiliateSocialProof" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-orange-500 outline-none transition" placeholder="4.9 • 1rb+ terjual"></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Keunggulan Produk</label><textarea id="affiliateBenefits" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition h-16 resize-none" placeholder="murah, compact, lucu, bahan tebal, mudah dipakai..."></textarea></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Catatan Jujur / Kekurangan</label><textarea id="affiliateCaveat" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition h-14 resize-none" placeholder="ukuran kecil, warna bisa beda sedikit, cocok penggunaan ringan..."></textarea></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Target Audiens</label><input id="affiliateAudience" type="text" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 focus:border-orange-500 outline-none transition" placeholder="anak kos, ibu rumah tangga, fans anime..."></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">CTA</label><select id="affiliateCTA" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition"><option>Cek keranjang / link produk</option><option>Cek etalase / bio</option><option>Simpan dulu biar nggak lupa</option><option>Komen mau versi apa</option><option>Follow untuk rekomendasi lainnya</option></select></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Catatan Detail Produk</label><textarea id="affiliateProductNotes" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition h-14 resize-none" placeholder="warna, ukuran, bahan, packaging, detail penting dari foto..."></textarea></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Catatan Model / Host</label><textarea id="affiliateModelNotes" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-300 placeholder-slate-655 focus:border-orange-500 outline-none transition h-14 resize-none" placeholder="vibe host, pose, outfit, ekspresi, gaya ngomong..."></textarea></div>
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-slate-400">CTA</label>
-                        <select id="affiliateCTA" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-orange-500 outline-none transition">
-                            <option>Cek keranjang / link produk</option>
-                            <option>Cek etalase / bio</option>
-                            <option>Simpan dulu biar nggak lupa</option>
-                            <option>Komen mau versi apa</option>
-                            <option>Follow untuk rekomendasi lainnya</option>
-                        </select>
-                    </div>
-                </div>
+                </details>
 
-                <button id="btnGenerateAffiliate" data-action="generate-affiliate" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-950/30 transition cursor-pointer">Generate Scene Package</button>
+                <button id="btnGenerateAffiliate" data-action="generate-affiliate" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-950/30 transition cursor-pointer">Generate Affiliate Package</button>
                 <button data-action="clear-affiliate" class="w-full py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer">Reset Form</button>
             </aside>
 
@@ -1089,13 +1092,14 @@ export const HTML_CONTENT = `
                     <div class="rounded-3xl border border-orange-500/15 bg-gradient-to-br from-orange-500/10 via-slate-950/50 to-[#08090e] p-5 md:p-6 shadow-2xl">
                         <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                             <div>
-                                <p class="text-[10px] font-mono font-bold text-orange-300 uppercase tracking-[0.2em]">Affiliate Content Package v1.2</p>
-                                <h2 class="mt-2 text-xl md:text-2xl font-black text-white tracking-tight">Affiliate Content Studio</h2>
-                                <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-2xl leading-relaxed">Output dibuat jadi 4 section ideal: Strategy, Scene Package, Upload Copy, dan Safe Version. Tiap scene tetap punya narasi/VO, overlay, text-to-image, image-to-video, dan SFX.</p>
+                                <p class="text-[10px] font-mono font-bold text-orange-300 uppercase tracking-[0.2em]">Affiliate UX & Direct Copy v1.4</p>
+                                <h2 class="mt-2 text-xl md:text-2xl font-black text-white tracking-tight">Affiliate Content Package</h2>
+                                <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-2xl leading-relaxed">Hasil dibuat seperti production package: scene card, upload copy, prompt bank, safety check. Setiap prompt punya tombol copy sendiri.</p>
                             </div>
-                            <div class="flex gap-2">
-                                <button data-action="copy-affiliate-output" class="px-4 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">Copy Output</button>
-                                <button data-action="copy-affiliate-prompt" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold cursor-pointer">Copy Prompt Visual</button>
+                            <div class="flex flex-wrap gap-2">
+                                <button data-action="copy-affiliate-output" class="px-4 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">Copy All Package</button>
+                                <button data-action="copy-affiliate-section" data-section="imagePrompts" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold cursor-pointer">Copy All TTI</button>
+                                <button data-action="copy-affiliate-section" data-section="videoPrompts" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold cursor-pointer">Copy All ITV</button>
                             </div>
                         </div>
                     </div>
@@ -1103,69 +1107,77 @@ export const HTML_CONTENT = `
                     <div id="affiliateOutputEmpty" class="rounded-3xl border border-dashed border-slate-800 bg-[#08090e] p-10 text-center">
                         <div class="text-4xl mb-3">🛒</div>
                         <h3 class="text-sm font-bold text-slate-300">Belum ada affiliate content package.</h3>
-                        <p class="text-xs text-slate-500 mt-1">Isi form di kiri, lalu klik Generate Scene Package untuk membuat paket affiliate per scene.</p>
+                        <p class="text-xs text-slate-500 mt-1">Isi nama produk, pilih tipe konten, lalu generate. Detail lain opsional.</p>
                     </div>
 
                     <div id="affiliateOutputPanel" class="hidden space-y-4">
-                        <div class="rounded-2xl border border-orange-500/20 bg-[#08090e] p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <div>
-                                    <h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">1. Product Selling Strategy</h3>
-                                    <p class="text-[10px] text-slate-500 mt-0.5">Arah jualan dulu: angle, target, alasan angle cocok, dan batas klaim.</p>
+                        <div class="flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-[#08090e] p-2">
+                            <button data-action="affiliate-result-tab" data-tab="scene" class="px-3 py-2 rounded-xl bg-orange-600 text-white text-xs font-black cursor-pointer">Scene Package</button>
+                            <button data-action="affiliate-result-tab" data-tab="copy" class="px-3 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs font-black cursor-pointer">Upload Copy</button>
+                            <button data-action="affiliate-result-tab" data-tab="bank" class="px-3 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs font-black cursor-pointer">Prompt Bank</button>
+                            <button data-action="affiliate-result-tab" data-tab="safe" class="px-3 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs font-black cursor-pointer">Safe Version</button>
+                        </div>
+
+                        <section id="affiliateResult-scene" class="space-y-4">
+                            <div class="rounded-2xl border border-orange-500/20 bg-[#08090e] p-4">
+                                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
+                                    <div>
+                                        <h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Product Strategy</h3>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">Arah jualan, angle, target, dan pemakaian referensi.</p>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <button data-action="copy-affiliate-section" data-section="strategy" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy Strategy</button>
+                                        <button data-action="copy-affiliate-section" data-section="angles" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy Angles</button>
+                                        <button data-action="copy-affiliate-section" data-section="hook" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy Hooks</button>
+                                    </div>
                                 </div>
-                                <button data-action="copy-field" data-field-id="affiliateStrategyText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button>
+                                <pre id="affiliateStrategyText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                                <pre id="affiliateAnglesText" class="hidden"></pre>
+                                <pre id="affiliateHookText" class="hidden"></pre>
                             </div>
-                            <pre id="affiliateStrategyText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
-                        </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Angle Konten</h3><button data-action="copy-field" data-field-id="affiliateAnglesText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateAnglesText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
-                            </div>
-                            <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Hook & Thumbnail</h3><button data-action="copy-field" data-field-id="affiliateHookText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateHookText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
-                            </div>
-                        </div>
-
-                        <div class="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 shadow-lg shadow-orange-950/10">
-                            <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">2. Storyboard Package Per Scene</h3>
-                                    <p class="text-[10px] text-slate-500 mt-0.5">Format mirip K Storyboard Studio: tiap scene punya tujuan, narasi, overlay, Text-to-Image, Image-to-Video, dan SFX.</p>
+                                    <h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Storyboard Package Per Scene</h3>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Setiap scene punya tombol copy granular.</p>
                                 </div>
-                                <button data-action="copy-field" data-field-id="affiliateStoryboardText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button>
+                                <button data-action="copy-affiliate-section" data-section="scenes" class="px-3 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">Copy All Scenes</button>
                             </div>
-                            <pre id="affiliateStoryboardText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-200 font-sans"></pre>
-                        </div>
+                            <div id="affiliateSceneCards" class="space-y-4"></div>
+                            <pre id="affiliateStoryboardText" class="hidden"></pre>
+                        </section>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <section id="affiliateResult-copy" class="hidden space-y-4">
                             <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Text-to-Image Prompts</h3><button data-action="copy-field" data-field-id="affiliateImagePromptsText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateImagePromptsText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
+                                <div class="flex items-center justify-between mb-3"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">Upload Copy Package</h3><button data-action="copy-affiliate-section" data-section="uploadCopy" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy All Upload Copy</button></div>
+                                <div id="affiliateUploadCopyCards"></div>
+                                <pre id="affiliateCaptionText" class="hidden"></pre>
                             </div>
-                            <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Image-to-Video Prompts</h3><button data-action="copy-field" data-field-id="affiliateVideoPromptsText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateVideoPromptsText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
-                            </div>
-                        </div>
+                        </section>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <section id="affiliateResult-bank" class="hidden space-y-4">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
+                                    <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Text-to-Image Prompts</h3><button data-action="copy-affiliate-section" data-section="imagePrompts" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy All TTI</button></div>
+                                    <pre id="affiliateImagePromptsText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
+                                </div>
+                                <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
+                                    <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Image-to-Video Prompts</h3><button data-action="copy-affiliate-section" data-section="videoPrompts" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy All ITV</button></div>
+                                    <pre id="affiliateVideoPromptsText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-mono"></pre>
+                                </div>
+                            </div>
                             <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Narration / VO</h3><button data-action="copy-field" data-field-id="affiliateNarrationText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
+                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">All Narration / VO</h3><button data-action="copy-affiliate-section" data-section="narrations" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy All VO</button></div>
                                 <pre id="affiliateNarrationText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
                             </div>
-                            <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4">
-                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-orange-300 uppercase tracking-wider">3. Upload Copy Package</h3><button data-action="copy-field" data-field-id="affiliateCaptionText" class="text-[10px] text-slate-500 hover:text-orange-300 font-bold cursor-pointer">Copy</button></div>
-                                <pre id="affiliateCaptionText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
-                            </div>
-                        </div>
+                        </section>
 
-                        <div class="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
-                            <h3 class="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">4. Safe Claim Version</h3>
-                            <pre id="affiliateSafeText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
-                        </div>
+                        <section id="affiliateResult-safe" class="hidden space-y-4">
+                            <div class="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
+                                <div class="flex items-center justify-between mb-2"><h3 class="text-xs font-bold text-emerald-300 uppercase tracking-wider">Safe Claim Version</h3><button data-action="copy-affiliate-section" data-section="safe" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 cursor-pointer">Copy Safe Version</button></div>
+                                <pre id="affiliateSafeText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </section>

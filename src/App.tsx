@@ -149,7 +149,8 @@ export default function App() {
                 cloudProjects: [] as any[],
                 activeCloudProjectId: null as string | null,
                 sceneVersionHistory: {} as Record<string, any[]>,
-                voiceSceneStatus: {} as Record<string, any>
+                voiceSceneStatus: {} as Record<string, any>,
+                activeAffiliatePackage: null as any
             },
             listeners: [] as Array<(state: any, oldState: any) => void>,
             subscribe(fn: (state: any, oldState: any) => void) {
@@ -1125,6 +1126,20 @@ export default function App() {
             if (el) el.textContent = value;
         }
 
+        function setHTML(id: string, value: string) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = value;
+        }
+
+        function getAffiliateFileName(id: string): string {
+            const input = document.getElementById(id) as HTMLInputElement | null;
+            return input?.files?.[0]?.name || '';
+        }
+
+        function buildCopyButton(action: string, label: string, attrs = '') {
+            return `<button data-action="${action}" ${attrs} class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-black text-slate-300 hover:text-orange-200 transition cursor-pointer">${label}</button>`;
+        }
+
         function chooseAffiliatePattern(category: string, style: string) {
             if (style && style !== 'auto') return style;
             const map: Record<string, string> = {
@@ -1173,6 +1188,7 @@ export default function App() {
 
         function buildAffiliatePackage() {
             const product = getInputValue('affiliateProductName', 'produk pilihan ini');
+            const productLink = getInputValue('affiliateProductLink', '');
             const marketplace = getInputValue('affiliateMarketplace', 'Marketplace');
             const category = getInputValue('affiliateCategory', 'auto');
             const price = getInputValue('affiliatePrice', 'harga terjangkau');
@@ -1183,77 +1199,54 @@ export default function App() {
             const rawStyle = getInputValue('affiliateContentStyle', 'auto');
             const audience = getInputValue('affiliateAudience', 'orang yang butuh rekomendasi produk praktis');
             const cta = getInputValue('affiliateCTA', 'Cek keranjang / link produk');
+            const sceneCount = Math.max(3, Math.min(7, parseInt(getInputValue('affiliateSceneCount', '5'), 10) || 5));
+            const outputMode = getInputValue('affiliateOutputMode', 'ai-video');
+            const productNotes = getInputValue('affiliateProductNotes', '');
+            const modelNotes = getInputValue('affiliateModelNotes', '');
+            const productImageName = getAffiliateFileName('affiliateProductImage');
+            const modelImageName = getAffiliateFileName('affiliateModelImage');
             const style = chooseAffiliatePattern(category, rawStyle);
             const styleLabel = getAffiliateStyleLabel(style);
             const categoryLabel = getAffiliateCategoryLabel(category);
             const proofLine = socialProof ? `Social proof: ${socialProof}` : 'Social proof: cek rating dan ulasan toko.';
             const priceLine = price ? `Harga: ${price}` : 'Harga: cek harga terbaru di marketplace.';
-            const normalizedCTA = cta.toLowerCase();
+            const referenceUsage = [
+                productImageName ? `Gunakan foto produk uploaded (${productImageName}) sebagai referensi bentuk, warna, packaging, tekstur, dan detail produk.` : 'Tidak ada foto produk uploaded; gunakan data produk manual sebagai acuan visual.',
+                productNotes ? `Catatan produk: ${productNotes}.` : '',
+                modelImageName ? `Gunakan foto model/host uploaded (${modelImageName}) sebagai referensi pose, framing, vibe host, outfit, dan ekspresi. Jangan mengubah identitas model secara berlebihan.` : 'Tidak ada referensi model; gunakan tangan/host generik natural sesuai format affiliate.',
+                modelNotes ? `Catatan model/host: ${modelNotes}.` : ''
+            ].filter(Boolean).join(' ');
+
+            const outputModeLabelMap: Record<string, string> = {
+                'ai-video': 'AI Video Package',
+                'record-manual': 'Rekam Manual / UGC',
+                'no-face': 'No Face Product Demo',
+                'talking-head': 'Talking Head Review'
+            };
+            const outputModeLabel = outputModeLabelMap[outputMode] || 'AI Video Package';
 
             const angleMap: Record<string, string[]> = {
-                honest: [
-                    `Review jujur ${product}: tampilkan produk, manfaat, bukti sosial, dan catatan sebelum checkout.`,
-                    `${product} worth it atau tidak di harga ${price}?`,
-                    `Fokus ke pengalaman pemakaian tanpa klaim berlebihan.`
-                ],
-                problem: [
-                    `Problem-solution: mulai dari masalah harian, lalu ${product} masuk sebagai solusi praktis.`,
-                    `Sebelum pakai vs setelah pakai, tapi tetap natural dan tidak lebay.`,
-                    `Barang kecil yang bisa bantu aktivitas ${audience}.`
-                ],
-                pov: [
-                    `POV kamu nemu ${product} yang kelihatan simpel tapi kepake.`,
-                    `Daily use: tunjukkan produk di rutinitas singkat.`,
-                    `Affordable find untuk ${audience}.`
-                ],
-                ugc: [
-                    `UGC natural: rekomendasi seperti dari teman, bukan iklan keras.`,
-                    `Unboxing cepat + first impression + demo fungsi utama.`,
-                    `Tunjukkan detail produk dan alasan kenapa menarik.`
-                ],
-                beforeafter: [
-                    `Before-after aman: tampilkan kondisi awal dan hasil pemakaian tanpa klaim pasti.`,
-                    `Routine singkat menggunakan ${product}.`,
-                    `Perubahan visual kecil yang terlihat jelas di kamera.`
-                ],
-                listicle: [
-                    `${product} sebagai rekomendasi barang murah yang kepake.`,
-                    `Top reason kenapa ${audience} mungkin suka produk ini.`,
-                    `List manfaat cepat: fungsi, harga, dan momen pemakaian.`
-                ],
-                soft: [
-                    `Soft selling: cerita kebutuhan dulu, baru masuk produk.`,
-                    `Buat yang lagi cari solusi simpel, ${product} bisa jadi opsi.`,
-                    `Highlight manfaat tanpa nada maksa checkout.`
-                ],
-                hard: [
-                    `Promo angle: harga, social proof, promo, dan CTA lebih tegas.`,
-                    `Urgency ringan: cek sekarang karena harga/promo bisa berubah.`,
-                    `Tekankan value for money, bukan klaim paling murah.`
-                ],
-                story: [
-                    `Cerita pendek: awalnya ragu, lalu sadar ${product} ternyata kepake.`,
-                    `Mini problem harian → nemu solusi → ajakan cek produk.`,
-                    `Hook emosional ringan untuk ${audience}.`
-                ],
-                niche: [
-                    `Niche creator mode: sesuaikan dengan komunitas, fandom, atau gaya kreator.`,
-                    `Bisa dibuat cinematic, skit, claymation, anime-style, gaming desk setup, atau unboxing tematik.`,
-                    `Tetap jaga info produk jelas: fungsi, harga, dan catatan jujur.`
-                ]
+                honest: [`Review jujur ${product}: tampilkan produk, manfaat, bukti sosial, dan catatan sebelum checkout.`, `${product} worth it atau tidak di harga ${price}?`, `Fokus ke pengalaman pemakaian tanpa klaim berlebihan.`],
+                problem: [`Problem-solution: mulai dari masalah harian, lalu ${product} masuk sebagai solusi praktis.`, `Sebelum pakai vs setelah pakai, tapi tetap natural dan tidak lebay.`, `Barang kecil yang bisa bantu aktivitas ${audience}.`],
+                pov: [`POV kamu nemu ${product} yang kelihatan simpel tapi kepake.`, `Daily use: tunjukkan produk di rutinitas singkat.`, `Affordable find untuk ${audience}.`],
+                ugc: [`UGC natural: rekomendasi seperti dari teman, bukan iklan keras.`, `Unboxing cepat + first impression + demo fungsi utama.`, `Tunjukkan detail produk dan alasan kenapa menarik.`],
+                beforeafter: [`Before-after aman: tampilkan kondisi awal dan hasil pemakaian tanpa klaim pasti.`, `Routine singkat menggunakan ${product}.`, `Perubahan visual kecil yang terlihat jelas di kamera.`],
+                listicle: [`${product} sebagai rekomendasi barang murah yang kepake.`, `Top reason kenapa ${audience} mungkin suka produk ini.`, `List manfaat cepat: fungsi, harga, dan momen pemakaian.`],
+                soft: [`Soft selling: cerita kebutuhan dulu, baru masuk produk.`, `Buat yang lagi cari solusi simpel, ${product} bisa jadi opsi.`, `Highlight manfaat tanpa nada maksa checkout.`],
+                hard: [`Promo angle: harga, social proof, promo, dan CTA lebih tegas.`, `Urgency ringan: cek sekarang karena harga/promo bisa berubah.`, `Tekankan value for money, bukan klaim paling murah.`],
+                story: [`Cerita pendek: awalnya ragu, lalu sadar ${product} ternyata kepake.`, `Mini problem harian → nemu solusi → ajakan cek produk.`, `Hook emosional ringan untuk ${audience}.`],
+                niche: [`Niche creator mode: sesuaikan dengan komunitas, fandom, atau gaya kreator.`, `Bisa dibuat cinematic, skit, claymation, gaming desk setup, atau unboxing tematik.`, `Tetap jaga info produk jelas: fungsi, harga, dan catatan jujur.`]
             };
 
-            const strategyText = `1. PRODUCT SELLING STRATEGY
+            const strategyText = `PRODUCT SELLING STRATEGY
 
-Produk:
-${product}
-
-Marketplace:
-${marketplace}
-
-Kategori:
-${categoryLabel}
-
+Produk: ${product}
+Marketplace: ${marketplace}
+Kategori: ${categoryLabel}
+Platform: ${platform}
+Output Mode: ${outputModeLabel}
+Jumlah Scene: ${sceneCount}
+${productLink ? `Link produk: ${productLink}\n` : ''}
 Angle Terbaik:
 ${styleLabel} untuk ${audience}.
 
@@ -1264,40 +1257,47 @@ Kenapa angle ini cocok:
 - Info objektif yang perlu muncul: ${priceLine} dan ${proofLine}.
 - Catatan jujur wajib disisipkan supaya konten tidak terasa hard selling: ${caveat}.
 
-Arah Konten:
-Buat video vertikal pendek untuk ${platform}. Gunakan gaya ${styleLabel}, dengan opening cepat, demo visual, social proof, catatan jujur, lalu CTA natural.
+Reference Usage:
+${referenceUsage}
 
 Risiko klaim yang perlu dihindari:
 Jangan menulis “paling murah”, “pasti viral”, “dijamin bagus”, “100% original”, atau hasil pasti kalau tidak ada bukti.`;
 
             const sceneBlueprints: Record<string, Array<{title: string; purpose: string; visual: string; action: string; narration: string; overlay: string;}>> = {
                 problem: [
-                    { title: 'Hook Masalah', purpose: 'Tarik perhatian dengan masalah yang relate.', visual: 'Situasi berantakan / kurang praktis sebelum produk dipakai.', action: 'Tampilkan masalah secara cepat, close-up area yang bikin audiens merasa relate.', narration: `Pernah ngerasa aktivitas kecil jadi ribet gara-gara hal sepele?`, overlay: 'MASALAHNYA INI...' },
+                    { title: 'Hook Masalah', purpose: 'Tarik perhatian dengan masalah yang relate.', visual: 'Situasi awal yang kurang praktis sebelum produk dipakai.', action: 'Tampilkan masalah secara cepat, close-up area yang bikin audiens relate.', narration: `Pernah ngerasa aktivitas kecil jadi ribet gara-gara hal sepele?`, overlay: 'MASALAHNYA INI...' },
                     { title: 'Produk Masuk', purpose: 'Kenalkan produk sebagai opsi solusi.', visual: `Close-up ${product} di tangan atau meja bersih.`, action: 'Tunjukkan produk dari depan, samping, dan detail penting.', narration: `Aku nemu ${product} di ${marketplace}, dan ini bisa jadi opsi buat ${audience}.`, overlay: product.toUpperCase() },
-                    { title: 'Demo Fungsi', purpose: 'Buktikan manfaat utama secara visual.', visual: 'Produk digunakan langsung dalam situasi harian.', action: `Demo manfaat: ${benefits}.`, narration: `Yang menarik, ${benefits}. Jadi bukan cuma kelihatan bagus, tapi juga ada fungsi yang jelas.`, overlay: 'DEMO PEMAKAIAN' },
-                    { title: 'Bukti & Catatan', purpose: 'Bangun trust dengan harga, rating, dan catatan jujur.', visual: 'Insert detail produk, harga, rating, dan close-up bahan/ukuran.', action: `Tampilkan ${priceLine} dan ${proofLine}. Sisipkan kekurangan secara singkat.`, narration: `${priceLine}. ${proofLine}. Catatan jujurnya, ${caveat}.`, overlay: 'CEK DETAIL DULU' },
-                    { title: 'CTA Soft', purpose: 'Arahkan audiens tanpa terlalu maksa.', visual: 'Produk berada di frame rapi dengan ruang untuk teks CTA.', action: 'Akhiri dengan frame bersih dan gesture menunjuk keranjang/link.', narration: `Kalau kamu lagi cari yang seperti ini, ${normalizedCTA}. Detailnya aku taruh di sana.`, overlay: cta.toUpperCase() }
+                    { title: 'Detail Utama', purpose: 'Tunjukkan manfaat produk.', visual: `Detail produk yang menjelaskan manfaat: ${benefits}.`, action: 'Sorot 2-3 detail paling penting secara pelan.', narration: `Yang menarik, ${benefits}.`, overlay: 'DETAILNYA' },
+                    { title: 'Demo Pemakaian', purpose: 'Buktikan produk dipakai langsung.', visual: `${product} digunakan dalam situasi nyata oleh target audiens.`, action: 'Demo pemakaian sederhana, jangan terlalu banyak transisi.', narration: `Biar lebih kebayang, ini contoh pemakaiannya.`, overlay: 'CARA PAKAI' },
+                    { title: 'CTA Natural', purpose: 'Arahkan audiens tanpa maksa.', visual: `Produk tertata rapi dengan teks CTA dan marketplace.`, action: 'Produk stay in frame, CTA muncul jelas.', narration: `${cta}. Tapi tetap cek varian dan ulasan tokonya dulu ya.`, overlay: cta.toUpperCase() }
                 ],
-                beforeafter: [
-                    { title: 'Before', purpose: 'Tampilkan kondisi awal.', visual: 'Kondisi awal sebelum produk dipakai, dibuat jelas dan realistis.', action: 'Ambil close-up area/masalah sebelum penggunaan.', narration: `Ini kondisi sebelum pakai ${product}. Kelihatannya sepele, tapi cukup ganggu.`, overlay: 'BEFORE' },
-                    { title: 'Kenalan Produk', purpose: 'Kenalkan produk dan alasan dicoba.', visual: `Close-up ${product}, packaging, warna, ukuran, dan tekstur.`, action: 'Tampilkan produk natural seperti konten UGC.', narration: `Aku coba ${product} dari ${marketplace}, karena cocok buat ${audience}.`, overlay: 'COBA PRODUK INI' },
-                    { title: 'Proses Pakai', purpose: 'Perlihatkan cara pakai.', visual: 'Tangan memakai produk step-by-step tanpa efek berlebihan.', action: `Peragakan penggunaan utama: ${benefits}.`, narration: `Cara pakainya simpel. Bagian yang aku suka: ${benefits}.`, overlay: 'CARA PAKAI' },
-                    { title: 'After & Honest Note', purpose: 'Tunjukkan hasil dan catatan aman.', visual: 'Hasil akhir setelah produk digunakan, tetap realistis.', action: 'Bandingkan perubahan secara visual, lalu munculkan catatan jujur.', narration: `Hasilnya cukup terlihat untuk kebutuhan ini. Tapi catat, ${caveat}.`, overlay: 'AFTER + CATATAN' },
-                    { title: 'CTA', purpose: 'Ajak cek produk.', visual: 'Produk dan hasil akhir dalam satu frame.', action: 'Closing dengan teks singkat dan jelas.', narration: `${priceLine}. Kalau penasaran, ${normalizedCTA}.`, overlay: cta.toUpperCase() }
+                honest: [
+                    { title: 'Hook Review', purpose: 'Buka dengan rasa penasaran.', visual: `Produk ${product} dipegang natural seperti video review.`, action: 'Tampilkan produk 1 detik pertama, lalu close-up.', narration: `Aku coba cek ${product}, dan ini first impression jujurnya.`, overlay: 'REVIEW JUJUR' },
+                    { title: 'Harga & Bukti', purpose: 'Kasih konteks objektif.', visual: `Insert harga, rating, terjual, dan halaman toko secara generik.`, action: `Sorot ${priceLine} dan ${proofLine}.`, narration: `${priceLine}. ${proofLine}.`, overlay: 'HARGA & RATING' },
+                    { title: 'Kelebihan', purpose: 'Highlight value utama.', visual: `Close-up detail terbaik dari ${product}.`, action: `Tunjukkan ${benefits}.`, narration: `Bagian yang menurutku menarik: ${benefits}.`, overlay: 'PLUSNYA' },
+                    { title: 'Catatan Jujur', purpose: 'Bangun trust.', visual: 'Produk tetap di frame sambil detail kecil ditunjukkan.', action: 'Tunjukkan bagian yang perlu dicek sebelum beli.', narration: `Catatan jujurnya, ${caveat}.`, overlay: 'CATATAN' },
+                    { title: 'Kesimpulan', purpose: 'Tutup dengan rekomendasi aman.', visual: 'Produk dipakai / diletakkan rapi dengan CTA.', action: 'Closing singkat dan natural.', narration: `Kalau kamu butuh yang seperti ini, ${cta}.`, overlay: 'CEK DULU' }
                 ],
                 pov: [
-                    { title: 'POV Hook', purpose: 'Masuk lewat situasi sehari-hari.', visual: 'POV kamera tangan menemukan produk saat scrolling / membuka paket.', action: 'Gerakan natural dari sudut pandang pengguna.', narration: `POV: kamu nemu ${product} yang awalnya kelihatan biasa aja.`, overlay: 'POV NEMU INI' },
-                    { title: 'First Look', purpose: 'Tampilkan bentuk produk.', visual: `Produk ${product} dipegang dekat kamera dengan background lifestyle.`, action: 'Putar produk pelan, perlihatkan detail penting.', narration: `Tapi pas dilihat, detailnya lumayan menarik buat ${audience}.`, overlay: 'FIRST LOOK' },
-                    { title: 'Daily Use', purpose: 'Tunjukkan momen pakai.', visual: 'Produk dipakai dalam rutinitas harian.', action: `Tampilkan fungsi utama: ${benefits}.`, narration: `Yang bikin kepake itu: ${benefits}.`, overlay: 'DAILY USE' },
-                    { title: 'Worth Check', purpose: 'Berikan info objektif.', visual: 'Insert harga/rating dan detail toko tanpa klaim berlebihan.', action: `Munculkan ${price} dan ${socialProof} sebagai teks kecil.`, narration: `${priceLine}. ${proofLine}. Tetap cek varian dan review toko sebelum checkout.`, overlay: 'WORTH CHECK?' },
-                    { title: 'Save / CTA', purpose: 'Ajak simpan atau cek link.', visual: 'Produk masuk tas/meja/area pakai dengan komposisi rapi.', action: 'Akhiri dengan CTA yang natural.', narration: `${cta}. Siapa tahu nanti kamu butuh rekomendasi seperti ini.`, overlay: cta.toUpperCase() }
+                    { title: 'POV Hook', purpose: 'Bikin audiens merasa relate.', visual: 'POV tangan membuka tas/meja/area aktivitas harian.', action: 'Handheld natural, gerakan kecil seperti konten TikTok.', narration: `POV kamu nemu barang kecil yang ternyata lumayan kepake.`, overlay: 'POV: NEMU INI' },
+                    { title: 'Reveal Produk', purpose: 'Produk muncul natural.', visual: `${product} muncul di tengah aktivitas harian.`, action: 'Produk masuk frame dari tangan, lalu close-up.', narration: `Ini ${product}, cocok buat ${audience}.`, overlay: product.toUpperCase() },
+                    { title: 'Dipakai Harian', purpose: 'Tunjukkan use case.', visual: `${product} dipakai dalam rutinitas sehari-hari.`, action: 'Demo singkat 3-4 detik, fokus ke fungsi.', narration: `Dipakainya simpel, dan fungsi utamanya: ${benefits}.`, overlay: 'KEPAKE HARIAN' },
+                    { title: 'Detail Cepat', purpose: 'Perkuat alasan checkout.', visual: 'Close-up tekstur, ukuran, warna, atau bagian penting produk.', action: 'Slow push-in ke detail produk.', narration: `Sebelum beli, tetap cek detailnya: ${caveat}.`, overlay: 'CEK DETAIL' },
+                    { title: 'Save & CTA', purpose: 'Ajak simpan/cek link.', visual: 'Produk final di frame bersih dengan text CTA.', action: 'Static final shot, teks jelas.', narration: `${cta}. Simpan dulu kalau belum mau checkout sekarang.`, overlay: cta.toUpperCase() }
+                ],
+                beforeafter: [
+                    { title: 'Before', purpose: 'Tampilkan kondisi awal.', visual: 'Kondisi awal sebelum produk dipakai, dibuat jelas dan natural.', action: 'Static shot 1-2 detik, jangan terlalu dramatis.', narration: `Ini kondisi sebelum pakai ${product}.`, overlay: 'SEBELUM' },
+                    { title: 'Produk Reveal', purpose: 'Masukkan produk sebagai bagian solusi.', visual: `Close-up ${product} dan detail pemakaiannya.`, action: 'Tangan menunjukkan produk perlahan.', narration: `Aku coba pakai ${product}, karena klaim utamanya: ${benefits}.`, overlay: 'COBA PAKAI INI' },
+                    { title: 'Proses', purpose: 'Tunjukkan penggunaan.', visual: `${product} dipakai step-by-step secara singkat.`, action: 'Tampilkan proses tanpa cut berlebihan.', narration: `Prosesnya simpel dan gampang diikuti.`, overlay: 'PROSESNYA' },
+                    { title: 'After Aman', purpose: 'Tampilkan hasil tanpa klaim berlebihan.', visual: 'Kondisi setelah penggunaan, tampil natural dan realistis.', action: 'Slow reveal hasil akhir.', narration: `Hasilnya bisa terlihat seperti ini, tapi tetap tergantung pemakaian dan produknya.`, overlay: 'SETELAH' },
+                    { title: 'CTA', purpose: 'Tutup aman.', visual: `Produk dan hasil akhir berdampingan.`, action: 'Final frame clean.', narration: `${cta}. Jangan lupa cek review toko dulu.`, overlay: 'CEK REVIEW' }
                 ],
                 ugc: [
-                    { title: 'Unboxing Hook', purpose: 'Bikin opening natural.', visual: 'Paket dibuka di meja dengan pencahayaan natural.', action: 'Buka paket cepat, tahan produk ke kamera.', narration: `Aku baru buka ${product} dari ${marketplace}, dan ini first impression jujurku.`, overlay: 'FIRST IMPRESSION' },
-                    { title: 'Detail Produk', purpose: 'Tunjukkan bentuk dan kualitas visual.', visual: `Close-up detail ${product}: ukuran, material, warna, dan finishing.`, action: 'Ambil 3 angle detail produk.', narration: `Secara tampilan, yang paling kelihatan adalah ${benefits}.`, overlay: 'DETAIL PRODUK' },
-                    { title: 'Demo Real', purpose: 'Tampilkan penggunaan nyata.', visual: 'Produk digunakan langsung, bukan hanya dipajang.', action: `Demo fungsi utama untuk ${audience}.`, narration: `Dipakainya cukup simpel, terutama buat ${audience}.`, overlay: 'REAL DEMO' },
-                    { title: 'Honest Check', purpose: 'Jaga kepercayaan audiens.', visual: 'Close-up bagian yang perlu dicek sebelum beli.', action: 'Tunjukkan potensi kekurangan/hal yang perlu diperhatikan.', narration: `Tapi catatan jujurnya, ${caveat}. Jadi jangan lupa cek ulasan toko juga.`, overlay: 'CATATAN JUJUR' },
-                    { title: 'Closing CTA', purpose: 'Arahkan ke link/keranjang.', visual: 'Produk diletakkan rapi, teks CTA muncul jelas.', action: 'Closing singkat, tidak terlalu hard selling.', narration: `Menurutku ini bisa jadi opsi. ${cta}.`, overlay: cta.toUpperCase() }
+                    { title: 'UGC Hook', purpose: 'Buka seperti rekomendasi teman.', visual: `Host/tangan menunjukkan ${product} secara natural.`, action: 'Kamera handheld ringan, produk langsung terlihat.', narration: `Aku nemu ${product} dan menurutku ini menarik buat dicek.`, overlay: 'NEMU PRODUK INI' },
+                    { title: 'Unboxing Cepat', purpose: 'Tampilkan isi produk.', visual: `Produk dibuka dari packaging atau ditaruh di meja.`, action: 'Buka/tunjukkan produk 2-3 angle.', narration: `Begitu dibuka, detailnya kurang lebih seperti ini.`, overlay: 'UNBOXING CEPAT' },
+                    { title: 'Benefit', purpose: 'Kasih alasan kenapa menarik.', visual: `3 poin manfaat muncul di sekitar produk.`, action: `Sorot manfaat: ${benefits}.`, narration: `Yang bikin menarik: ${benefits}.`, overlay: 'KENAPA MENARIK?' },
+                    { title: 'Catatan', purpose: 'Jaga trust.', visual: 'Produk close-up, bagian detail ditunjukkan.', action: 'Tunjukkan hal yang perlu dicek.', narration: `Tapi sebelum checkout, catat ini: ${caveat}.`, overlay: 'CATATAN JUJUR' },
+                    { title: 'CTA', purpose: 'Ajak cek produk.', visual: 'Produk final + teks CTA.', action: 'Frame produk stabil, CTA terlihat.', narration: `${cta}.`, overlay: cta.toUpperCase() }
                 ],
                 hard: [
                     { title: 'Promo Hook', purpose: 'Buka dengan value dan promo.', visual: 'Produk dengan teks harga/promo besar namun tetap rapi.', action: 'Tampilkan produk cepat, highlight harga dan social proof.', narration: `Lagi cari ${product}? Ini bisa jadi opsi yang menarik buat dicek.`, overlay: 'CEK PROMONYA' },
@@ -1307,27 +1307,69 @@ Jangan menulis “paling murah”, “pasti viral”, “dijamin bagus”, “10
                     { title: 'CTA Tegas', purpose: 'Akhiri dengan ajakan jelas.', visual: 'Frame produk + teks CTA besar.', action: 'Closing tegas tapi tidak menipu.', narration: `${cta}. Jangan lupa tetap cek varian dan ulasan tokonya.`, overlay: cta.toUpperCase() }
                 ]
             };
+            sceneBlueprints.listicle = sceneBlueprints.ugc;
+            sceneBlueprints.soft = sceneBlueprints.problem;
+            sceneBlueprints.story = sceneBlueprints.pov;
+            sceneBlueprints.niche = sceneBlueprints.ugc;
 
-            const fallbackBlueprint = sceneBlueprints[style] || sceneBlueprints.ugc;
-            const scenes = fallbackBlueprint.map((scene, index) => {
+            let blueprints = [...(sceneBlueprints[style] || sceneBlueprints.ugc)];
+            if (sceneCount === 3) {
+                blueprints = [blueprints[0], blueprints[2] || blueprints[1], blueprints[blueprints.length - 1]];
+            } else if (sceneCount === 7) {
+                blueprints.splice(2, 0,
+                    { title: 'Reference Detail', purpose: 'Samakan visual dengan referensi produk/model.', visual: `Close-up detail fisik ${product} sesuai referensi upload.`, action: 'Camera slow push-in ke warna, bentuk, packaging, tekstur, atau detail produk.', narration: `Detail produk ini yang perlu kamu perhatikan sebelum checkout.`, overlay: 'CEK DETAIL' },
+                    { title: 'Social Proof', purpose: 'Tampilkan bukti sosial tanpa klaim lebay.', visual: 'Frame marketplace generik dengan rating/terjual sebagai elemen teks.', action: `Tampilkan ${proofLine} secara ringkas.`, narration: `${proofLine}. Tetap cek ulang karena data toko bisa berubah.`, overlay: 'RATING & REVIEW' }
+                );
+            }
+
+            const scenes = blueprints.slice(0, sceneCount).map((scene, index) => {
                 const sceneNumber = index + 1;
-                const textToImage = `Vertical 9:16 social commerce ${styleLabel} scene, ${scene.visual} Product: "${product}". Marketplace context: ${marketplace}. Audience: ${audience}. Natural Indonesian affiliate content, realistic lighting, clean composition, readable space for overlay text "${scene.overlay}", trustworthy product review mood, no exaggerated claims.`;
+                const textToImage = `Vertical 9:16 ${outputModeLabel} affiliate scene for ${platform}. ${scene.visual} Product: "${product}". Marketplace context: ${marketplace}. Audience: ${audience}. Reference instruction: ${referenceUsage} Natural Indonesian social commerce visual, realistic lighting, clean composition, readable space for overlay text "${scene.overlay}", trustworthy product review mood, no exaggerated claims.`;
                 const imageToVideo = `[SCENE ${sceneNumber} MOTION] ${scene.action}
 [PRODUCT FOCUS] Keep ${product} clear as the main subject.
+[REFERENCE USAGE] ${referenceUsage}
 [TEXT OVERLAY] Show short Indonesian overlay: "${scene.overlay}".
 [CAMERA] Vertical 9:16, stable handheld or static tripod, simple cuts, no excessive transition.
 [ATMOSPHERE] Natural affiliate content, honest review, not too salesy.
 [SAFETY] Avoid claims like paling murah, pasti viral, dijamin bagus, or guaranteed results.`;
                 const sfx = `Natural room tone, soft package/hand movement sounds, light tap/click when showing product detail, subtle upbeat social-commerce bed music.`;
+                const fullScene = `SCENE ${sceneNumber} — ${scene.title}
+
+Tujuan Scene:
+${scene.purpose}
+
+Reference Usage:
+${referenceUsage}
+
+Visual:
+${scene.visual}
+
+Narasi / VO:
+${scene.narration}
+
+Text Overlay:
+${scene.overlay}
+
+Text-to-Image Prompt:
+${textToImage}
+
+Image-to-Video Prompt:
+${imageToVideo}
+
+Realistic SFX:
+${sfx}`;
                 return {
                     number: sceneNumber,
                     title: scene.title,
                     purpose: scene.purpose,
+                    visual: scene.visual,
+                    referenceUsage,
                     narration: scene.narration,
                     textOverlay: scene.overlay,
                     textToImage,
                     imageToVideo,
-                    sfx
+                    sfx,
+                    fullScene
                 };
             });
 
@@ -1344,23 +1386,27 @@ THUMBNAIL TEXT:
 - “WORTH IT?”
 - “KEPAKE BANGET?”
 - “CEK SEBELUM BELI”`;
-            const caption = `3. UPLOAD COPY PACKAGE
+            const title = `${product} Ini Worth It Buat Dicek?`;
+            const captionOnly = `${product} ini bisa jadi opsi buat ${audience}. Yang menarik: ${benefits}. Catatan jujur: ${caveat}.`;
+            const hashtags = `#AffiliateIndonesia #ShopeeAffiliate #TikTokShopAffiliate #RacunBelanja #RekomendasiProduk #ReviewJujur #BelanjaOnline #${platform.replace(/\s+/g, '')}`;
+            const thumbnailText = `WORTH IT? / CEK SEBELUM BELI / KEPAKE BANGET?`;
+            const uploadCopy = `UPLOAD COPY PACKAGE
 
 JUDUL KONTEN:
-${product} Ini Worth It Buat Dicek?
+${title}
 
 CAPTION:
-${product} ini bisa jadi opsi buat ${audience}. Yang menarik: ${benefits}. Catatan jujur: ${caveat}.
+${captionOnly}
 
 CTA:
 ${cta}. Jangan lupa bandingin harga, varian, dan review toko sebelum checkout.
 
 HASHTAG:
-#AffiliateIndonesia #ShopeeAffiliate #TikTokShopAffiliate #RacunBelanja #RekomendasiProduk #ReviewJujur #BelanjaOnline #${platform.replace(/\s+/g, '')}
+${hashtags}
 
 THUMBNAIL TEXT REKOMENDASI:
-WORTH IT? / CEK SEBELUM BELI / KEPAKE BANGET?`;
-            const safe = `4. SAFE CLAIM VERSION
+${thumbnailText}`;
+            const safe = `SAFE CLAIM VERSION
 
 Kalimat yang harus dihindari:
 - “Paling murah”
@@ -1379,12 +1425,11 @@ Kalimat pengganti yang lebih aman:
 
 Catatan produksi:
 Fokus ke fungsi, pengalaman pakai, harga, rating, social proof, dan catatan jujur. Jangan membuat klaim yang tidak terlihat di video.`;
-
-            const storyboardText = `2. STORYBOARD PACKAGE PER SCENE\n\n` + scenes.map(scene => `SCENE ${scene.number} — ${scene.title}\n\nTujuan Scene:\n${scene.purpose}\n\nNarasi / VO:\n${scene.narration}\n\nText Overlay:\n${scene.textOverlay}\n\nText-to-Image Prompt:\n${scene.textToImage}\n\nImage-to-Video Prompt:\n${scene.imageToVideo}\n\nRealistic SFX:\n${scene.sfx}`).join('\n\n---\n\n');
+            const storyboardText = scenes.map(scene => scene.fullScene).join('\n\n---\n\n');
             const allImagePrompts = scenes.map(scene => `SCENE ${scene.number}\n${scene.textToImage}`).join('\n\n---\n\n');
             const allVideoPrompts = scenes.map(scene => `SCENE ${scene.number}\n${scene.imageToVideo}`).join('\n\n---\n\n');
             const allNarrations = scenes.map(scene => `SCENE ${scene.number}\n${scene.narration}`).join('\n\n---\n\n');
-            const full = `AFFILIATE CONTENT PACKAGE V1.2
+            const full = `AFFILIATE CONTENT PACKAGE V1.4
 
 ${strategyText}
 
@@ -1400,16 +1445,72 @@ ${hookText}
 
 ---
 
+STORYBOARD PACKAGE PER SCENE
 ${storyboardText}
 
 ---
 
-${caption}
+${uploadCopy}
 
 ---
 
 ${safe}`;
-            return { strategyText, angles, hookText, caption, safe, storyboardText, allImagePrompts, allVideoPrompts, allNarrations, full };
+            return { strategyText, angles, hookText, uploadCopy, caption: uploadCopy, safe, storyboardText, allImagePrompts, allVideoPrompts, allNarrations, full, scenes, title, captionOnly, hashtags, cta, thumbnailText };
+        }
+
+        function renderAffiliateSceneCards(pack: any) {
+            const scenes = Array.isArray(pack?.scenes) ? pack.scenes : [];
+            const html = scenes.map((scene: any, index: number) => `
+                <article class="rounded-2xl border border-orange-500/20 bg-[#08090e] p-4 shadow-lg shadow-orange-950/10 space-y-3">
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] font-mono font-black text-orange-300 uppercase tracking-[0.2em]">Scene ${scene.number}</p>
+                            <h3 class="mt-1 text-sm font-black text-white">${escapeHTML(scene.title)}</h3>
+                            <p class="mt-1 text-[11px] text-slate-500 leading-relaxed">${escapeHTML(scene.purpose)}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${buildCopyButton('copy-affiliate-scene-item', 'Copy Full Scene', `data-index="${index}" data-kind="fullScene"`)}
+                            ${buildCopyButton('copy-affiliate-scene-item', 'Copy VO', `data-index="${index}" data-kind="narration"`)}
+                            ${buildCopyButton('copy-affiliate-scene-item', 'Copy TTI', `data-index="${index}" data-kind="textToImage"`)}
+                            ${buildCopyButton('copy-affiliate-scene-item', 'Copy ITV', `data-index="${index}" data-kind="imageToVideo"`)}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between gap-2 mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Visual</span>${buildCopyButton('copy-affiliate-scene-item', 'Copy', `data-index="${index}" data-kind="visual"`)}</div><p class="text-xs leading-relaxed text-slate-300">${escapeHTML(scene.visual)}</p></div>
+                        <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between gap-2 mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Text Overlay</span>${buildCopyButton('copy-affiliate-scene-item', 'Copy', `data-index="${index}" data-kind="textOverlay"`)}</div><p class="text-xs leading-relaxed text-slate-300">${escapeHTML(scene.textOverlay)}</p></div>
+                    </div>
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between gap-2 mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Narasi / VO</span>${buildCopyButton('copy-affiliate-scene-item', 'Copy VO', `data-index="${index}" data-kind="narration"`)}</div><p class="text-xs leading-relaxed text-slate-200">${escapeHTML(scene.narration)}</p></div>
+                    <div class="rounded-xl bg-black/40 border border-slate-800 p-3"><div class="flex justify-between gap-2 mb-1"><span class="text-[10px] font-black uppercase text-orange-300">Text-to-Image Prompt</span>${buildCopyButton('copy-affiliate-scene-item', 'Copy TTI', `data-index="${index}" data-kind="textToImage"`)}</div><pre class="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-300 font-mono">${escapeHTML(scene.textToImage)}</pre></div>
+                    <div class="rounded-xl bg-black/40 border border-slate-800 p-3"><div class="flex justify-between gap-2 mb-1"><span class="text-[10px] font-black uppercase text-orange-300">Image-to-Video Prompt</span>${buildCopyButton('copy-affiliate-scene-item', 'Copy ITV', `data-index="${index}" data-kind="imageToVideo"`)}</div><pre class="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-300 font-mono">${escapeHTML(scene.imageToVideo)}</pre></div>
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between gap-2 mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Realistic SFX</span>${buildCopyButton('copy-affiliate-scene-item', 'Copy SFX', `data-index="${index}" data-kind="sfx"`)}</div><p class="text-xs leading-relaxed text-slate-300">${escapeHTML(scene.sfx)}</p></div>
+                </article>`).join('');
+            setHTML('affiliateSceneCards', html || '<div class="rounded-2xl border border-dashed border-slate-800 p-6 text-center text-xs text-slate-500">Belum ada scene.</div>');
+        }
+
+        function renderAffiliateUploadCopy(pack: any) {
+            const html = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Judul</span>${buildCopyButton('copy-affiliate-section', 'Copy', 'data-section="title"')}</div><p class="text-xs text-slate-200">${escapeHTML(pack.title)}</p></div>
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Thumbnail Text</span>${buildCopyButton('copy-affiliate-section', 'Copy', 'data-section="thumbnailText"')}</div><p class="text-xs text-slate-200">${escapeHTML(pack.thumbnailText)}</p></div>
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3 lg:col-span-2"><div class="flex justify-between mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Caption</span>${buildCopyButton('copy-affiliate-section', 'Copy', 'data-section="captionOnly"')}</div><p class="text-xs text-slate-200 leading-relaxed">${escapeHTML(pack.captionOnly)}</p></div>
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between mb-1"><span class="text-[10px] font-black uppercase text-slate-500">CTA</span>${buildCopyButton('copy-affiliate-section', 'Copy', 'data-section="cta"')}</div><p class="text-xs text-slate-200">${escapeHTML(pack.cta)}</p></div>
+                    <div class="rounded-xl bg-slate-950/70 border border-slate-800 p-3"><div class="flex justify-between mb-1"><span class="text-[10px] font-black uppercase text-slate-500">Hashtag</span>${buildCopyButton('copy-affiliate-section', 'Copy', 'data-section="hashtags"')}</div><p class="text-xs text-slate-200 break-words">${escapeHTML(pack.hashtags)}</p></div>
+                </div>`;
+            setHTML('affiliateUploadCopyCards', html);
+        }
+
+        function switchAffiliateResultTab(tab: string) {
+            ['scene','copy','bank','safe'].forEach(key => {
+                const panel = document.getElementById(`affiliateResult-${key}`);
+                const btn = document.querySelector(`[data-action="affiliate-result-tab"][data-tab="${key}"]`);
+                if (panel) panel.classList.toggle('hidden', key !== tab);
+                if (btn) {
+                    btn.classList.toggle('bg-orange-600', key === tab);
+                    btn.classList.toggle('text-white', key === tab);
+                    btn.classList.toggle('bg-slate-900', key !== tab);
+                    btn.classList.toggle('text-slate-400', key !== tab);
+                }
+            });
         }
 
         function generateAffiliateContent() {
@@ -1419,36 +1520,46 @@ ${safe}`;
                 return;
             }
             const pack = buildAffiliatePackage();
+            AppStore.setState({ activeAffiliatePackage: pack });
             setText('affiliateStrategyText', pack.strategyText);
             setText('affiliateAnglesText', pack.angles);
             setText('affiliateHookText', pack.hookText);
             setText('affiliateStoryboardText', pack.storyboardText);
-            setText('affiliateCaptionText', pack.caption);
+            setText('affiliateCaptionText', pack.uploadCopy);
             setText('affiliateImagePromptsText', pack.allImagePrompts);
             setText('affiliateVideoPromptsText', pack.allVideoPrompts);
             setText('affiliateNarrationText', pack.allNarrations);
             setText('affiliateSafeText', pack.safe);
+            renderAffiliateSceneCards(pack);
+            renderAffiliateUploadCopy(pack);
             const empty = document.getElementById('affiliateOutputEmpty');
             const panel = document.getElementById('affiliateOutputPanel');
             empty?.classList.add('hidden');
             panel?.classList.remove('hidden');
+            switchAffiliateResultTab('scene');
             try { localStorage.setItem('kc_affiliate_last_output', pack.full); } catch (_) {}
-            showToast('Affiliate storyboard package berhasil dibuat.', 'success');
+            showToast('Affiliate package per scene berhasil dibuat.', 'success');
         }
 
         function resetAffiliateForm() {
-            ['affiliateProductName','affiliatePrice','affiliateSocialProof','affiliateBenefits','affiliateCaveat','affiliateAudience'].forEach(id => {
+            ['affiliateProductName','affiliateProductLink','affiliatePrice','affiliateSocialProof','affiliateBenefits','affiliateCaveat','affiliateAudience','affiliateProductNotes','affiliateModelNotes'].forEach(id => {
                 const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+                if (el) el.value = '';
+            });
+            ['affiliateProductImage','affiliateModelImage'].forEach(id => {
+                const el = document.getElementById(id) as HTMLInputElement | null;
                 if (el) el.value = '';
             });
             const empty = document.getElementById('affiliateOutputEmpty');
             const panel = document.getElementById('affiliateOutputPanel');
             panel?.classList.add('hidden');
             empty?.classList.remove('hidden');
+            AppStore.setState({ activeAffiliatePackage: null });
             showToast('Form affiliate direset.', 'success');
         }
 
         function getAffiliateFullOutputFromScreen() {
+            if (AppStore.state.activeAffiliatePackage?.full) return AppStore.state.activeAffiliatePackage.full;
             const parts = [
                 ['PRODUCT SELLING STRATEGY', 'affiliateStrategyText'],
                 ['ANGLE KONTEN', 'affiliateAnglesText'],
@@ -4446,7 +4557,6 @@ GENERAL RULES:
                     await VoiceRepo.delete(removed.id);
                 }
                 AppStore.setState({ generationHistory: list });
-                return { success: true, blob: wavBlob, fileName: options.fileName || `K_Voice_${voiceName}.wav`, url: audioUrl };
             } catch (err) {
                 console.error("Gagal mendecode audio data:", err);
                 showToast("Gagal memproses sinyal audio.", "error");
@@ -5567,6 +5677,58 @@ GENERAL RULES:
 
 
 
+            const affiliateTabBtn = target.closest('[data-action="affiliate-result-tab"]');
+            if (affiliateTabBtn) {
+                switchAffiliateResultTab(affiliateTabBtn.getAttribute('data-tab') || 'scene');
+                return;
+            }
+
+            const copyAffiliateSceneItemBtn = target.closest('[data-action="copy-affiliate-scene-item"]');
+            if (copyAffiliateSceneItemBtn) {
+                const idx = parseInt(copyAffiliateSceneItemBtn.getAttribute('data-index') || '0', 10);
+                const kind = copyAffiliateSceneItemBtn.getAttribute('data-kind') || 'fullScene';
+                const scene = AppStore.state.activeAffiliatePackage?.scenes?.[idx];
+                if (!scene) {
+                    showToast('Scene affiliate belum tersedia.', 'warning');
+                    return;
+                }
+                const labelMap: Record<string, string> = {
+                    fullScene: 'Full scene berhasil disalin!',
+                    narration: 'VO scene berhasil disalin!',
+                    textToImage: 'Text-to-Image prompt berhasil disalin!',
+                    imageToVideo: 'Image-to-Video prompt berhasil disalin!',
+                    textOverlay: 'Text overlay berhasil disalin!',
+                    visual: 'Visual scene berhasil disalin!',
+                    sfx: 'SFX scene berhasil disalin!'
+                };
+                await copyTextToClipboard(scene[kind] || '', labelMap[kind] || 'Item scene berhasil disalin!');
+                return;
+            }
+
+            const copyAffiliateSectionBtn = target.closest('[data-action="copy-affiliate-section"]');
+            if (copyAffiliateSectionBtn) {
+                const section = copyAffiliateSectionBtn.getAttribute('data-section') || '';
+                const pack = AppStore.state.activeAffiliatePackage;
+                const map: Record<string, string> = {
+                    strategy: pack?.strategyText || '',
+                    angles: pack?.angles || '',
+                    hook: pack?.hookText || '',
+                    scenes: pack?.storyboardText || '',
+                    uploadCopy: pack?.uploadCopy || pack?.caption || '',
+                    imagePrompts: pack?.allImagePrompts || '',
+                    videoPrompts: pack?.allVideoPrompts || '',
+                    narrations: pack?.allNarrations || '',
+                    safe: pack?.safe || '',
+                    title: pack?.title || '',
+                    captionOnly: pack?.captionOnly || '',
+                    hashtags: pack?.hashtags || '',
+                    cta: pack?.cta || '',
+                    thumbnailText: pack?.thumbnailText || ''
+                };
+                await copyTextToClipboard(map[section] || '', 'Bagian affiliate berhasil disalin!');
+                return;
+            }
+
             if (target.closest('[data-action="generate-affiliate"]')) {
                 generateAffiliateContent();
                 return;
@@ -5717,7 +5879,6 @@ GENERAL RULES:
                     await VoiceRepo.delete(id);
                     const list = AppStore.state.generationHistory.filter((v: any) => v.id !== id);
                     AppStore.setState({ generationHistory: list });
-                return { success: true, blob: wavBlob, fileName: options.fileName || `K_Voice_${voiceName}.wav`, url: audioUrl };
                     showToast("Arsip audio berhasil dihapus.", "success");
                 }
                 return;
