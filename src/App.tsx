@@ -1669,27 +1669,20 @@ ${safe}`;
                 const pack = buildAffiliatePackage(referenceBrain);
                 AppStore.setState({ activeAffiliatePackage: pack });
                 const empty = document.getElementById('affiliateOutputEmpty');
-                const filled = document.getElementById('affiliateOutputFilled');
+                const panel = document.getElementById('affiliateOutputPanel');
                 if (empty) empty.classList.add('hidden');
-                if (filled) filled.classList.remove('hidden');
+                if (panel) panel.classList.remove('hidden');
+
                 setText('affiliateStrategyText', pack.strategyText);
-                setText('affiliateHookText', pack.hookText);
-                setText('affiliatePromptBankText', `ALL TEXT-TO-IMAGE PROMPTS
-
-${pack.allImagePrompts}
-
----
-
-ALL IMAGE-TO-VIDEO PROMPTS
-
-${pack.allVideoPrompts}
-
----
-
-ALL NARRATION / VO
-
-${pack.allNarrations}`);
+                setText('affiliateAnglesText', pack.angles || '');
+                setText('affiliateHookText', pack.hookText || '');
+                setText('affiliateStoryboardText', pack.storyboardText || '');
+                setText('affiliateCaptionText', pack.caption || '');
+                setText('affiliateImagePromptsText', pack.allImagePrompts || '');
+                setText('affiliateVideoPromptsText', pack.allVideoPrompts || '');
+                setText('affiliateNarrationText', pack.allNarrations || '');
                 setText('affiliateSafeText', pack.safe);
+
                 renderAffiliateSceneCards(pack);
                 renderAffiliateUploadCopy(pack);
                 const sceneTab = document.querySelector('[data-action="affiliate-result-tab"][data-tab="scene"]') as HTMLElement | null;
