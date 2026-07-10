@@ -15,12 +15,15 @@ export type RecruitmentFormData = {
   style: string;
   ratio: string;
   extraNotes: string;
+  logoName: string;
+  primaryColor: string;
+  secondaryColor: string;
 };
 
 export const recruitmentDNA = {
-  id: 'recruitment-poster-v1',
-  version: '1.0.0',
-  name: 'Recruitment Poster',
+  id: 'recruitment-poster-v2',
+  version: '2.0.0',
+  name: 'Recruitment Designer',
   required: ['companyName', 'position', 'requirements', 'contact'],
   supportedOutputs: ['1:1', '4:5', '9:16', 'A4'],
   zeroCost: true,
@@ -43,9 +46,12 @@ export function buildRecruitmentPrompt(data: RecruitmentFormData): string {
   const requirements = cleanLines(data.requirements);
   const responsibilities = cleanLines(data.responsibilities);
   const benefits = cleanLines(data.benefits);
+  const brandColors = [data.primaryColor, data.secondaryColor].filter(Boolean).join(' and ');
 
   const blocks = [
     `Create a professional recruitment poster for ${data.companyName}.`,
+    data.logoName ? `Use the uploaded company logo named "${data.logoName}" faithfully. Do not redraw, distort, replace, or invent the logo.` : `Reserve a clean logo area at the top-left without inventing a logo.`,
+    brandColors ? `Brand palette: use ${brandColors} as the main visual colors, with accessible contrast and neutral supporting tones.` : '',
     data.industry ? `Industry: ${data.industry}.` : '',
     `Main headline: "WE'RE HIRING". Job position: "${data.position}".`,
     `Employment type: ${data.employmentType}. Work arrangement: ${data.workMode}.`,
@@ -58,9 +64,9 @@ export function buildRecruitmentPrompt(data: RecruitmentFormData): string {
     `Application contact: ${data.contact}. Call to action: "${data.cta}".`,
     `Visual style: ${data.style}. Output format: ${data.ratio}.`,
     `Use a clean information hierarchy: company identity at top, strong job title as the hero text, concise requirement and benefit blocks, and a highly visible application CTA at the bottom. Keep generous spacing, professional typography, strong contrast, and social-media-safe margins.`,
-    `Leave a clear logo area at the top-left and a photo/hero visual area that can use an office, employee, or role-related professional image.`,
+    `Use one relevant professional hero visual such as an employee, office, or role-related workplace scene. Avoid crowded compositions and keep enough negative space for readable copy.`,
     data.extraNotes ? `Additional direction: ${data.extraNotes}.` : '',
-    `All visible poster text must be spelled correctly and remain readable. Do not invent company facts, salary, benefits, requirements, contact details, or deadlines. Do not add watermarks, fake logos, random QR codes, illegible text, excessive decoration, or unrelated people.`
+    `All visible poster text must be spelled correctly and remain readable. Do not invent company facts, salary, benefits, requirements, contact details, deadlines, QR codes, or certifications. Do not add watermarks, fake logos, random icons, illegible text, excessive decoration, duplicated limbs, or unrelated people.`
   ];
 
   return blocks.filter(Boolean).join('\n\n');

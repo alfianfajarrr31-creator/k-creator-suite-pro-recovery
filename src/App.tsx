@@ -4,7 +4,7 @@ import { dbContainer, BaseRepository, ProjectRepo, CharacterRepo, VoiceRepo, Set
 import { GeminiService, sanitizeAndCleanJSON, validateStoryboardPayload } from './GeminiService';
 import { audioState, AudioMemoryRegistry, pcmToWav, responseToWavBuffer, AudioEngine } from './AudioHelper';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
-import { clearRecruitmentDraft, generateRecruitmentPrompt, loadRecruitmentDraft, saveRecruitmentDraft } from './modules/design/DesignStudio';
+import { applyIndustryRecommendation, clearRecruitmentDraft, generateRecruitmentPrompt, handleDesignLogo, loadRecruitmentDraft, removeDesignLogo, saveRecruitmentDraft, updateDesignStudioUI } from './modules/design/DesignStudio';
 
 const DB_NAME = 'KCreatorSuiteDB';
 const DB_VERSION = 3;
@@ -5890,6 +5890,23 @@ GENERAL RULES:
                 return;
             }
 
+            if (target.closest('[data-action="upload-design-logo"]')) {
+                document.getElementById('designLogoInput')?.click();
+                return;
+            }
+
+            if (target.closest('[data-action="remove-design-logo"]')) {
+                removeDesignLogo();
+                showToast('Logo dihapus dari Recruitment Designer.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="apply-design-recommendation"]')) {
+                applyIndustryRecommendation();
+                showToast('Saran style dan warna diterapkan.', 'success');
+                return;
+            }
+
             if (target.closest('[data-action="generate-design-recruitment"]')) {
                 const result = generateRecruitmentPrompt();
                 if (result.missing.length) {
@@ -6222,6 +6239,7 @@ GENERAL RULES:
 
         const inputHandler = (e: Event) => {
             const target = e.target as HTMLElement;
+            if (target.closest('#tab-design')) updateDesignStudioUI();
             if (target.id === 'directorApiKey' || target.id === 'voiceApiKey') {
                 syncApiKey((target as HTMLInputElement).value);
             }
@@ -6281,6 +6299,16 @@ GENERAL RULES:
 
         const changeHandler = (e: Event) => {
             const target = e.target as HTMLElement;
+            if (target.closest('#tab-design')) updateDesignStudioUI();
+            if (target.id === 'designIndustry') applyIndustryRecommendation();
+            if (target.id === 'designLogoInput') {
+                const file = (target as HTMLInputElement).files?.[0];
+                if (file) {
+                    handleDesignLogo(file)
+                        .then(() => showToast('Logo dan warna brand berhasil dianalisis di browser.', 'success'))
+                        .catch((error) => showToast(error?.message || 'Logo gagal dianalisis.', 'warning'));
+                }
+            }
             if (target.id === 'charFile') {
                 const file = (target as HTMLInputElement).files?.[0];
                 if (file) {
@@ -6522,6 +6550,7 @@ GENERAL RULES:
         window.addEventListener('unload', unloadHandler);
         window.addEventListener('scroll', updateActiveSceneFromViewport, { passive: true });
         window.addEventListener('resize', () => updateMobileSceneNavigator(AppStore.state.activeMobileSceneIndex || 0));
+        updateDesignStudioUI();
 
         initSupabaseAuth();
 
