@@ -4,6 +4,7 @@ import { dbContainer, BaseRepository, ProjectRepo, CharacterRepo, VoiceRepo, Set
 import { GeminiService, sanitizeAndCleanJSON, validateStoryboardPayload } from './GeminiService';
 import { audioState, AudioMemoryRegistry, pcmToWav, responseToWavBuffer, AudioEngine } from './AudioHelper';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
+import { clearRecruitmentDraft, generateRecruitmentPrompt, loadRecruitmentDraft, saveRecruitmentDraft } from './modules/design/DesignStudio';
 
 const DB_NAME = 'KCreatorSuiteDB';
 const DB_VERSION = 3;
@@ -5889,6 +5890,54 @@ GENERAL RULES:
                 return;
             }
 
+            if (target.closest('[data-action="generate-design-recruitment"]')) {
+                const result = generateRecruitmentPrompt();
+                if (result.missing.length) {
+                    showToast(`Lengkapi: ${result.missing.join(', ')}`, 'warning');
+                    return;
+                }
+                const output = document.getElementById('designPromptOutput');
+                const empty = document.getElementById('designOutputEmpty');
+                const panel = document.getElementById('designOutputPanel');
+                if (output) output.textContent = result.prompt;
+                if (empty) empty.classList.add('hidden');
+                if (panel) panel.classList.remove('hidden');
+                saveRecruitmentDraft();
+                showToast('Prompt recruitment berhasil dibuat tanpa biaya AI.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="save-design-draft"]')) {
+                saveRecruitmentDraft();
+                showToast('Draft recruitment tersimpan di browser.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="load-design-draft"]')) {
+                const loaded = loadRecruitmentDraft();
+                showToast(loaded ? 'Draft recruitment dimuat.' : 'Belum ada draft tersimpan.', loaded ? 'success' : 'warning');
+                return;
+            }
+
+            if (target.closest('[data-action="clear-design-draft"]')) {
+                clearRecruitmentDraft();
+                const output = document.getElementById('designPromptOutput');
+                const empty = document.getElementById('designOutputEmpty');
+                const panel = document.getElementById('designOutputPanel');
+                if (output) output.textContent = '';
+                if (empty) empty.classList.remove('hidden');
+                if (panel) panel.classList.add('hidden');
+                showToast('Form recruitment direset.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="copy-design-prompt"]')) {
+                const text = document.getElementById('designPromptOutput')?.textContent || '';
+                if (!text) { showToast('Belum ada prompt yang bisa disalin.', 'warning'); return; }
+                await copyTextToClipboard(text, 'Prompt recruitment berhasil disalin!');
+                return;
+            }
+
             if (target.closest('[data-action="generate-affiliate"]')) {
                 generateAffiliateContent();
                 return;
@@ -6322,7 +6371,7 @@ GENERAL RULES:
         function switchTab(tabId: string) {
             AppStore.setState({ activeTab: tabId });
             updateMobileNavActive(tabId);
-            const tabs = ['director', 'voice', 'affiliate'];
+            const tabs = ['director', 'voice', 'affiliate', 'design'];
             tabs.forEach((tab) => {
                 const section = document.getElementById(`tab-${tab}`);
                 if (section) section.classList.toggle('hidden', tab !== tabId);
@@ -6332,7 +6381,8 @@ GENERAL RULES:
             const activeClass: Record<string, string> = {
                 director: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-indigo-600 shadow cursor-pointer",
                 voice: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-emerald-600 shadow cursor-pointer",
-                affiliate: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-orange-600 shadow cursor-pointer"
+                affiliate: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-orange-600 shadow cursor-pointer",
+                design: "px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-white bg-fuchsia-600 shadow cursor-pointer"
             };
             tabs.forEach((tab) => {
                 const btn = document.getElementById(`tabBtn-${tab}`);
@@ -6342,7 +6392,8 @@ GENERAL RULES:
                     const activeMobile: Record<string, string> = {
                         director: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer",
                         voice: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-emerald-600 cursor-pointer",
-                        affiliate: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-orange-600 cursor-pointer"
+                        affiliate: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-orange-600 cursor-pointer",
+                        design: "flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-fuchsia-600 cursor-pointer"
                     };
                     mobileBtn.className = tab === tabId ? activeMobile[tab] : "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer";
                 }
@@ -6358,6 +6409,14 @@ GENERAL RULES:
                 const mobileSceneNav = document.getElementById('mobileSceneNavigator');
                 if (mobileSceneNav) mobileSceneNav.classList.add('hidden');
                 updateGlobalStatus("Affiliate Studio Aktif", "orange");
+                AudioEngine.stop();
+                return;
+            }
+
+            if (tabId === 'design') {
+                const mobileSceneNav = document.getElementById('mobileSceneNavigator');
+                if (mobileSceneNav) mobileSceneNav.classList.add('hidden');
+                updateGlobalStatus("Design Studio Aktif", "fuchsia");
                 AudioEngine.stop();
                 return;
             }
@@ -6403,6 +6462,10 @@ GENERAL RULES:
                 badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20";
                 dot.className = "w-2 h-2 rounded-full bg-orange-400 animate-pulse";
                 label.className = "text-[10px] md:text-xs font-semibold text-orange-400";
+            } else if (color === 'fuchsia' && badge && dot) {
+                badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20";
+                dot.className = "w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse";
+                label.className = "text-[10px] md:text-xs font-semibold text-fuchsia-400";
             }
         }
 

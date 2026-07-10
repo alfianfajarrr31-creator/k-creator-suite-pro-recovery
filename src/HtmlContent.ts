@@ -70,6 +70,9 @@ export const HTML_CONTENT = `
             <button id="tabBtn-affiliate" data-action="switch-tab" data-tab="affiliate" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
                 🛒 Affiliate Studio
             </button>
+            <button id="tabBtn-design" data-action="switch-tab" data-tab="design" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200 cursor-pointer">
+                🎨 Design Studio
+            </button>
         </nav>
 
         <div class="flex items-center gap-2 md:gap-4 min-w-0 shrink-0">
@@ -110,6 +113,7 @@ export const HTML_CONTENT = `
         <button id="mobileTabBtn-director" data-action="switch-tab" data-tab="director" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-indigo-600 cursor-pointer">🎬 Storyboard</button>
         <button id="mobileTabBtn-voice" data-action="switch-tab" data-tab="voice" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer">🎙️ Voice Lab</button>
         <button id="mobileTabBtn-affiliate" data-action="switch-tab" data-tab="affiliate" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer">🛒 Affiliate</button>
+        <button id="mobileTabBtn-design" data-action="switch-tab" data-tab="design" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 cursor-pointer">🎨 Design</button>
     </div>
 
     <!-- Mobile Quick Access Bar (disabled in v2; replaced by floating menu so canvas gets more space) -->
@@ -148,6 +152,7 @@ export const HTML_CONTENT = `
                 <button data-action="switch-tab" data-tab="director" class="text-left px-3 py-3 rounded-2xl bg-indigo-600/12 border border-indigo-500/20 text-indigo-200 text-xs font-bold cursor-pointer">🎬 Storyboard Studio</button>
                 <button data-action="switch-tab" data-tab="voice" class="text-left px-3 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-200 text-xs font-bold cursor-pointer">🎙️ Voice Lab</button>
                 <button data-action="switch-tab" data-tab="affiliate" class="text-left px-3 py-3 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-200 text-xs font-bold cursor-pointer">🛒 Affiliate Studio</button>
+                <button data-action="switch-tab" data-tab="design" class="text-left px-3 py-3 rounded-2xl bg-fuchsia-600/10 border border-fuchsia-500/20 text-fuchsia-200 text-xs font-bold cursor-pointer">🎨 Design Studio</button>
                 <button data-action="toggle-output-tools" class="text-left px-3 py-3 rounded-2xl bg-purple-600/10 border border-purple-500/20 text-purple-200 text-xs font-bold cursor-pointer">📦 Tools Output</button>
                 <button data-action="open-user-guide" class="text-left px-3 py-3 rounded-2xl bg-amber-600/10 border border-amber-500/20 text-amber-200 text-xs font-bold cursor-pointer">📘 Panduan</button>
                 <button data-action="open-failure-playbook" class="text-left px-3 py-3 rounded-2xl bg-rose-600/10 border border-rose-500/20 text-rose-200 text-xs font-bold cursor-pointer">🚑 Prompt Gagal</button>
@@ -1178,6 +1183,74 @@ export const HTML_CONTENT = `
                                 <pre id="affiliateSafeText" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-300 font-sans"></pre>
                             </div>
                         </section>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+
+        <!-- Tab Workspace: AI Design Studio -->
+        <section id="tab-design" class="flex-1 flex overflow-hidden hidden">
+            <aside id="designAside" class="mobile-sidebar w-80 border-r border-slate-855 bg-[#08090e] p-5 overflow-y-auto space-y-4 flex flex-col shrink-0">
+                <div class="space-y-1">
+                    <h2 class="text-xs font-bold text-fuchsia-400 uppercase tracking-wider font-mono">AI Design Studio — Sprint 1</h2>
+                    <p class="text-xs text-slate-400 leading-relaxed">Preset aktif pertama: Recruitment Poster. Prompt dibuat lokal tanpa memanggil AI, jadi cost Rp0.</p>
+                </div>
+
+                <div class="rounded-2xl border border-fuchsia-500/20 bg-fuchsia-500/5 p-3">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-fuchsia-300">Preset Aktif</p>
+                    <p class="mt-1 text-sm font-bold text-white">Recruitment Poster</p>
+                    <p class="mt-1 text-[10px] text-slate-500">CV, Education, Product, Restaurant, Property, dan Event masuk tahap berikutnya.</p>
+                </div>
+
+                <div class="space-y-3 border-t border-slate-800/50 pt-4">
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Nama Perusahaan *</label><input id="designCompanyName" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-fuchsia-500 outline-none" placeholder="PT Contoh Indonesia"></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Industri</label><select id="designIndustry" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-fuchsia-500 outline-none"><option value="">Pilih industri</option><option>Technology</option><option>Retail</option><option>Hospitality</option><option>Food & Beverage</option><option>Healthcare</option><option>Education</option><option>Finance</option><option>Logistics</option><option>Manufacturing</option><option>Other</option></select></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Posisi Lowongan *</label><input id="designPosition" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-fuchsia-500 outline-none" placeholder="HR Recruitment Specialist"></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Tipe Kerja</label><select id="designEmploymentType" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200"><option>Full Time</option><option>Contract</option><option>Part Time</option><option>Internship</option><option>Freelance</option></select></div>
+                        <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Mode Kerja</label><select id="designWorkMode" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200"><option>WFO</option><option>Hybrid</option><option>Remote / WFH</option></select></div>
+                    </div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Lokasi Penempatan</label><input id="designLocation" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200" placeholder="Jakarta Barat"></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Informasi Gaji</label><input id="designSalary" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200" placeholder="Rp6–8 juta / Negotiable / kosongkan"></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Requirement * <span class="text-slate-600">(satu per baris)</span></label><textarea id="designRequirements" class="w-full h-28 resize-y rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-fuchsia-500 outline-none" placeholder="Minimal S1
+Pengalaman 2 tahun
+Komunikasi baik"></textarea></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Jobdesk <span class="text-slate-600">(satu per baris)</span></label><textarea id="designResponsibilities" class="w-full h-24 resize-y rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200" placeholder="Mengelola proses rekrutmen
+Melakukan interview"></textarea></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Benefit <span class="text-slate-600">(satu per baris)</span></label><textarea id="designBenefits" class="w-full h-20 resize-y rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200" placeholder="BPJS
+THR
+Bonus kinerja"></textarea></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Deadline</label><input id="designDeadline" type="date" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200"></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Email / WhatsApp Lamaran *</label><input id="designContact" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200 focus:border-fuchsia-500 outline-none" placeholder="career@company.com"></div>
+                    <div class="grid grid-cols-2 gap-2"><div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">CTA</label><select id="designCTA" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200"><option>Apply Now</option><option>Join Our Team</option><option>Send Your CV</option><option>Apply Today</option></select></div><div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Rasio</label><select id="designRatio" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200"><option>4:5</option><option>1:1</option><option>9:16</option><option>A4 Portrait</option></select></div></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Gaya Visual</label><select id="designStyle" class="w-full rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200"><option>Modern Corporate</option><option>Minimalist Professional</option><option>Bold Recruitment</option><option>Creative Agency</option><option>Luxury Corporate</option><option>Friendly Startup</option></select></div>
+                    <div class="space-y-2"><label class="block text-xs font-semibold text-slate-400">Catatan Tambahan</label><textarea id="designExtraNotes" class="w-full h-20 resize-y rounded-xl bg-[#0f111a] border border-slate-800 p-2.5 text-xs text-slate-200" placeholder="Gunakan warna perusahaan biru, beri ruang untuk logo dan QR..."></textarea></div>
+                </div>
+
+                <button data-action="generate-design-recruitment" class="w-full py-3 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-black uppercase tracking-wider cursor-pointer">Generate Prompt Recruitment</button>
+                <div class="grid grid-cols-3 gap-2"><button data-action="save-design-draft" class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-300 cursor-pointer">Simpan</button><button data-action="load-design-draft" class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-300 cursor-pointer">Muat</button><button data-action="clear-design-draft" class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-[10px] font-bold text-rose-300 cursor-pointer">Reset</button></div>
+            </aside>
+
+            <section class="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+                <div class="max-w-6xl mx-auto space-y-5">
+                    <div class="rounded-3xl border border-fuchsia-500/15 bg-gradient-to-br from-fuchsia-500/10 via-slate-950/50 to-[#08090e] p-5 md:p-6 shadow-2xl">
+                        <p class="text-[10px] font-mono font-bold text-fuchsia-300 uppercase tracking-[0.2em]">Design Studio DNA Engine — Zero Cost</p>
+                        <h2 class="mt-2 text-xl md:text-2xl font-black text-white">Recruitment Poster Prompt Generator</h2>
+                        <p class="mt-2 text-xs md:text-sm text-slate-400 max-w-3xl leading-relaxed">Isi data lowongan di panel kiri. KCS menyusun prompt poster profesional secara lokal tanpa API berbayar. Upload logo dan generator gambar akan masuk ARC berikutnya.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4"><p class="text-[10px] text-fuchsia-300 font-black uppercase">Cost</p><p class="mt-1 text-lg font-black text-white">Rp0</p><p class="text-[10px] text-slate-500">Tidak memanggil AI/API</p></div>
+                        <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4"><p class="text-[10px] text-fuchsia-300 font-black uppercase">Draft</p><p class="mt-1 text-lg font-black text-white">Local Browser</p><p class="text-[10px] text-slate-500">Tersimpan di perangkat</p></div>
+                        <div class="rounded-2xl border border-slate-800 bg-[#08090e] p-4"><p class="text-[10px] text-fuchsia-300 font-black uppercase">Output</p><p class="mt-1 text-lg font-black text-white">Prompt Siap Copy</p><p class="text-[10px] text-slate-500">Gemini / Imagen / Firefly</p></div>
+                    </div>
+
+                    <div id="designOutputEmpty" class="rounded-3xl border border-dashed border-slate-800 bg-[#08090e] p-10 text-center"><div class="text-4xl mb-3">🎨</div><h3 class="text-sm font-bold text-slate-300">Belum ada prompt recruitment.</h3><p class="text-xs text-slate-500 mt-1">Lengkapi minimal nama perusahaan, posisi, requirement, dan kontak.</p></div>
+
+                    <div id="designOutputPanel" class="hidden rounded-3xl border border-fuchsia-500/20 bg-[#08090e] p-5 md:p-6">
+                        <div class="flex items-center justify-between gap-3 mb-4"><div><h3 class="text-xs font-black text-fuchsia-300 uppercase tracking-wider">Generated Recruitment Prompt</h3><p class="text-[10px] text-slate-500 mt-1">Bisa diedit setelah disalin ke generator gambar pilihan.</p></div><button data-action="copy-design-prompt" class="px-4 py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-black cursor-pointer">Copy Prompt</button></div>
+                        <pre id="designPromptOutput" class="whitespace-pre-wrap rounded-2xl bg-black/40 border border-slate-800 p-4 text-xs leading-relaxed text-slate-300 font-mono select-text"></pre>
                     </div>
                 </div>
             </section>
