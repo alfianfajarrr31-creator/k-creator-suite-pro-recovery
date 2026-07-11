@@ -1,6 +1,7 @@
 import { buildRecruitmentPrompt, RecruitmentFormData, validateRecruitmentData } from './RecruitmentDNA';
 
-const DRAFT_KEY = 'kcs_design_recruitment_draft_v2';
+const DRAFT_KEY = 'kcs_design_recruitment_draft_v3';
+const TEMPLATE_KEY = 'kcs_design_recruitment_template_v1';
 let logoObjectUrl = '';
 
 const fieldIds = [
@@ -132,6 +133,7 @@ export function updateDesignStudioUI(): void {
   const swatch = document.getElementById('designRecommendationSwatch') as HTMLElement | null;
   if (swatch) swatch.style.backgroundColor = color;
   setText('designRecommendationColor', color.toUpperCase());
+  updateRecruitmentPreview(data, color);
 }
 
 export function applyIndustryRecommendation(): void {
@@ -246,4 +248,122 @@ export function removeDesignLogo(): void {
   if (primarySwatch) primarySwatch.style.backgroundColor = '#334155';
   if (secondarySwatch) secondarySwatch.style.backgroundColor = '#64748B';
   updateDesignStudioUI();
+}
+
+
+function lines(text: string, fallback: string): string[] {
+  const items = text.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).slice(0, 4);
+  return items.length ? items : [fallback];
+}
+
+function renderList(id: string, items: string[]): void {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = items.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('');
+}
+
+function escapeHtml(input: string): string {
+  return input.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char] || char));
+}
+
+function updateRecruitmentPreview(data: RecruitmentFormData, accent: string): void {
+  const poster = document.getElementById('designPosterPreview') as HTMLElement | null;
+  if (!poster) return;
+  poster.style.setProperty('--brand', accent || '#C026D3');
+  poster.style.setProperty('--brand2', data.secondaryColor || '#F5D0FE');
+
+  setText('designPosterCompany', data.companyName || 'Nama Perusahaan');
+  setText('designPosterPosition', data.position || 'Your Next Great Role');
+  setText('designPosterEmployment', `${data.employmentType || 'Full Time'} • ${data.workMode || 'WFO'}`.toUpperCase());
+  setText('designPosterLocation', `📍 ${data.location || 'Lokasi'}`);
+  setText('designPosterCTA', data.cta || 'Apply Now');
+  setText('designPosterContact', data.contact || 'email@company.com');
+  setText('designPosterDeadline', data.deadline ? `Deadline\n${data.deadline}` : '');
+  setText('designPreviewRatioLabel', data.ratio || '4:5');
+
+  const salary = document.getElementById('designPosterSalary');
+  if (salary) {
+    salary.textContent = data.salary ? `💰 ${data.salary}` : '';
+    salary.classList.toggle('hidden', !data.salary);
+  }
+  renderList('designPosterRequirements', lines(data.requirements, 'Tambahkan requirement utama'));
+  renderList('designPosterBenefits', lines(data.benefits, 'Tambahkan benefit menarik'));
+
+  const benefitSection = document.getElementById('designPosterBenefitSection');
+  if (benefitSection) benefitSection.classList.toggle('hidden', !data.benefits.trim());
+
+  const logoSource = document.getElementById('designLogoPreview') as HTMLImageElement | null;
+  const posterLogo = document.getElementById('designPosterLogo') as HTMLImageElement | null;
+  const fallback = document.getElementById('designPosterLogoFallback');
+  const hasLogo = Boolean(logoSource?.src && data.logoName);
+  if (posterLogo) {
+    if (hasLogo && logoSource) posterLogo.src = logoSource.src;
+    else posterLogo.removeAttribute('src');
+    posterLogo.classList.toggle('hidden', !hasLogo);
+  }
+  fallback?.classList.toggle('hidden', hasLogo);
+
+  const ratioMap: Record<string, { width: string; minHeight: string; radius: string }> = {
+    '1:1': { width: '480px', minHeight: '480px', radius: '26px' },
+    '4:5': { width: '410px', minHeight: '545px', radius: '26px' },
+    '9:16': { width: '350px', minHeight: '622px', radius: '26px' },
+    '16:9': { width: '650px', minHeight: '366px', radius: '24px' },
+    'A4': { width: '420px', minHeight: '594px', radius: '10px' },
+    'A3': { width: '440px', minHeight: '622px', radius: '10px' },
+  };
+  const size = ratioMap[data.ratio] || ratioMap['4:5'];
+  poster.style.width = size.width;
+  poster.style.minHeight = size.minHeight;
+  poster.style.borderRadius = size.radius;
+
+  const style = data.style.toLowerCase();
+  poster.style.fontFamily = style.includes('luxury') ? 'Georgia, serif' : 'Inter, ui-sans-serif, system-ui, sans-serif';
+  poster.style.background = style.includes('technology') ? 'linear-gradient(145deg,#07111f,#0f172a)' : style.includes('luxury') ? 'linear-gradient(145deg,#fffaf0,#f5ead7)' : style.includes('creative') ? `linear-gradient(145deg,${data.secondaryColor || '#F5D0FE'},#ffffff)` : '#ffffff';
+  poster.style.color = style.includes('technology') ? '#f8fafc' : '#0f172a';
+}
+
+export function saveRecruitmentTemplate(): void {
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(readRecruitmentForm()));
+}
+
+export function loadRecruitmentTemplate(): boolean {
+  const raw = localStorage.getItem(TEMPLATE_KEY);
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    const map: Record<string, string> = {
+      designCompanyName: data.companyName, designIndustry: data.industry,
+      designEmploymentType: data.employmentType, designWorkMode: data.workMode,
+      designLocation: data.location, designContact: data.contact, designCTA: data.cta,
+      designStyle: data.style, designRatio: data.ratio, designExtraNotes: data.extraNotes,
+      designLogoName: data.logoName, designPrimaryColor: data.primaryColor, designSecondaryColor: data.secondaryColor,
+    };
+    Object.entries(map).forEach(([id, nextValue]) => {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      if (el && typeof nextValue === 'string') el.value = nextValue;
+    });
+    updateDesignStudioUI();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function exportRecruitmentPrompt(format: 'txt' | 'md'): boolean {
+  const prompt = document.getElementById('designPromptOutput')?.textContent?.trim() || '';
+  if (!prompt) return false;
+  const data = readRecruitmentForm();
+  const safeName = `${data.companyName || 'company'}-${data.position || 'recruitment-poster'}`
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const content = format === 'md' ? `# Recruitment Poster Prompt\n\n${prompt}\n` : prompt;
+  const blob = new Blob([content], { type: format === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${safeName || 'recruitment-poster-prompt'}.${format}`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+  return true;
 }

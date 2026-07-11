@@ -4,7 +4,7 @@ import { dbContainer, BaseRepository, ProjectRepo, CharacterRepo, VoiceRepo, Set
 import { GeminiService, sanitizeAndCleanJSON, validateStoryboardPayload } from './GeminiService';
 import { audioState, AudioMemoryRegistry, pcmToWav, responseToWavBuffer, AudioEngine } from './AudioHelper';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
-import { applyIndustryRecommendation, clearRecruitmentDraft, generateRecruitmentPrompt, handleDesignLogo, loadRecruitmentDraft, removeDesignLogo, saveRecruitmentDraft, updateDesignStudioUI } from './modules/design/DesignStudio';
+import { applyIndustryRecommendation, clearRecruitmentDraft, exportRecruitmentPrompt, generateRecruitmentPrompt, handleDesignLogo, loadRecruitmentDraft, loadRecruitmentTemplate, removeDesignLogo, saveRecruitmentDraft, saveRecruitmentTemplate, updateDesignStudioUI } from './modules/design/DesignStudio';
 
 const DB_NAME = 'KCreatorSuiteDB';
 const DB_VERSION = 3;
@@ -5933,6 +5933,30 @@ GENERAL RULES:
             if (target.closest('[data-action="load-design-draft"]')) {
                 const loaded = loadRecruitmentDraft();
                 showToast(loaded ? 'Draft recruitment dimuat.' : 'Belum ada draft tersimpan.', loaded ? 'success' : 'warning');
+                return;
+            }
+
+            if (target.closest('[data-action="save-design-template"]')) {
+                saveRecruitmentTemplate();
+                showToast('Template recruitment tersimpan di browser.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="load-design-template"]')) {
+                const loaded = loadRecruitmentTemplate();
+                showToast(loaded ? 'Template recruitment dimuat.' : 'Belum ada template tersimpan.', loaded ? 'success' : 'warning');
+                return;
+            }
+
+            if (target.closest('[data-action="export-design-txt"]')) {
+                const exported = exportRecruitmentPrompt('txt');
+                showToast(exported ? 'Prompt TXT berhasil diunduh.' : 'Buat prompt terlebih dahulu.', exported ? 'success' : 'warning');
+                return;
+            }
+
+            if (target.closest('[data-action="export-design-md"]')) {
+                const exported = exportRecruitmentPrompt('md');
+                showToast(exported ? 'Prompt Markdown berhasil diunduh.' : 'Buat prompt terlebih dahulu.', exported ? 'success' : 'warning');
                 return;
             }
 
