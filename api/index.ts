@@ -509,6 +509,40 @@ Task: Build a merged product + model visual reference prompt for affiliate conte
     }
 });
 
+// DESIGN STUDIO: RECRUITMENT CONTENT OPTIMIZER
+app.post("/api/gemini/recruitment-optimize", async (req, res) => {
+    try {
+        const { requirements, responsibilities, benefits, ratio, limits } = req.body || {};
+        const finalKey = process.env.GEMINI_API_KEY;
+        if (!finalKey) return res.status(400).json({ success: false, error: "Environment GEMINI_API_KEY belum dikonfigurasi" });
+        const systemPrompt = `You are an expert Indonesian recruitment copy editor. Compress recruitment content for a poster without changing intent or facts. Never add qualifications, duties, benefits, salary, claims, or company facts. Preserve mandatory conditions. Use natural concise Indonesian. Return ONLY JSON with arrays: requirements, responsibilities, benefits. Each bullet must be clear, standalone, and within the requested maximum words.`;
+        const userText = `Poster ratio: ${ratio || '4:5'}\nLimits: ${JSON.stringify(limits || {})}\nRequirements:\n${requirements || '-'}\n\nResponsibilities / Jobdesk:\n${responsibilities || '-'}\n\nBenefits:\n${benefits || '-'}\n\nSelect the most important items and shorten them. Do not invent anything.`;
+        const payload = {
+            contents: [{ parts: [{ text: userText }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        requirements: { type: "ARRAY", items: { type: "STRING" } },
+                        responsibilities: { type: "ARRAY", items: { type: "STRING" } },
+                        benefits: { type: "ARRAY", items: { type: "STRING" } }
+                    },
+                    required: ["requirements", "responsibilities", "benefits"]
+                }
+            }
+        };
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${finalKey}`;
+        const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "aistudio-build" }, body: JSON.stringify(payload) });
+        if (!response.ok) return res.status(response.status).json({ success: false, error: `Recruitment optimizer gagal (${response.status}): ${(await response.text()).slice(0,400)}` });
+        return res.json(await response.json());
+    } catch (error: any) {
+        console.error("Recruitment optimizer error:", error);
+        return res.status(500).json({ success: false, error: error.message || String(error) });
+    }
+});
+
 // 2. TTS PROXY ENDPOINT
 app.post("/api/gemini/tts", async (req, res) => {
     try {

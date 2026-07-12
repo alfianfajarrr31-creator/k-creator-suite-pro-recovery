@@ -4,7 +4,7 @@ import { dbContainer, BaseRepository, ProjectRepo, CharacterRepo, VoiceRepo, Set
 import { GeminiService, sanitizeAndCleanJSON, validateStoryboardPayload } from './GeminiService';
 import { audioState, AudioMemoryRegistry, pcmToWav, responseToWavBuffer, AudioEngine } from './AudioHelper';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
-import { applyIndustryRecommendation, clearRecruitmentDraft, exportRecruitmentPrompt, generateRecruitmentPrompt, handleDesignLogo, loadRecruitmentDraft, loadRecruitmentTemplate, removeDesignLogo, saveRecruitmentDraft, saveRecruitmentTemplate, updateDesignStudioUI } from './modules/design/DesignStudio';
+import { applyIndustryRecommendation, clearRecruitmentDraft, exportRecruitmentPrompt, generateRecruitmentPrompt, handleDesignLogo, loadRecruitmentDraft, loadRecruitmentTemplate, removeDesignLogo, saveRecruitmentDraft, saveRecruitmentTemplate, updateDesignStudioUI, optimizeRecruitmentLocally, optimizeRecruitmentWithAI } from './modules/design/DesignStudio';
 
 const DB_NAME = 'KCreatorSuiteDB';
 const DB_VERSION = 3;
@@ -5904,6 +5904,29 @@ GENERAL RULES:
             if (target.closest('[data-action="apply-design-recommendation"]')) {
                 applyIndustryRecommendation();
                 showToast('Saran style dan warna diterapkan.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="optimize-design-local"]')) {
+                optimizeRecruitmentLocally();
+                saveRecruitmentDraft();
+                showToast('Konten diringkas otomatis sesuai kapasitas poster.', 'success');
+                return;
+            }
+
+            if (target.closest('[data-action="optimize-design-ai"]')) {
+                const button = target.closest('[data-action="optimize-design-ai"]') as HTMLButtonElement;
+                const original = button?.textContent || '✨ Ringkas dengan AI';
+                try {
+                    if (button) { button.disabled = true; button.textContent = 'Memproses...'; }
+                    await optimizeRecruitmentWithAI();
+                    saveRecruitmentDraft();
+                    showToast('Requirement, jobdesk, dan benefit berhasil diringkas AI.', 'success');
+                } catch (error: any) {
+                    showToast(error?.message || 'AI gagal meringkas konten.', 'error');
+                } finally {
+                    if (button) { button.disabled = false; button.textContent = original; }
+                }
                 return;
             }
 

@@ -1,4 +1,5 @@
 import { buildRecruitmentPrompt, RecruitmentFormData, validateRecruitmentData } from './RecruitmentDNA';
+import { fetchWithBackoff } from '../../GeminiService';
 
 const DRAFT_KEY = 'kcs_design_recruitment_draft_v3';
 const TEMPLATE_KEY = 'kcs_design_recruitment_template_v1';
@@ -133,6 +134,14 @@ export function updateDesignStudioUI(): void {
   const swatch = document.getElementById('designRecommendationSwatch') as HTMLElement | null;
   if (swatch) swatch.style.backgroundColor = color;
   setText('designRecommendationColor', color.toUpperCase());
+  const report = analyzeRecruitmentContent();
+  setText('designContentScore', `${report.score}%`);
+  setText('designDensityStatus', report.over > 0 || report.long > 0 ? 'Konten terlalu padat untuk ukuran ini' : 'Kepadatan konten aman');
+  setText('designDensityDetail', `${report.total} poin • ${report.over} melebihi kapasitas • ${report.long} bullet terlalu panjang`);
+  const scoreBar = document.getElementById('designContentScoreBar') as HTMLElement | null;
+  if (scoreBar) scoreBar.style.width = `${report.score}%`;
+  const badge = document.getElementById('designDensityBadge');
+  if (badge) { badge.textContent = report.over > 0 || report.long > 0 ? 'Perlu diringkas' : 'Siap dipakai'; badge.className = report.over > 0 || report.long > 0 ? 'px-2 py-1 rounded-full text-[9px] font-black bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'px-2 py-1 rounded-full text-[9px] font-black bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'; }
   updateRecruitmentPreview(data, color);
 }
 
@@ -251,9 +260,73 @@ export function removeDesignLogo(): void {
 }
 
 
-function lines(text: string, fallback: string): string[] {
-  const items = text.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).slice(0, 4);
+function splitItems(text: string): string[] {
+  return text.split(/\r?\n|;/).map((item) => item.trim().replace(/^[-•\d.)\s]+/, '')).filter(Boolean);
+}
+
+function lines(text: string, fallback: string, limit = 4): string[] {
+  const items = splitItems(text).slice(0, limit);
   return items.length ? items : [fallback];
+}
+
+const capacityByRatio: Record<string, { requirements: number; responsibilities: number; benefits: number; maxWords: number }> = {
+  '1:1': { requirements: 4, responsibilities: 3, benefits: 3, maxWords: 9 },
+  '4:5': { requirements: 5, responsibilities: 4, benefits: 4, maxWords: 10 },
+  '9:16': { requirements: 4, responsibilities: 3, benefits: 3, maxWords: 9 },
+  '16:9': { requirements: 3, responsibilities: 2, benefits: 2, maxWords: 8 },
+  'A4': { requirements: 8, responsibilities: 6, benefits: 5, maxWords: 12 },
+  'A3': { requirements: 10, responsibilities: 8, benefits: 6, maxWords: 14 },
+};
+
+function compactItem(item: string, maxWords: number): string {
+  const words = item.replace(/[.!]+$/, '').split(/\s+/).filter(Boolean);
+  return words.length <= maxWords ? words.join(' ') : `${words.slice(0, maxWords).join(' ')}…`;
+}
+
+export function analyzeRecruitmentContent() {
+  const data = readRecruitmentForm();
+  const cap = capacityByRatio[data.ratio] || capacityByRatio['4:5'];
+  const groups = {
+    requirements: splitItems(data.requirements),
+    responsibilities: splitItems(data.responsibilities),
+    benefits: splitItems(data.benefits),
+  };
+  const total = groups.requirements.length + groups.responsibilities.length + groups.benefits.length;
+  const over = Math.max(0, groups.requirements.length-cap.requirements) + Math.max(0, groups.responsibilities.length-cap.responsibilities) + Math.max(0, groups.benefits.length-cap.benefits);
+  const long = [...groups.requirements, ...groups.responsibilities, ...groups.benefits].filter(x => x.split(/\s+/).length > cap.maxWords).length;
+  const densityScore = Math.max(20, Math.min(100, 100 - over*8 - long*4));
+  const completeness = [data.companyName,data.position,data.requirements,data.contact].filter(Boolean).length / 4 * 100;
+  const score = Math.round(densityScore*0.55 + completeness*0.45);
+  return { data, cap, groups, total, over, long, densityScore, score };
+}
+
+export function optimizeRecruitmentLocally(): void {
+  const report = analyzeRecruitmentContent();
+  const mapping: Array<[string, string[], number]> = [
+    ['designRequirements', report.groups.requirements, report.cap.requirements],
+    ['designResponsibilities', report.groups.responsibilities, report.cap.responsibilities],
+    ['designBenefits', report.groups.benefits, report.cap.benefits],
+  ];
+  mapping.forEach(([id, items, limit]) => {
+    const el = document.getElementById(id) as HTMLTextAreaElement | null;
+    if (el) el.value = items.slice(0, limit).map(item => compactItem(item, report.cap.maxWords)).join('\n');
+  });
+  updateDesignStudioUI();
+}
+
+export async function optimizeRecruitmentWithAI(): Promise<void> {
+  const data = readRecruitmentForm();
+  const cap = capacityByRatio[data.ratio] || capacityByRatio['4:5'];
+  const response = await fetchWithBackoff('/api/gemini/recruitment-optimize', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requirements: data.requirements, responsibilities: data.responsibilities, benefits: data.benefits, ratio: data.ratio, limits: cap })
+  });
+  const raw = await response.json();
+  const text = raw?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const parsed = typeof text === 'string' ? JSON.parse(text) : text;
+  const fields: Array<[string, unknown]> = [['designRequirements', parsed.requirements],['designResponsibilities', parsed.responsibilities],['designBenefits', parsed.benefits]];
+  fields.forEach(([id, items]) => { const el=document.getElementById(id) as HTMLTextAreaElement|null; if(el && Array.isArray(items)) el.value=items.join('\n'); });
+  updateDesignStudioUI();
 }
 
 function renderList(id: string, items: string[]): void {
@@ -286,9 +359,13 @@ function updateRecruitmentPreview(data: RecruitmentFormData, accent: string): vo
     salary.textContent = data.salary ? `💰 ${data.salary}` : '';
     salary.classList.toggle('hidden', !data.salary);
   }
-  renderList('designPosterRequirements', lines(data.requirements, 'Tambahkan requirement utama'));
-  renderList('designPosterBenefits', lines(data.benefits, 'Tambahkan benefit menarik'));
+  const cap = capacityByRatio[data.ratio] || capacityByRatio['4:5'];
+  renderList('designPosterRequirements', lines(data.requirements, 'Tambahkan requirement utama', cap.requirements));
+  renderList('designPosterResponsibilities', lines(data.responsibilities, 'Tambahkan jobdesk utama', cap.responsibilities));
+  renderList('designPosterBenefits', lines(data.benefits, 'Tambahkan benefit menarik', cap.benefits));
 
+  const responsibilitySection = document.getElementById('designPosterResponsibilitySection');
+  if (responsibilitySection) responsibilitySection.classList.toggle('hidden', !data.responsibilities.trim());
   const benefitSection = document.getElementById('designPosterBenefitSection');
   if (benefitSection) benefitSection.classList.toggle('hidden', !data.benefits.trim());
 
