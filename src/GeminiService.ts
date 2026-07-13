@@ -259,7 +259,9 @@ export const GeminiService = {
         humanCueInstruction: string = "",
         humanCueIntensity: number = 2,
         voiceAgeInstruction: string = "",
-        voiceAgeLabel: string = "Auto / Netral"
+        voiceAgeLabel: string = "Auto / Netral",
+        voiceGender: string = "auto",
+        voiceGenderLabel: string = "Auto dari Aktor Vokal"
     ) {
         try {
             const response = await fetchWithBackoff("/api/gemini/tts", {
@@ -275,7 +277,9 @@ export const GeminiService = {
                     humanCueInstruction,
                     humanCueIntensity,
                     voiceAgeInstruction,
-                    voiceAgeLabel
+                    voiceAgeLabel,
+                    voiceGender,
+                    voiceGenderLabel
                 })
             });
 

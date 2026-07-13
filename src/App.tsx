@@ -4582,6 +4582,14 @@ GENERAL RULES:
             }
 
             const voiceName = (document.getElementById('voiceSelector') as HTMLSelectElement).value;
+            const maleVoiceNames = new Set(["Puck", "Charon", "Fenrir", "Orus", "Iapetus", "Umbriel", "Rasalgethi", "Alnilam", "Achird", "Sadaltager", "Schedar", "Algenib"]);
+            const femaleVoiceNames = new Set(["Kore", "Aoede", "Leda", "Autonoe", "Enceladus", "Despina", "Erinome", "Laomedeia", "Vindemiatrix", "Sadachbia", "Sulafat"]);
+            const voiceGenderSelect = document.getElementById('voiceGenderProfile') as HTMLSelectElement | null;
+            let voiceGender = voiceGenderSelect?.value || 'auto';
+            if (voiceGender === 'auto') {
+                voiceGender = maleVoiceNames.has(voiceName) ? 'male' : femaleVoiceNames.has(voiceName) ? 'female' : 'neutral';
+            }
+            const voiceGenderLabel = voiceGender === 'male' ? 'Laki-laki / Maskulin' : voiceGender === 'female' ? 'Perempuan / Feminin' : 'Netral';
             const emotionSelect = document.getElementById('voiceEmotion') as HTMLSelectElement;
             const actingPrefix = emotionSelect.options[emotionSelect.selectedIndex].getAttribute('data-prefix') || "";
             const voiceAgeSelect = document.getElementById('voiceAgeProfile') as HTMLSelectElement | null;
@@ -4607,7 +4615,9 @@ GENERAL RULES:
                 humanCueInstruction,
                 humanCueIntensity,
                 voiceAgeInstruction,
-                voiceAgeLabel
+                voiceAgeLabel,
+                voiceGender,
+                voiceGenderLabel
             );
             if (!isBatchMode) updateOperationProgress('Mengolah audio...', 84, 'Audio diterima, sedang disiapkan untuk preview dan download.');
 
@@ -4651,7 +4661,7 @@ GENERAL RULES:
                 document.getElementById('visualizerEmpty')?.classList.add('hidden');
 
                 const playerTitle = document.getElementById('playerTitle');
-                if (playerTitle) playerTitle.innerText = `${voiceName} (${voiceAgeLabel} • ${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel})`;
+                if (playerTitle) playerTitle.innerText = `${voiceName} (${voiceGenderLabel} • ${voiceAgeLabel} • ${emotionSelect.options[emotionSelect.selectedIndex].text} • ${humanCueLabel})`;
                 const playerSubtitle = document.getElementById('playerSubtitle');
                 if (playerSubtitle) playerSubtitle.innerText = "Klip suara berhasil disintesis.";
                 const engineVoiceTag = document.getElementById('engineVoiceTag');

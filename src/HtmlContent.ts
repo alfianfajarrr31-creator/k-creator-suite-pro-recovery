@@ -744,6 +744,20 @@ export const HTML_CONTENT = `
                     </select>
                 </div>
 
+                <!-- Voice Gender Lock -->
+                <div class="space-y-3 border-t border-slate-800/40 pt-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-semibold text-slate-455">Gender Suara (Voice Lock)</label>
+                        <p class="text-[10px] leading-relaxed text-slate-500">Mengunci karakter suara agar tidak bergeser ke gender lain. Pilih sesuai aktor vokal yang digunakan.</p>
+                    </div>
+                    <select id="voiceGenderProfile" class="w-full rounded-xl bg-[#0f111a] border border-slate-855 p-2.5 text-xs text-slate-200 focus:border-emerald-500 outline-none transition">
+                        <option value="auto" selected>Auto dari Aktor Vokal</option>
+                        <option value="male">Laki-laki — Maskulin</option>
+                        <option value="female">Perempuan — Feminin</option>
+                    </select>
+                    <div id="voiceCompatibilityNotice" class="hidden rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-[10px] leading-relaxed text-amber-300"></div>
+                </div>
+
                 <!-- Voice Age Profile -->
                 <div class="space-y-3 border-t border-slate-800/40 pt-4">
                     <div class="space-y-1">
@@ -756,8 +770,8 @@ export const HTML_CONTENT = `
                         <option value="teen" data-instruction="Perform as a teenage voice, youthful, energetic, expressive, and casual, but still clear for narration.">Remaja (Muda & Ekspresif)</option>
                         <option value="young_adult" data-instruction="Perform as a young adult creator voice, fresh, confident, natural, and friendly for social media narration.">Dewasa Muda (Fresh & Creator)</option>
                         <option value="adult" data-instruction="Perform as an adult narrator, balanced, clear, mature, and reliable.">Dewasa (Jelas & Stabil)</option>
-                        <option value="mature" data-instruction="Perform as a mature older adult voice, slower, wiser, calm, and authoritative, with controlled emotion.">Paruh Baya (Bijak & Berwibawa)</option>
-                        <option value="elderly" data-instruction="Perform as a generic elderly voice, slower, warmer, slightly fragile, wise, and reflective. Keep it respectful and natural, not a caricature.">Orang Tua / Lansia (Hangat & Bijak)</option>
+                        <option value="mature" data-instruction="Perform as a middle-aged adult approximately 40 to 55 years old: mature, confident, steady, and authoritative. Do not sound elderly, frail, grandmotherly, or grandfatherly. Keep normal adult vocal strength and clear articulation.">Paruh Baya (Bijak & Berwibawa)</option>
+                        <option value="elderly" data-instruction="Perform as a senior adult approximately 65 to 75 years old: warm, experienced, reflective, and clearly elderly. Keep it respectful and natural, never cartoonish. Only use slight vocal fragility when compatible with the selected emotion and pace.">Orang Tua / Lansia (Hangat & Bijak)</option>
                     </select>
                     <p class="text-[9px] text-slate-600">Tips: gabungkan dengan Human Acting Layer, misalnya Lansia + Sad Soft atau Anak Kecil + Smiling Voice.</p>
                 </div>

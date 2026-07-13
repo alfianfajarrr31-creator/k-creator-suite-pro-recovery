@@ -546,7 +546,7 @@ app.post("/api/gemini/recruitment-optimize", async (req, res) => {
 // 2. TTS PROXY ENDPOINT
 app.post("/api/gemini/tts", async (req, res) => {
     try {
-        const { script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, humanCueInstruction, humanCueIntensity, voiceAgeInstruction, voiceAgeLabel } = req.body;
+        const { script, voiceName, actingPrefix, pace, injectBreaths, injectSighs, humanCueInstruction, humanCueIntensity, voiceAgeInstruction, voiceAgeLabel, voiceGender, voiceGenderLabel } = req.body;
 
         const finalKey = process.env.GEMINI_API_KEY;
         if (!finalKey) {
@@ -582,19 +582,48 @@ app.post("/api/gemini/tts", async (req, res) => {
         const humanLayer = humanCueInstruction ? String(humanCueInstruction) : "Keep the delivery natural and human, with subtle emotional color but no exaggerated acting.";
         const ageLayer = voiceAgeInstruction ? String(voiceAgeInstruction) : "Use a natural age-neutral creator voice that matches the script context.";
         const ageLabel = voiceAgeLabel ? String(voiceAgeLabel) : "Auto / Netral";
-        const finalProcessedPrompt = `${actingPrefix}
-Voice age profile: ${ageLabel}.
-Age performance direction: ${ageLayer}
-Voice acting direction: ${humanLayer}
-Acting intensity: ${intensityLabel}.
-Speak at a pace of ${pace}x.
-Important: do not read bracket labels literally. Convert cue tags and parenthetical acting notes into natural vocal performance such as smile in the voice, tiny laugh, hmm, breath, sad pause, or emotional softness. Keep it realistic for Indonesian creator voice-over, not theatrical overacting.
-If a childlike or elderly voice is requested, perform it as a respectful generic character voice. Do not imitate any real person, celebrity, or specific child. Keep articulation clear for creator narration.
-Read naturally: ${cleanScript}`;
+        const normalizedGender = ["male", "female", "neutral"].includes(String(voiceGender)) ? String(voiceGender) : "neutral";
+        const genderLayer = normalizedGender === "male"
+            ? "Use a clearly adult masculine vocal identity with male resonance and masculine intonation. Never drift into a female, feminine, grandmotherly, or elderly-woman voice."
+            : normalizedGender === "female"
+                ? "Use a clearly adult feminine vocal identity with female resonance and feminine intonation. Never drift into a male, masculine, grandfatherly, or elderly-man voice."
+                : "Keep the selected prebuilt voice's natural vocal identity consistent from beginning to end.";
+        const numericPace = Math.max(0.8, Math.min(1.3, Number(pace) || 1));
+        const paceLayer = numericPace >= 1.25
+            ? "FAST LOCK: deliver approximately 25 to 30 percent faster than normal narration. Use short pauses, compact phrasing, energetic forward momentum, and no slow dramatic stretching."
+            : numericPace >= 1.15
+                ? "QUICK LOCK: deliver approximately 15 to 20 percent faster than normal. Keep pauses short and rhythm brisk while preserving clear Indonesian articulation."
+                : numericPace <= 0.85
+                    ? "SLOW LOCK: deliver approximately 15 to 20 percent slower than normal with deliberate pauses, while avoiding lethargic or sleepy delivery."
+                    : numericPace <= 0.95
+                        ? "RELAXED LOCK: deliver slightly slower than normal with measured pauses and clear articulation."
+                        : "NORMAL LOCK: use a natural conversational narration speed with balanced pauses.";
+        const finalProcessedPrompt = `VOICE DIRECTION — priority order is strict:
+1. PREBUILT VOICE IDENTITY: keep the selected voice stable and consistent.
+2. GENDER LOCK (${voiceGenderLabel || normalizedGender}): ${genderLayer}
+3. AGE LOCK (${ageLabel}): ${ageLayer}
+4. PACE LOCK (${numericPace.toFixed(1)}x): ${paceLayer}
+5. EMOTION: ${actingPrefix || "Natural creator narration."}
+6. HUMAN PERFORMANCE: ${humanLayer}
+7. ACTING INTENSITY: ${intensityLabel}.
+
+Conflict rule: gender lock and age lock override emotion words such as warm, soft, wise, gentle, or dramatic. For example, a middle-aged male must remain unmistakably male and 40–55 years old; warmth must not turn him into an elderly woman. Pace lock overrides any slower wording inside emotion or age directions.
+Language: natural Indonesian creator voice-over. Clear consonants, stable identity, realistic performance, no theatrical caricature.
+Do not read bracket labels or parenthetical acting notes literally. Convert them into subtle performance cues.
+If a childlike or elderly voice is requested, use a respectful generic character voice and never imitate a real person.
+
+SCRIPT TO SPEAK:
+${cleanScript}`;
         const modelName = "gemini-3.1-flash-tts-preview";
         const validatedUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalKey}`;
 
-        const validVoices = ["Zephyr", "Puck", "Kore", "Charon", "Fenrir", "Aoede"];
+        const validVoices = [
+            "Zephyr", "Puck", "Charon", "Kore", "Fenrir", "Leda", "Orus", "Aoede",
+            "Callirrhoe", "Autonoe", "Enceladus", "Iapetus", "Umbriel", "Algieba",
+            "Despina", "Erinome", "Algenib", "Rasalgethi", "Laomedeia", "Achernar",
+            "Alnilam", "Schedar", "Gacrux", "Pulcherrima", "Achird", "Zubenelgenubi",
+            "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat"
+        ];
         const resolvedVoiceName = validVoices.includes(voiceName) ? voiceName : "Zephyr";
 
         const payload = {
